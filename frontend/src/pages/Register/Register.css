@@ -1,0 +1,17 @@
+.register-page{
+    min-height:calc(100vh - 70px);
+    display:flex;
+    align-items:center;
+    flex-direction:column;
+    justify-content:center;
+    gap:10px;
+}
+
+.register-page h1{
+    font-size:40px;
+    color:#111827;
+
+}
+.register-page p{
+    color:#6b7280;
+}

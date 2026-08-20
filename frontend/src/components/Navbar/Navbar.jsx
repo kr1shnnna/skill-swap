@@ -1,23 +1,23 @@
-
+import {Link} from 'react-router-dom'
 import './Navbar.css'
 const Navbar = () => {
   return (
     
     <nav className='navbar'>
 
-        <div className='navbar-logo'>
+        <Link to='/' className='navbar-logo'>
             Skill <span>Swap</span>
-        </div>
+        </Link>
 
         <div className="navbar-links">
-            <a href="#">Home</a>
-            <a href="#">Find Skills</a>
-            <a href="#">How it Works</a>
+            <Link to='/' href="#">Home</Link>
+            <Link to ='/find-skills'>Find Skills</Link>
+            <Link to='/how-it-works'>How it Works</Link>
         </div>
 
         <div className="navbar-actions">
-            <button className='login-btn'>Login</button>
-            <button className='signup-btn'>Get Started</button>
+            <Link to='/login' className='login-btn'>Login</Link>
+            <Link to='/register' className='signup-btn'>Get Started</Link>
         </div>
     </nav>
   )
