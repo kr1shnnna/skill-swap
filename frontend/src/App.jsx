@@ -1,4 +1,5 @@
 import Navbar from "./components/Navbar/Navbar"
+import Home from "./pages/Home/Home"
 
 
 const App = () => {
@@ -6,10 +7,7 @@ const App = () => {
      <>
      <Navbar />
 
-      <main>
-        <h1>SkillSwap</h1>
-        <p>Learn. Teach. Swap Skills.</p>
-      </main>
+      <Home />
     </>
   )
 }
