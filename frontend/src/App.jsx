@@ -1,12 +1,16 @@
+import Navbar from "./components/Navbar/Navbar"
 
 
 const App = () => {
   return (
-    <div>
-      <h1>Skikl Swap</h1>
+     <>
+     <Navbar />
 
-    <p>Learn . Teach . Swap Skills.</p>
-    </div>
+      <main>
+        <h1>SkillSwap</h1>
+        <p>Learn. Teach. Swap Skills.</p>
+      </main>
+    </>
   )
 }
 
