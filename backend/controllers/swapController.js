@@ -176,11 +176,33 @@ const rejectSwapRequest = async (req, res) => {
 };
 
 
+const getReceivedSwapRequests = async (req, res) => {
+  try {
+    const swaps = await Swap.find({
+      receiver: req.user.userId,
+    })
+      .populate("sender", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: swaps.length,
+      swaps,
+    });
+  } catch (error) {
+    console.error("Get received swap requests error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 
 module.exports = {
   sendSwapRequest,
   getSwapRequests,
     acceptSwapRequest,
-    rejectSwapRequest
+    rejectSwapRequest,
+    getReceivedSwapRequests
 };
 
