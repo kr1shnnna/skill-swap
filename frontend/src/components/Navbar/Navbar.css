@@ -68,3 +68,29 @@
     background-color:#2563eb;
     color:#ffffff;
 }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-icon {
+  font-size: 24px;
+  color: #2563eb;
+}
+
+.logout-btn {
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  color: #1d4ed8;
+}

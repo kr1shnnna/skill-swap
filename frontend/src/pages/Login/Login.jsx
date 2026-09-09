@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { AuthContext } from "../../context/AuthContext";
 import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
+
+  const { login } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -32,18 +35,10 @@ const Login = () => {
 
       console.log("Login successful:", response.data);
 
-      // Store JWT token
-      localStorage.setItem("token", response.data.token);
+      // Update AuthContext + localStorage
+      login(response.data.user, response.data.token);
 
-      // Store user information if backend sends it
-      if (response.data.user) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify(response.data.user)
-        );
-      }
-
-      // Temporary redirect until Dashboard is created
+      // Redirect to home page
       navigate("/");
 
     } catch (error) {
@@ -53,6 +48,7 @@ const Login = () => {
         error.response?.data?.message ||
         "Invalid email or password"
       );
+
     } finally {
       setLoading(false);
     }
