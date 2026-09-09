@@ -39,13 +39,52 @@ app.get("/", (req, res) => {
   });
 });
 
+const connectedUsers={};
+
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
+  // Register logged-in user
+  socket.on("registerUser", (userId) => {
+    connectedUsers[userId] = socket.id;
+
+    console.log(`User ${userId} connected with socket ${socket.id}`);
+  });
+
+  socket.on("sendMessage", ({ senderId, receiverId, message }) => {
+  console.log(
+    `Message from ${senderId} to ${receiverId}: ${message}`
+  );
+
+  const receiverSocketId = connectedUsers[receiverId];
+
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("receiveMessage", {
+      senderId,
+      message,
+      createdAt: new Date(),
+    });
+
+    console.log(`Message delivered to ${receiverId}`);
+  } else {
+    console.log(`User ${receiverId} is offline`);
+  }
+});
+
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
+
+    // Remove disconnected user from connectedUsers
+    for (const userId in connectedUsers) {
+      if (connectedUsers[userId] === socket.id) {
+        delete connectedUsers[userId];
+        console.log(`User ${userId} removed from connected users`);
+      }
+    }
   });
 });
+
 
 const PORT = process.env.PORT || 5000;
 
