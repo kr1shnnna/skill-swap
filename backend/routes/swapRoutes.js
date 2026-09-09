@@ -4,7 +4,7 @@ const {
   sendSwapRequest,
 } = require("../controllers/swapController");
 
-const protect = require("../middleware/authMiddleware");
+const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
