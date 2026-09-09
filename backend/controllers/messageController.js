@@ -1,5 +1,7 @@
 const Message = require("../models/Message");
 const Swap = require("../models/Swap");
+const { getUserSocket } = require("../socket/socketManager");
+
 
 const sendMessage = async (req, res) => {
   try {
@@ -42,7 +44,17 @@ const sendMessage = async (req, res) => {
       message,
     });
 
-    res.status(201).json({
+    const io=req.app.get("io"); // Get the io instance from the app
+
+  
+    const receiverSocketId = getUserSocket(receiverId);
+    
+
+    if(receiverSocketId){
+        io.to(receiverSocketId).emit("receiveMessage",newMessage); // Emit the message to the receiver
+    }
+
+    res.status(201).json({  
       message: "Message sent successfully",
       newMessage,
     });
@@ -92,5 +104,5 @@ const getMessages = async (req, res) => {
 module.exports = {
   sendMessage,
   getMessages
-  
+
 };

@@ -9,6 +9,11 @@ const matchRoutes = require("./routes/matchRoutes");
 const swapRoutes = require("./routes/swapRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
+const {
+  addUser,
+  removeUser,
+} = require("./socket/socketManager");
+
 require("dotenv").config();
 
 const connectDB = require("./config/db");
@@ -17,6 +22,7 @@ const app = express();
 
 const server = http.createServer(app);
 
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -24,67 +30,45 @@ const io = new Server(server, {
   },
 });
 
+// Make Socket.IO accessible in controllers
+app.set("io", io);
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/swaps", swapRoutes);
 app.use("/api/messages", messageRoutes);
 
+// Test route
 app.get("/", (req, res) => {
   res.json({
     message: "SkillSwap API is running",
   });
 });
 
-const connectedUsers={};
-
-
+// Socket.IO connection
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Register logged-in user
   socket.on("registerUser", (userId) => {
-    connectedUsers[userId] = socket.id;
+    addUser(userId, socket.id);
 
     console.log(`User ${userId} connected with socket ${socket.id}`);
   });
 
-  socket.on("sendMessage", ({ senderId, receiverId, message }) => {
-  console.log(
-    `Message from ${senderId} to ${receiverId}: ${message}`
-  );
-
-  const receiverSocketId = connectedUsers[receiverId];
-
-  if (receiverSocketId) {
-    io.to(receiverSocketId).emit("receiveMessage", {
-      senderId,
-      message,
-      createdAt: new Date(),
-    });
-
-    console.log(`Message delivered to ${receiverId}`);
-  } else {
-    console.log(`User ${receiverId} is offline`);
-  }
-});
-
+  // Handle disconnect
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
 
-    // Remove disconnected user from connectedUsers
-    for (const userId in connectedUsers) {
-      if (connectedUsers[userId] === socket.id) {
-        delete connectedUsers[userId];
-        console.log(`User ${userId} removed from connected users`);
-      }
-    }
+    removeUser(socket.id);
   });
 });
-
 
 const PORT = process.env.PORT || 5000;
 
