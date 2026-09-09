@@ -198,11 +198,67 @@ const getReceivedSwapRequests = async (req, res) => {
 };
 
 
+const getSentSwapRequests = async (req, res) => {
+  try {
+    const swaps = await Swap.find({
+      sender: req.user.userId,
+    })
+      .populate("receiver", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: swaps.length,
+      swaps,
+    });
+  } catch (error) {
+    console.error("Get sent swap requests error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
+
+const getAcceptedSwaps = async (req, res) => {
+  try {
+    const swaps = await Swap.find({
+      $and: [
+        {
+          $or: [
+            { sender: req.user.userId },
+            { receiver: req.user.userId },
+          ],
+        },
+        { status: "accepted" },
+      ],
+    })
+      .populate("sender", "name email")
+      .populate("receiver", "name email")
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({
+      count: swaps.length,
+      swaps,
+    });
+  } catch (error) {
+    console.error("Get accepted swaps error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
 module.exports = {
   sendSwapRequest,
   getSwapRequests,
     acceptSwapRequest,
     rejectSwapRequest,
-    getReceivedSwapRequests
+    getReceivedSwapRequests,
+    getSentSwapRequests,
+    getAcceptedSwaps
 };
 
