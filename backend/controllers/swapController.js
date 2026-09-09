@@ -60,7 +60,33 @@ const sendSwapRequest = async (req, res) => {
   }
 };
 
+
+const getSwapRequests = async (req, res) => {
+  try {
+    const swaps = await Swap.find({
+      $or: [
+        { sender: req.user.userId },
+        { receiver: req.user.userId },
+      ],
+    })
+      .populate("sender", "name email")
+      .populate("receiver", "name email");
+
+    res.status(200).json({
+      count: swaps.length,
+      swaps,
+    });
+  } catch (error) {
+    console.error("Get swap requests error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   sendSwapRequest,
+  getSwapRequests
 };
 
