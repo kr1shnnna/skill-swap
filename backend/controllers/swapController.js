@@ -129,9 +129,58 @@ const acceptSwapRequest = async (req, res) => {
   }
 };
 
+
+const rejectSwapRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const swap = await Swap.findById(id);
+
+    // Check if swap request exists
+    if (!swap) {
+      return res.status(404).json({
+        message: "Swap request not found",
+      });
+    }
+
+    // Only receiver can reject
+    if (swap.receiver.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to reject this request",
+      });
+    }
+
+    // Check if already processed
+    if (swap.status !== "pending") {
+      return res.status(400).json({
+        message: "This swap request has already been processed",
+      });
+    }
+
+    // Reject request
+    swap.status = "rejected";
+
+    await swap.save();
+
+    res.status(200).json({
+      message: "Swap request rejected successfully",
+      swap,
+    });
+  } catch (error) {
+    console.error("Reject swap request error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
+
 module.exports = {
   sendSwapRequest,
   getSwapRequests,
-    acceptSwapRequest
+    acceptSwapRequest,
+    rejectSwapRequest
 };
 

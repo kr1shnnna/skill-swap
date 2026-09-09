@@ -3,7 +3,8 @@ const express = require("express");
 const {
   sendSwapRequest,
   getSwapRequests,
-  acceptSwapRequest
+  acceptSwapRequest,
+rejectSwapRequest
 } = require("../controllers/swapController");
 
 const protect = require("../middlewares/authMiddleware");
@@ -16,7 +17,11 @@ router.post("/", protect, sendSwapRequest);
 // Get all sent and received swap requests
 router.get("/", protect, getSwapRequests);
 
-
+//accept swap request
 router.patch("/:id/accept", protect, acceptSwapRequest);
+
+//reject swap request
+router.patch("/:id/reject", protect, rejectSwapRequest);
+
 
 module.exports = router;
