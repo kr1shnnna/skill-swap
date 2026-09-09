@@ -4,6 +4,8 @@ const authRoutes=require("./routes/authRoutes");
 const userRoutes=require("./routes/userRoutes");
 const matchRoutes=require("./routes/matchRoutes");
 const swapRoutes=require("./routes/swapRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+
 
 require("dotenv").config();
 
@@ -19,6 +21,7 @@ app.use('/api/auth',authRoutes);
 app.use('/api/users',userRoutes);
 app.use('/api/matches',matchRoutes);
 app.use('/api/swaps',swapRoutes);
+app.use("/api/messages", messageRoutes);
 
 
 app.get("/", (req, res) => {
