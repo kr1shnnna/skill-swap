@@ -85,8 +85,53 @@ const getSwapRequests = async (req, res) => {
   }
 };
 
+
+const acceptSwapRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const swap = await Swap.findById(id);
+
+    if (!swap) {
+      return res.status(404).json({
+        message: "Swap request not found",
+      });
+    }
+
+    // Only receiver can accept
+    if (swap.receiver.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to accept this request",
+      });
+    }
+
+    // Check if already processed
+    if (swap.status !== "pending") {
+      return res.status(400).json({
+        message: "This swap request has already been processed",
+      });
+    }
+
+    swap.status = "accepted";
+
+    await swap.save();
+
+    res.status(200).json({
+      message: "Swap request accepted successfully",
+      swap,
+    });
+  } catch (error) {
+    console.error("Accept swap request error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   sendSwapRequest,
-  getSwapRequests
+  getSwapRequests,
+    acceptSwapRequest
 };
 
