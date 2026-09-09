@@ -5,6 +5,7 @@ import Login from "./pages/Login/Login"
 import Register from "./pages/Register/Register"
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Profile from "./pages/Profile/Profile";
 
 
 
@@ -26,7 +27,17 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         
+
      </Routes>
 
    

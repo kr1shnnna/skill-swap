@@ -1,0 +1,209 @@
+.profile-page {
+  min-height: calc(100vh - 80px);
+  background: #f8fafc;
+  padding: 50px 20px;
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.profile-header h1 {
+  font-size: 32px;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.profile-header p {
+  color: #6b7280;
+  font-size: 16px;
+  max-width: 550px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.profile-section h2 {
+  font-size: 20px;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.section-description {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.profile-section textarea,
+.profile-section input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.profile-section textarea {
+  resize: vertical;
+}
+
+.profile-section input:focus,
+.profile-section textarea:focus {
+  border-color: #2563eb;
+}
+
+.skill-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.skill-input-row input {
+  flex: 1;
+}
+
+.skill-input-row button {
+  padding: 0 22px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.skill-input-row button:hover {
+  background: #1d4ed8;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.teach-tag {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.learn-tag {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.skill-tag button {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+}
+
+.profile-message {
+  text-align: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.save-profile-btn {
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-profile-btn:hover {
+  background: #1d4ed8;
+}
+
+.save-profile-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.profile-loading {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: #6b7280;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+
+.profile-section .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+
+
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 30px 15px;
+  }
+
+  .profile-section {
+    padding: 20px;
+  }
+
+  .skill-input-row {
+    flex-direction: column;
+  }
+
+  .skill-input-row button {
+    padding: 12px;
+  }
+
+  .profile-header h1 {
+    font-size: 26px;
+  }
+}
