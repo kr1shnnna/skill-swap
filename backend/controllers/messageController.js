@@ -55,6 +55,42 @@ const sendMessage = async (req, res) => {
   }
 };
 
+
+const getMessages = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const loggedInUserId = req.user.userId;
+
+    const messages = await Message.find({
+      $or: [
+        {
+          sender: loggedInUserId,
+          receiver: userId,
+        },
+        {
+          sender: userId,
+          receiver: loggedInUserId,
+        },
+      ],
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json({
+      count: messages.length,
+      messages,
+    });
+  } catch (error) {
+    console.error("Get messages error:", error.message);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
 module.exports = {
   sendMessage,
+  getMessages
+  
 };
