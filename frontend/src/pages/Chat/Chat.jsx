@@ -1,12 +1,13 @@
 import {
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 
-import { FaUserCircle, FaComments } from "react-icons/fa";
-import { io } from "socket.io-client";
+import {
+  FaUserCircle,
+  FaComments,
+} from "react-icons/fa";
 
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -14,31 +15,41 @@ import { AuthContext } from "../../context/AuthContext";
 import "./Chat.css";
 
 const Chat = () => {
-  const { user } = useContext(AuthContext);
+  const {
+    user,
+    setUnreadMessageCount,
+  } = useContext(AuthContext);
 
-  const [conversations, setConversations] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [conversations, setConversations] =
+    useState([]);
 
-  const [messages, setMessages] = useState([]);
-  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [selectedUser, setSelectedUser] =
+    useState(null);
 
-  const [messageText, setMessageText] = useState("");
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messages, setMessages] =
+    useState([]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [messagesLoading, setMessagesLoading] =
+    useState(false);
 
-  // Store Socket.IO connection
-  const socketRef = useRef(null);
+  const [messageText, setMessageText] =
+    useState("");
+
+  const [sendingMessage, setSendingMessage] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   /*
-   * Get user ID safely.
-   *
-   * MongoDB data may come as:
-   * - _id
-   * - id
-   * - string
+   * ------------------------------------------
+   * GET USER ID
+   * ------------------------------------------
    */
+
   const getUserId = (userObject) => {
     if (!userObject) return null;
 
@@ -54,100 +65,14 @@ const Chat = () => {
   };
 
   /*
-   * --------------------------------------------------
-   * SOCKET.IO CONNECTION
-   * --------------------------------------------------
-   */
-  useEffect(() => {
-    if (!user) return;
-
-    const userId = getUserId(user);
-
-    if (!userId) {
-      console.error("Unable to get logged-in user ID.");
-      return;
-    }
-
-    // Create Socket.IO connection
-    const socket = io("http://localhost:5000", {
-      transports: ["websocket"],
-    });
-
-    socketRef.current = socket;
-
-    /*
-     * Socket connected
-     */
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
-
-      /*
-       * IMPORTANT:
-       * Your backend expects:
-       *
-       * socket.on("registerUser", ...)
-       */
-      socket.emit("registerUser", userId);
-
-      console.log(
-        "User registered with Socket.IO:",
-        userId
-      );
-    });
-
-    /*
-     * Receive real-time message
-     */
-    socket.on("receiveMessage", (newMessage) => {
-      console.log(
-        "Real-time message received:",
-        newMessage
-      );
-
-      setMessages((previousMessages) => {
-        /*
-         * Prevent duplicate messages.
-         */
-        const alreadyExists = previousMessages.some(
-          (message) =>
-            message._id === newMessage._id
-        );
-
-        if (alreadyExists) {
-          return previousMessages;
-        }
-
-        return [
-          ...previousMessages,
-          newMessage,
-        ];
-      });
-    });
-
-    /*
-     * Socket disconnected
-     */
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-    });
-
-    /*
-     * Cleanup when leaving Chat page
-     */
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [user]);
-
-  /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * FETCH CONVERSATIONS
-   * --------------------------------------------------
+   * ------------------------------------------
    */
+
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [user]);
 
   const fetchConversations = async () => {
     try {
@@ -158,28 +83,30 @@ const Chat = () => {
         "/swaps/accepted"
       );
 
-      const swaps = response.data.swaps || [];
+      const swaps =
+        response.data.swaps || [];
 
-      const currentUserId = getUserId(user);
+      const currentUserId =
+        getUserId(user);
 
       const uniqueUsers = [];
       const seenUserIds = new Set();
 
       swaps.forEach((swap) => {
-        const senderId = getUserId(
-          swap.sender
-        );
+        const senderId =
+          getUserId(swap.sender);
 
-        const receiverId = getUserId(
-          swap.receiver
-        );
+        const receiverId =
+          getUserId(swap.receiver);
 
         let otherUser = null;
 
         /*
          * Current user is sender
          */
-        if (senderId === currentUserId) {
+        if (
+          senderId === currentUserId
+        ) {
           otherUser = swap.receiver;
         }
 
@@ -202,13 +129,24 @@ const Chat = () => {
         /*
          * Prevent duplicate conversations
          */
-        if (!seenUserIds.has(otherUserId)) {
-          seenUserIds.add(otherUserId);
-          uniqueUsers.push(otherUser);
+        if (
+          !seenUserIds.has(
+            otherUserId
+          )
+        ) {
+          seenUserIds.add(
+            otherUserId
+          );
+
+          uniqueUsers.push(
+            otherUser
+          );
         }
       });
 
-      setConversations(uniqueUsers);
+      setConversations(
+        uniqueUsers
+      );
     } catch (error) {
       console.error(
         "Fetch conversations error:",
@@ -216,7 +154,8 @@ const Chat = () => {
       );
 
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Unable to load conversations."
       );
     } finally {
@@ -225,22 +164,29 @@ const Chat = () => {
   };
 
   /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * FETCH MESSAGE HISTORY
-   * --------------------------------------------------
+   * ------------------------------------------
    */
-  const fetchMessages = async (userId) => {
+
+  const fetchMessages = async (
+    userId
+  ) => {
     try {
       setMessagesLoading(true);
+
       setMessages([]);
+
       setError("");
 
-      const response = await api.get(
-        `/messages/${userId}`
-      );
+      const response =
+        await api.get(
+          `/messages/${userId}`
+        );
 
       setMessages(
-        response.data.messages || []
+        response.data.messages ||
+          []
       );
     } catch (error) {
       console.error(
@@ -249,7 +195,8 @@ const Chat = () => {
       );
 
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Unable to load messages."
       );
     } finally {
@@ -258,161 +205,214 @@ const Chat = () => {
   };
 
   /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * SELECT CONVERSATION
-   * --------------------------------------------------
+   * ------------------------------------------
    */
+
   const handleSelectConversation = (
     conversationUser
   ) => {
-    setSelectedUser(conversationUser);
+    setSelectedUser(
+      conversationUser
+    );
+
     setMessageText("");
+
     setError("");
 
     const otherUserId =
-      getUserId(conversationUser);
+      getUserId(
+        conversationUser
+      );
 
     if (otherUserId) {
-      fetchMessages(otherUserId);
+      fetchMessages(
+        otherUserId
+      );
     }
+
+    /*
+     * For now, opening Chat clears
+     * the global unread count.
+     *
+     * Later we can make this
+     * conversation-specific.
+     */
+    setUnreadMessageCount(0);
   };
 
   /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * SEND MESSAGE
-   * --------------------------------------------------
+   * ------------------------------------------
    */
-  const handleSendMessage = async () => {
-    const trimmedMessage =
-      messageText.trim();
 
-    /*
-     * Don't send empty messages
-     */
-    if (!trimmedMessage) return;
-
-    /*
-     * No selected conversation
-     */
-    if (!selectedUser) return;
-
-    const receiverId =
-      getUserId(selectedUser);
-
-    if (!receiverId) {
-      setError(
-        "Unable to identify the receiver."
-      );
-
-      return;
-    }
-
-    try {
-      setSendingMessage(true);
-      setError("");
+  const handleSendMessage =
+    async () => {
+      const trimmedMessage =
+        messageText.trim();
 
       /*
-       * Send message through REST API.
-       *
-       * Backend:
-       * POST /api/messages
+       * Don't send empty messages
        */
-      const response = await api.post(
-        "/messages",
-        {
-          receiverId,
-          message: trimmedMessage,
-        }
-      );
-
-      const newMessage =
-        response.data.newMessage;
-
-      /*
-       * Add message immediately for sender.
-       *
-       * The backend sends the Socket.IO event
-       * only to the receiver, so this prevents
-       * waiting for anything.
-       */
-      if (newMessage) {
-        setMessages(
-          (previousMessages) => [
-            ...previousMessages,
-            newMessage,
-          ]
-        );
+      if (!trimmedMessage) {
+        return;
       }
 
       /*
-       * Clear input
+       * No selected user
        */
-      setMessageText("");
-    } catch (error) {
-      console.error(
-        "Send message error:",
-        error
-      );
+      if (!selectedUser) {
+        return;
+      }
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to send message."
-      );
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+      const receiverId =
+        getUserId(
+          selectedUser
+        );
+
+      if (!receiverId) {
+        setError(
+          "Unable to identify the receiver."
+        );
+
+        return;
+      }
+
+      try {
+        setSendingMessage(true);
+
+        setError("");
+
+        /*
+         * Send through REST API
+         */
+        const response =
+          await api.post(
+            "/messages",
+            {
+              receiverId,
+              message:
+                trimmedMessage,
+            }
+          );
+
+        const newMessage =
+          response.data
+            .newMessage;
+
+        /*
+         * Add message immediately
+         * for sender.
+         *
+         * Backend emits Socket.IO
+         * only to receiver.
+         */
+        if (newMessage) {
+          setMessages(
+            (previousMessages) => {
+              /*
+               * Prevent duplicate
+               * message if necessary.
+               */
+              const alreadyExists =
+                previousMessages.some(
+                  (message) =>
+                    message._id ===
+                    newMessage._id
+                );
+
+              if (
+                alreadyExists
+              ) {
+                return previousMessages;
+              }
+
+              return [
+                ...previousMessages,
+                newMessage,
+              ];
+            }
+          );
+        }
+
+        /*
+         * Clear input
+         */
+        setMessageText("");
+      } catch (error) {
+        console.error(
+          "Send message error:",
+          error
+        );
+
+        setError(
+          error.response?.data
+            ?.message ||
+            "Unable to send message."
+        );
+      } finally {
+        setSendingMessage(
+          false
+        );
+      }
+    };
 
   /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * ENTER KEY
-   * --------------------------------------------------
+   * ------------------------------------------
    */
-  const handleMessageKeyDown = (
-    event
-  ) => {
-    /*
-     * Enter = send
-     *
-     * Shift + Enter = normal input
-     */
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey
-    ) {
-      event.preventDefault();
 
-      handleSendMessage();
-    }
-  };
+  const handleMessageKeyDown =
+    (event) => {
+      /*
+       * Enter = send
+       *
+       * Shift + Enter =
+       * normal input
+       */
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey
+      ) {
+        event.preventDefault();
+
+        handleSendMessage();
+      }
+    };
 
   /*
-   * --------------------------------------------------
-   * LOADING STATE
-   * --------------------------------------------------
+   * ------------------------------------------
+   * LOADING
+   * ------------------------------------------
    */
+
   if (loading) {
     return (
       <main className="chat-page">
         <div className="chat-loading">
-          Loading your conversations...
+          Loading your
+          conversations...
         </div>
       </main>
     );
   }
 
   /*
-   * --------------------------------------------------
+   * ------------------------------------------
    * UI
-   * --------------------------------------------------
+   * ------------------------------------------
    */
+
   return (
     <main className="chat-page">
       <div className="chat-container">
 
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
         {/* PAGE HEADER */}
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
 
         <div className="chat-page-header">
           <div>
@@ -425,15 +425,15 @@ const Chat = () => {
             </h1>
 
             <p>
-              Continue your skill exchange
-              conversations.
+              Continue your skill
+              exchange conversations.
             </p>
           </div>
         </div>
 
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
         {/* ERROR */}
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
 
         {error && (
           <div className="chat-error">
@@ -441,38 +441,46 @@ const Chat = () => {
           </div>
         )}
 
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
         {/* CHAT WORKSPACE */}
-        {/* ---------------------------------------- */}
+        {/* ================================== */}
 
         <div className="chat-workspace">
 
-          {/* ====================================== */}
-          {/* CONVERSATIONS */}
-          {/* ====================================== */}
+          {/* ================================= */}
+          {/* CONVERSATIONS PANEL */}
+          {/* ================================= */}
 
           <aside className="conversation-panel">
 
             <div className="conversation-header">
+
               <div>
                 <h2>
                   Conversations
                 </h2>
 
                 <p>
-                  {conversations.length} active
-                  exchange
-                  {conversations.length !== 1
+                  {conversations.length}{" "}
+                  active exchange
+                  {conversations.length !==
+                  1
                     ? "s"
                     : ""}
                 </p>
               </div>
 
               <FaComments />
+
             </div>
 
-            {/* No conversations */}
-            {conversations.length === 0 ? (
+            {/* ----------------------------- */}
+            {/* NO CONVERSATIONS */}
+            {/* ----------------------------- */}
+
+            {conversations.length ===
+            0 ? (
+
               <div className="empty-conversations">
 
                 <FaComments />
@@ -482,15 +490,20 @@ const Chat = () => {
                 </h3>
 
                 <p>
-                  Accept a skill swap request
-                  to start chatting with
-                  another student.
+                  Accept a skill swap
+                  request to start
+                  chatting with another
+                  student.
                 </p>
 
               </div>
+
             ) : (
 
-              /* Conversation list */
+              /* --------------------------- */
+              /* CONVERSATION LIST */
+              /* --------------------------- */
+
               <div className="conversation-list">
 
                 {conversations.map(
@@ -550,15 +563,15 @@ const Chat = () => {
 
           </aside>
 
-          {/* ====================================== */}
+          {/* ================================== */}
           {/* CHAT AREA */}
-          {/* ====================================== */}
+          {/* ================================== */}
 
           <section className="chat-area">
 
-            {/* ------------------------------------ */}
-            {/* NO SELECTED USER */}
-            {/* ------------------------------------ */}
+            {/* -------------------------------- */}
+            {/* NO SELECTED CONVERSATION */}
+            {/* -------------------------------- */}
 
             {!selectedUser ? (
 
@@ -571,9 +584,9 @@ const Chat = () => {
                 </h2>
 
                 <p>
-                  Select a conversation to
-                  start chatting with your
-                  skill partner.
+                  Select a conversation
+                  to start chatting with
+                  your skill partner.
                 </p>
 
               </div>
@@ -581,29 +594,32 @@ const Chat = () => {
             ) : (
 
               <>
-                {/* ================================ */}
+                {/* ============================ */}
                 {/* CHAT HEADER */}
-                {/* ================================ */}
+                {/* ============================ */}
 
                 <div className="conversation-chat-header">
 
                   <FaUserCircle className="chat-user-avatar" />
 
                   <div>
+
                     <h2>
                       {selectedUser.name}
                     </h2>
 
                     <p>
-                      Skill Exchange Partner
+                      Skill Exchange
+                      Partner
                     </p>
+
                   </div>
 
                 </div>
 
-                {/* ================================ */}
+                {/* ============================ */}
                 {/* MESSAGES */}
-                {/* ================================ */}
+                {/* ============================ */}
 
                 <div className="messages-area">
 
@@ -612,24 +628,28 @@ const Chat = () => {
                     <div className="messages-placeholder">
 
                       <p>
-                        Loading conversation...
+                        Loading
+                        conversation...
                       </p>
 
                     </div>
 
-                  ) : messages.length === 0 ? (
+                  ) : messages.length ===
+                    0 ? (
 
                     <div className="messages-placeholder">
 
                       <p>
-                        Your conversation
+                        Your
+                        conversation
                         with{" "}
                         <strong>
                           {
                             selectedUser.name
                           }
                         </strong>{" "}
-                        will appear here.
+                        will appear
+                        here.
                       </p>
 
                       <span>
@@ -652,7 +672,9 @@ const Chat = () => {
                             );
 
                           const currentUserId =
-                            getUserId(user);
+                            getUserId(
+                              user
+                            );
 
                           const isMine =
                             senderId ===
@@ -684,8 +706,7 @@ const Chat = () => {
                                   ).toLocaleTimeString(
                                     [],
                                     {
-                                      hour:
-                                        "2-digit",
+                                      hour: "2-digit",
                                       minute:
                                         "2-digit",
                                     }
@@ -704,9 +725,9 @@ const Chat = () => {
 
                 </div>
 
-                {/* ================================ */}
+                {/* ============================ */}
                 {/* MESSAGE INPUT */}
-                {/* ================================ */}
+                {/* ============================ */}
 
                 <div className="message-input-area">
 
