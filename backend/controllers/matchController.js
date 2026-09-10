@@ -53,7 +53,6 @@ const getMatches = async (req, res) => {
           user: {
             id: user._id,
             name: user.name,
-            email: user.email,
             bio: user.bio,
           },
           matchScore: Number(matchScore.toFixed(2)),

@@ -144,7 +144,6 @@ const FindSkills = () => {
 
                     <div>
                       <h3>{match.user.name}</h3>
-                      <p>{match.user.email}</p>
                     </div>
                   </div>
 

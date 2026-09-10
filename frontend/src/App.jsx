@@ -7,6 +7,8 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Profile from "./pages/Profile/Profile";
 import FindSkills from "./pages/FindSkills/FindSkills";
+import StudentProfile from "./pages/StudentProfile/StudentProfile";
+
 
 
 
@@ -44,6 +46,15 @@ const App = () => {
   element={
     <ProtectedRoute>
       <FindSkills />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/profile/:userId"
+  element={
+    <ProtectedRoute>
+      <StudentProfile />
     </ProtectedRoute>
   }
 />
