@@ -209,4 +209,44 @@
   background: #fef2f2;
 }
 
+.notification-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.notification-btn:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+.notification-btn svg {
+  font-size: 18px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dc2626;
+  color: white;
+  border: 2px solid white;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
 

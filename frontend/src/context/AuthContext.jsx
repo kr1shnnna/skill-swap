@@ -1,4 +1,5 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import api from "../services/api";
 
 export const AuthContext = createContext();
 
@@ -12,6 +13,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => {
     return localStorage.getItem("token") || null;
   });
+
+  // Number of pending incoming swap requests
+  const [pendingSwapCount, setPendingSwapCount] = useState(0);
 
   const login = (userData, tokenData) => {
     localStorage.setItem("token", tokenData);
@@ -27,7 +31,38 @@ export const AuthProvider = ({ children }) => {
 
     setUser(null);
     setToken(null);
+
+    // Clear notifications after logout
+    setPendingSwapCount(0);
   };
+
+  // Fetch pending incoming swap requests
+  const fetchPendingSwapCount = async () => {
+    if (!token) {
+      setPendingSwapCount(0);
+      return;
+    }
+
+    try {
+      const response = await api.get("/swaps/received");
+
+      const pendingCount = (response.data.swaps || []).filter(
+        (swap) => swap.status === "pending"
+      ).length;
+
+      setPendingSwapCount(pendingCount);
+    } catch (error) {
+      console.error(
+        "Fetch pending swap requests error:",
+        error
+      );
+    }
+  };
+
+  // Fetch notification count when user logs in
+  useEffect(() => {
+    fetchPendingSwapCount();
+  }, [token]);
 
   const value = {
     user,
@@ -35,6 +70,10 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!token,
+
+    // Notification data
+    pendingSwapCount,
+    fetchPendingSwapCount,
   };
 
   return (
