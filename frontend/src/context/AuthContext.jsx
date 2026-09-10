@@ -190,10 +190,6 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    console.log(
-      "Creating global Socket.IO connection..."
-    );
-
     const socket = io(
       "http://localhost:5000",
       {
@@ -208,18 +204,8 @@ export const AuthProvider = ({ children }) => {
     // ----------------------------------------
 
     socket.on("connect", () => {
-      console.log(
-        "Global Socket connected:",
-        socket.id
-      );
-
       socket.emit(
         "registerUser",
-        userId
-      );
-
-      console.log(
-        "User registered with Socket.IO:",
         userId
       );
     });
@@ -231,25 +217,10 @@ export const AuthProvider = ({ children }) => {
     socket.on(
       "receiveMessage",
       (newMessage) => {
-        console.log(
-          "Global real-time message received:",
-          newMessage
-        );
-
-        /*
-         * IMPORTANT
-         *
-         * Store the latest incoming message
-         * so Chat.jsx can react to it instantly.
-         */
         setLastReceivedMessage(
           newMessage
         );
 
-        /*
-         * Increase global Navbar
-         * unread notification.
-         */
         setUnreadMessageCount(
           (previousCount) =>
             previousCount + 1
@@ -272,30 +243,11 @@ export const AuthProvider = ({ children }) => {
     );
 
     // ----------------------------------------
-    // SOCKET DISCONNECTED
-    // ----------------------------------------
-
-    socket.on(
-      "disconnect",
-      (reason) => {
-        console.log(
-          "Global Socket disconnected:",
-          reason
-        );
-      }
-    );
-
-    // ----------------------------------------
     // CLEANUP
     // ----------------------------------------
 
     return () => {
-      console.log(
-        "Cleaning up global Socket.IO connection..."
-      );
-
       socket.disconnect();
-
       socketRef.current = null;
     };
   }, [user, token]);
