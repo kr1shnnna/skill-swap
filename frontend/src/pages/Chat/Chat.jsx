@@ -70,6 +70,15 @@ const Chat = () => {
 
   /*
    * ------------------------------------------
+   * AUTO SCROLL
+   * ------------------------------------------
+   */
+
+  const messagesEndRef =
+    useRef(null);
+
+  /*
+   * ------------------------------------------
    * GET USER ID
    * ------------------------------------------
    */
@@ -117,104 +126,134 @@ const Chat = () => {
   };
 
   /*
- * ------------------------------------------
- * CHECK IF TWO DATES ARE SAME DAY
- * ------------------------------------------
- */
-
-const isSameDay = (dateA, dateB) => {
-  const firstDate = new Date(dateA);
-  const secondDate = new Date(dateB);
-
-  return (
-    firstDate.getFullYear() ===
-      secondDate.getFullYear() &&
-    firstDate.getMonth() ===
-      secondDate.getMonth() &&
-    firstDate.getDate() ===
-      secondDate.getDate()
-  );
-};
-
-/*
- * ------------------------------------------
- * FORMAT DATE SEPARATOR
- * ------------------------------------------
- */
-
-const formatDateSeparator = (date) => {
-  if (!date) return "";
-
-  const messageDate = new Date(date);
-
-  if (
-    Number.isNaN(
-      messageDate.getTime()
-    )
-  ) {
-    return "";
-  }
-
-  const today = new Date();
-
-  const yesterday = new Date();
-  yesterday.setDate(
-    yesterday.getDate() - 1
-  );
-
-  if (
-    isSameDay(
-      messageDate,
-      today
-    )
-  ) {
-    return "Today";
-  }
-
-  if (
-    isSameDay(
-      messageDate,
-      yesterday
-    )
-  ) {
-    return "Yesterday";
-  }
-
-  /*
-   * Messages from the current year:
-   * Monday, September 7
+   * ------------------------------------------
+   * CHECK IF TWO DATES ARE SAME DAY
+   * ------------------------------------------
    */
 
-  if (
-    messageDate.getFullYear() ===
-    today.getFullYear()
-  ) {
+  const isSameDay = (
+    dateA,
+    dateB
+  ) => {
+    const firstDate =
+      new Date(dateA);
+
+    const secondDate =
+      new Date(dateB);
+
+    return (
+      firstDate.getFullYear() ===
+        secondDate.getFullYear() &&
+      firstDate.getMonth() ===
+        secondDate.getMonth() &&
+      firstDate.getDate() ===
+        secondDate.getDate()
+    );
+  };
+
+  /*
+   * ------------------------------------------
+   * FORMAT DATE SEPARATOR
+   * ------------------------------------------
+   */
+
+  const formatDateSeparator = (
+    date
+  ) => {
+    if (!date) return "";
+
+    const messageDate =
+      new Date(date);
+
+    if (
+      Number.isNaN(
+        messageDate.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    const today =
+      new Date();
+
+    const yesterday =
+      new Date();
+
+    yesterday.setDate(
+      yesterday.getDate() - 1
+    );
+
+    if (
+      isSameDay(
+        messageDate,
+        today
+      )
+    ) {
+      return "Today";
+    }
+
+    if (
+      isSameDay(
+        messageDate,
+        yesterday
+      )
+    ) {
+      return "Yesterday";
+    }
+
+    /*
+     * Current year
+     */
+
+    if (
+      messageDate.getFullYear() ===
+      today.getFullYear()
+    ) {
+      return messageDate.toLocaleDateString(
+        [],
+        {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        }
+      );
+    }
+
+    /*
+     * Older years
+     */
+
     return messageDate.toLocaleDateString(
       [],
       {
         weekday: "long",
         month: "long",
         day: "numeric",
+        year: "numeric",
       }
     );
-  }
+  };
 
   /*
-   * Older messages:
-   * Monday, September 7, 2025
+   * ------------------------------------------
+   * SCROLL TO BOTTOM
+   * ------------------------------------------
    */
 
-  return messageDate.toLocaleDateString(
-    [],
-    {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
+  const scrollToBottom = (
+    behavior = "smooth"
+  ) => {
+    if (
+      messagesEndRef.current
+    ) {
+      messagesEndRef.current.scrollIntoView(
+        {
+          behavior,
+          block: "end",
+        }
+      );
     }
-  );
-};
-
+  };
 
   /*
    * ------------------------------------------
@@ -250,7 +289,9 @@ const formatDateSeparator = (date) => {
    * ------------------------------------------
    */
 
-  const handleMessageChange = (event) => {
+  const handleMessageChange = (
+    event
+  ) => {
     const value =
       event.target.value;
 
@@ -268,19 +309,24 @@ const formatDateSeparator = (date) => {
      */
 
     if (!value.trim()) {
-      if (isTypingRef.current) {
+      if (
+        isTypingRef.current
+      ) {
         stopTyping(receiverId);
 
         isTypingRef.current =
           false;
       }
 
-      if (typingTimeoutRef.current) {
+      if (
+        typingTimeoutRef.current
+      ) {
         clearTimeout(
           typingTimeoutRef.current
         );
 
-        typingTimeoutRef.current = null;
+        typingTimeoutRef.current =
+          null;
       }
 
       return;
@@ -290,17 +336,22 @@ const formatDateSeparator = (date) => {
      * Start typing.
      */
 
-    if (!isTypingRef.current) {
+    if (
+      !isTypingRef.current
+    ) {
       startTyping(receiverId);
 
-      isTypingRef.current = true;
+      isTypingRef.current =
+        true;
     }
 
     /*
      * Reset typing timer.
      */
 
-    if (typingTimeoutRef.current) {
+    if (
+      typingTimeoutRef.current
+    ) {
       clearTimeout(
         typingTimeoutRef.current
       );
@@ -310,9 +361,11 @@ const formatDateSeparator = (date) => {
       setTimeout(() => {
         stopTyping(receiverId);
 
-        isTypingRef.current = false;
+        isTypingRef.current =
+          false;
 
-        typingTimeoutRef.current = null;
+        typingTimeoutRef.current =
+          null;
       }, 1000);
   };
 
@@ -348,14 +401,19 @@ const formatDateSeparator = (date) => {
           getUserId(user);
 
         const uniqueUsers = [];
-        const seenUserIds = new Set();
+        const seenUserIds =
+          new Set();
 
         swaps.forEach((swap) => {
           const senderId =
-            getUserId(swap.sender);
+            getUserId(
+              swap.sender
+            );
 
           const receiverId =
-            getUserId(swap.receiver);
+            getUserId(
+              swap.receiver
+            );
 
           let otherUser = null;
 
@@ -388,7 +446,9 @@ const formatDateSeparator = (date) => {
           }
 
           const otherUserId =
-            getUserId(otherUser);
+            getUserId(
+              otherUser
+            );
 
           if (!otherUserId) {
             return;
@@ -409,7 +469,8 @@ const formatDateSeparator = (date) => {
 
             uniqueUsers.push({
               user: otherUser,
-              latestMessage: null,
+              latestMessage:
+                null,
               unreadCount: 0,
             });
           }
@@ -492,7 +553,9 @@ const formatDateSeparator = (date) => {
                   ).getTime()
                 : 0;
 
-            return dateB - dateA;
+            return (
+              dateB - dateA
+            );
           }
         );
 
@@ -506,7 +569,8 @@ const formatDateSeparator = (date) => {
         );
 
         setError(
-          error.response?.data?.message ||
+          error.response?.data
+            ?.message ||
             "Unable to load conversations."
         );
       } finally {
@@ -538,13 +602,16 @@ const formatDateSeparator = (date) => {
       getUserId(selectedUser);
 
     const isCurrentConversation =
-      selectedUserId === senderId;
+      selectedUserId ===
+      senderId;
 
     /*
      * MESSAGE RECEIVED IN OPEN CHAT
      */
 
-    if (isCurrentConversation) {
+    if (
+      isCurrentConversation
+    ) {
       setMessages(
         (previousMessages) => {
           const alreadyExists =
@@ -566,6 +633,14 @@ const formatDateSeparator = (date) => {
       );
 
       /*
+       * Scroll after incoming message.
+       */
+
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
+
+      /*
        * Immediately mark as read.
        */
 
@@ -576,10 +651,13 @@ const formatDateSeparator = (date) => {
         .then((response) => {
           const updatedCount =
             Number(
-              response.data.updatedCount
+              response.data
+                .updatedCount
             ) || 0;
 
-          if (updatedCount > 0) {
+          if (
+            updatedCount > 0
+          ) {
             setUnreadMessageCount(
               (previousCount) =>
                 Math.max(
@@ -612,7 +690,9 @@ const formatDateSeparator = (date) => {
               ) === senderId
           );
 
-        if (!conversationExists) {
+        if (
+          !conversationExists
+        ) {
           return previousConversations;
         }
 
@@ -688,7 +768,8 @@ const formatDateSeparator = (date) => {
   useEffect(() => {
     if (
       !deliveredMessageIds ||
-      deliveredMessageIds.length === 0
+      deliveredMessageIds.length ===
+        0
     ) {
       return;
     }
@@ -747,7 +828,9 @@ const formatDateSeparator = (date) => {
           }
         )
     );
-  }, [deliveredMessageIds]);
+  }, [
+    deliveredMessageIds,
+  ]);
 
   /*
    * ------------------------------------------
@@ -821,7 +904,9 @@ const formatDateSeparator = (date) => {
           }
         )
     );
-  }, [seenMessageIds]);
+  }, [
+    seenMessageIds,
+  ]);
 
   /*
    * ------------------------------------------
@@ -834,7 +919,9 @@ const formatDateSeparator = (date) => {
   ) => {
     try {
       setMessagesLoading(true);
+
       setMessages([]);
+
       setError("");
 
       const response =
@@ -842,9 +929,22 @@ const formatDateSeparator = (date) => {
           `/messages/${userId}`
         );
 
+      const fetchedMessages =
+        response.data.messages ||
+        [];
+
       setMessages(
-        response.data.messages || []
+        fetchedMessages
       );
+
+      /*
+       * Scroll to bottom after
+       * message history loads.
+       */
+
+      setTimeout(() => {
+        scrollToBottom("auto");
+      }, 50);
 
       return response.data;
     } catch (error) {
@@ -854,7 +954,8 @@ const formatDateSeparator = (date) => {
       );
 
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Unable to load messages."
       );
 
@@ -871,7 +972,9 @@ const formatDateSeparator = (date) => {
    */
 
   const handleSelectConversation =
-    async (conversation) => {
+    async (
+      conversation
+    ) => {
       /*
        * Stop typing in previous chat.
        */
@@ -891,7 +994,15 @@ const formatDateSeparator = (date) => {
       );
 
       setMessageText("");
+
       setError("");
+
+      /*
+       * Clear messages while
+       * switching conversations.
+       */
+
+      setMessages([]);
 
       if (!otherUserId) {
         return;
@@ -911,7 +1022,8 @@ const formatDateSeparator = (date) => {
        */
 
       if (
-        unreadCountBeforeRead > 0
+        unreadCountBeforeRead >
+        0
       ) {
         setConversations(
           (previousConversations) =>
@@ -920,7 +1032,8 @@ const formatDateSeparator = (date) => {
                 if (
                   getUserId(
                     item.user
-                  ) === otherUserId
+                  ) ===
+                  otherUserId
                 ) {
                   return {
                     ...item,
@@ -935,7 +1048,7 @@ const formatDateSeparator = (date) => {
       }
 
       /*
-       * Fetch messages.
+       * Fetch conversation.
        */
 
       const messageData =
@@ -964,7 +1077,8 @@ const formatDateSeparator = (date) => {
 
           const updatedCount =
             Number(
-              response.data.updatedCount
+              response.data
+                .updatedCount
             ) || 0;
 
           /*
@@ -978,7 +1092,8 @@ const formatDateSeparator = (date) => {
                   if (
                     getUserId(
                       item.user
-                    ) === otherUserId
+                    ) ===
+                    otherUserId
                   ) {
                     return {
                       ...item,
@@ -995,7 +1110,9 @@ const formatDateSeparator = (date) => {
            * Update navbar count.
            */
 
-          if (updatedCount > 0) {
+          if (
+            updatedCount > 0
+          ) {
             setUnreadMessageCount(
               (previousCount) =>
                 Math.max(
@@ -1012,6 +1129,15 @@ const formatDateSeparator = (date) => {
           );
         }
       }
+
+      /*
+       * Make absolutely sure the
+       * conversation ends at bottom.
+       */
+
+      setTimeout(() => {
+        scrollToBottom("auto");
+      }, 100);
     };
 
   /*
@@ -1034,7 +1160,9 @@ const formatDateSeparator = (date) => {
       }
 
       const receiverId =
-        getUserId(selectedUser);
+        getUserId(
+          selectedUser
+        );
 
       if (!receiverId) {
         setError(
@@ -1048,20 +1176,29 @@ const formatDateSeparator = (date) => {
        * Stop typing.
        */
 
-      stopTyping(receiverId);
+      stopTyping(
+        receiverId
+      );
 
-      isTypingRef.current = false;
+      isTypingRef.current =
+        false;
 
-      if (typingTimeoutRef.current) {
+      if (
+        typingTimeoutRef.current
+      ) {
         clearTimeout(
           typingTimeoutRef.current
         );
 
-        typingTimeoutRef.current = null;
+        typingTimeoutRef.current =
+          null;
       }
 
       try {
-        setSendingMessage(true);
+        setSendingMessage(
+          true
+        );
+
         setError("");
 
         /*
@@ -1079,7 +1216,8 @@ const formatDateSeparator = (date) => {
           );
 
         const newMessage =
-          response.data.newMessage;
+          response.data
+            .newMessage;
 
         /*
          * Add sent message.
@@ -1107,7 +1245,9 @@ const formatDateSeparator = (date) => {
                     messageToAdd._id
                 );
 
-              if (alreadyExists) {
+              if (
+                alreadyExists
+              ) {
                 return previousMessages;
               }
 
@@ -1117,6 +1257,14 @@ const formatDateSeparator = (date) => {
               ];
             }
           );
+
+          /*
+           * Scroll after sent message.
+           */
+
+          setTimeout(() => {
+            scrollToBottom();
+          }, 50);
 
           /*
            * Update sidebar preview.
@@ -1130,7 +1278,8 @@ const formatDateSeparator = (date) => {
                     if (
                       getUserId(
                         conversation.user
-                      ) !== receiverId
+                      ) !==
+                      receiverId
                     ) {
                       return conversation;
                     }
@@ -1153,7 +1302,8 @@ const formatDateSeparator = (date) => {
                   (conversation) =>
                     getUserId(
                       conversation.user
-                    ) === receiverId
+                    ) ===
+                    receiverId
                 );
 
               const otherConversations =
@@ -1161,7 +1311,8 @@ const formatDateSeparator = (date) => {
                   (conversation) =>
                     getUserId(
                       conversation.user
-                    ) !== receiverId
+                    ) !==
+                    receiverId
                 );
 
               return selectedConversation
@@ -1186,11 +1337,14 @@ const formatDateSeparator = (date) => {
         );
 
         setError(
-          error.response?.data?.message ||
+          error.response?.data
+            ?.message ||
             "Unable to send message."
         );
       } finally {
-        setSendingMessage(false);
+        setSendingMessage(
+          false
+        );
       }
     };
 
@@ -1220,7 +1374,9 @@ const formatDateSeparator = (date) => {
 
   useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
+      if (
+        typingTimeoutRef.current
+      ) {
         clearTimeout(
           typingTimeoutRef.current
         );
@@ -1237,9 +1393,11 @@ const formatDateSeparator = (date) => {
   if (loading) {
     return (
       <main className="chat-page">
+
         <div className="chat-loading">
           Loading your conversations...
         </div>
+
       </main>
     );
   }
@@ -1313,7 +1471,8 @@ const formatDateSeparator = (date) => {
                 <p>
                   {conversations.length}{" "}
                   active exchange
-                  {conversations.length !== 1
+                  {conversations.length !==
+                  1
                     ? "s"
                     : ""}
                 </p>
@@ -1326,7 +1485,8 @@ const formatDateSeparator = (date) => {
 
             {/* NO CONVERSATIONS */}
 
-            {conversations.length === 0 ? (
+            {conversations.length ===
+            0 ? (
 
               <div className="empty-conversations">
 
@@ -1337,8 +1497,9 @@ const formatDateSeparator = (date) => {
                 </h3>
 
                 <p>
-                  Accept a skill swap request
-                  to start chatting with another
+                  Accept a skill swap
+                  request to start
+                  chatting with another
                   student.
                 </p>
 
@@ -1346,12 +1507,12 @@ const formatDateSeparator = (date) => {
 
             ) : (
 
-              /* CONVERSATION LIST */
-
               <div className="conversation-list">
 
                 {conversations.map(
-                  (conversation) => {
+                  (
+                    conversation
+                  ) => {
 
                     const conversationUser =
                       conversation.user;
@@ -1443,6 +1604,7 @@ const formatDateSeparator = (date) => {
                 )}
 
               </div>
+
             )}
 
           </aside>
@@ -1464,8 +1626,9 @@ const formatDateSeparator = (date) => {
                 </h2>
 
                 <p>
-                  Select a conversation to start
-                  chatting with your skill partner.
+                  Select a conversation
+                  to start chatting with
+                  your skill partner.
                 </p>
 
               </div>
@@ -1534,20 +1697,26 @@ const formatDateSeparator = (date) => {
 
                     </div>
 
-                  ) : messages.length === 0 ? (
+                  ) : messages.length ===
+                    0 ? (
 
                     <div className="messages-placeholder">
 
                       <p>
-                        Your conversation with{" "}
+                        Your conversation
+                        with{" "}
                         <strong>
-                          {selectedUser.name}
+                          {
+                            selectedUser.name
+                          }
                         </strong>{" "}
-                        will appear here.
+                        will appear
+                        here.
                       </p>
 
                       <span>
-                        Start by saying hello 👋
+                        Start by saying
+                        hello 👋
                       </span>
 
                     </div>
@@ -1556,121 +1725,143 @@ const formatDateSeparator = (date) => {
 
                     <div className="messages-list">
 
-                    {messages.map(
-  (message, index) => {
+                      {messages.map(
+                        (
+                          message,
+                          index
+                        ) => {
 
-    const senderId =
-      getUserId(
-        message.sender
-      );
+                          const senderId =
+                            getUserId(
+                              message.sender
+                            );
 
-    const currentUserId =
-      getUserId(user);
+                          const currentUserId =
+                            getUserId(
+                              user
+                            );
 
-    const isMine =
-      senderId ===
-      currentUserId;
+                          const isMine =
+                            senderId ===
+                            currentUserId;
 
-    /*
-     * Show a date separator when:
-     *
-     * 1. This is the first message
-     * OR
-     * 2. The previous message is from
-     *    a different day.
-     */
+                          /*
+                           * Previous message
+                           */
 
-    const previousMessage =
-      index > 0
-        ? messages[index - 1]
-        : null;
+                          const previousMessage =
+                            index >
+                            0
+                              ? messages[
+                                  index -
+                                    1
+                                ]
+                              : null;
 
-    const shouldShowDateSeparator =
-      index === 0 ||
-      !isSameDay(
-        previousMessage.createdAt,
-        message.createdAt
-      );
+                          /*
+                           * Date separator
+                           */
 
-    return (
-      <div
-        key={
-          message._id
-        }
-      >
+                          const shouldShowDateSeparator =
+                            index ===
+                              0 ||
+                            !isSameDay(
+                              previousMessage.createdAt,
+                              message.createdAt
+                            );
 
-        {/* ============================ */}
-        {/* DATE SEPARATOR */}
-        {/* ============================ */}
+                          return (
+                            <div
+                              key={
+                                message._id
+                              }
+                            >
 
-        {shouldShowDateSeparator && (
-          <div className="message-date-separator">
-            <span>
-              {formatDateSeparator(
-                message.createdAt
-              )}
-            </span>
-          </div>
-        )}
+                              {/* ======================== */}
+                              {/* DATE SEPARATOR */}
+                              {/* ======================== */}
 
-        {/* ============================ */}
-        {/* MESSAGE */}
-        {/* ============================ */}
+                              {shouldShowDateSeparator && (
+                                <div className="message-date-separator">
 
-        <div
-          className={`message-row ${
-            isMine
-              ? "mine"
-              : "theirs"
-          }`}
-        >
+                                  <span>
+                                    {formatDateSeparator(
+                                      message.createdAt
+                                    )}
+                                  </span>
 
-          <div className="message-bubble">
+                                </div>
+                              )}
 
-            <p>
-              {
-                message.message
-              }
-            </p>
+                              {/* ======================== */}
+                              {/* MESSAGE */}
+                              {/* ======================== */}
 
-            <div className="message-meta">
+                              <div
+                                className={`message-row ${
+                                  isMine
+                                    ? "mine"
+                                    : "theirs"
+                                }`}
+                              >
 
-              <span>
-                {formatMessageTime(
-                  message.createdAt
-                )}
-              </span>
+                                <div className="message-bubble">
 
-              {isMine && (
-                <span
-                  className={`message-status ${
-                    message.read
-                      ? "seen"
-                      : message.delivered
-                      ? "delivered"
-                      : ""
-                  }`}
-                >
-                  {message.read
-                    ? "✓✓"
-                    : message.delivered
-                    ? "✓✓"
-                    : "✓"}
-                </span>
-              )}
+                                  <p>
+                                    {
+                                      message.message
+                                    }
+                                  </p>
 
-            </div>
+                                  <div className="message-meta">
 
-          </div>
+                                    <span>
+                                      {formatMessageTime(
+                                        message.createdAt
+                                      )}
+                                    </span>
 
-        </div>
+                                    {isMine && (
+                                      <span
+                                        className={`message-status ${
+                                          message.read
+                                            ? "seen"
+                                            : message.delivered
+                                            ? "delivered"
+                                            : ""
+                                        }`}
+                                      >
+                                        {message.read
+                                          ? "✓✓"
+                                          : message.delivered
+                                          ? "✓✓"
+                                          : "✓"}
+                                      </span>
+                                    )}
 
-      </div>
-    );
-  }
-)}
+                                  </div>
+
+                                </div>
+
+                              </div>
+
+                            </div>
+                          );
+                        }
+                      )}
+
+                      {/* ========================== */}
+                      {/* AUTO SCROLL TARGET */}
+                      {/* ========================== */}
+
+                      <div
+                        ref={
+                          messagesEndRef
+                        }
+                      />
 
                     </div>
+
                   )}
 
                 </div>
@@ -1694,7 +1885,9 @@ const formatDateSeparator = (date) => {
                       <span className="typing-dot"></span>
 
                       <span className="typing-text">
-                        {selectedUser.name}{" "}
+                        {
+                          selectedUser.name
+                        }{" "}
                         is typing...
                       </span>
 

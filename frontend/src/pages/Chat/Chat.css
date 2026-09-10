@@ -848,6 +848,10 @@
 }
 
 
+.messages-list {
+  scroll-behavior: smooth;
+}
+
 
 
 
