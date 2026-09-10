@@ -9,6 +9,8 @@ import Profile from "./pages/Profile/Profile";
 import FindSkills from "./pages/FindSkills/FindSkills";
 import StudentProfile from "./pages/StudentProfile/StudentProfile";
 import SwapRequests from "./pages/SwapRequests/SwapRequests";
+import Chat from "./pages/Chat/Chat";
+
 
 
 
@@ -69,6 +71,16 @@ const App = () => {
     </ProtectedRoute>
   }
 />
+
+<Route
+  path="/chat"
+  element={
+    <ProtectedRoute>
+      <Chat />
+    </ProtectedRoute>
+  }
+/>
+
 
 
         
