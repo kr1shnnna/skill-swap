@@ -57,6 +57,57 @@ const Navbar = () => {
     navigate("/");
   };
 
+
+  /*
+   * ------------------------------------------
+   * HOW IT WORKS
+   * ------------------------------------------
+   */
+
+  const handleHowItWorks = () => {
+    setMobileMenuOpen(false);
+
+    /*
+     * If already on Home page,
+     * directly scroll to the section.
+     */
+
+    if (window.location.pathname === "/") {
+      const section =
+        document.getElementById("how-it-works");
+
+      if (section) {
+        section.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+
+      return;
+    }
+
+    /*
+     * If on another page, first go Home.
+     * The Home page will then scroll
+     * to the How It Works section.
+     */
+
+    navigate("/");
+
+    setTimeout(() => {
+      const section =
+        document.getElementById("how-it-works");
+
+      if (section) {
+        section.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  };
+
+
   /*
    * ------------------------------------------
    * CLOSE DROPDOWN WHEN CLICKING OUTSIDE
@@ -88,9 +139,10 @@ const Navbar = () => {
     };
   }, []);
 
+
   /*
    * ------------------------------------------
-   * CLOSE MOBILE MENU WHEN SCREEN BECOMES DESKTOP
+   * CLOSE MOBILE MENU ON DESKTOP
    * ------------------------------------------
    */
 
@@ -114,6 +166,7 @@ const Navbar = () => {
     };
   }, []);
 
+
   /*
    * ------------------------------------------
    * CLOSE MOBILE MENU
@@ -123,6 +176,7 @@ const Navbar = () => {
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
+
 
   /*
    * ------------------------------------------
@@ -135,6 +189,7 @@ const Navbar = () => {
       (previous) => !previous
     );
   };
+
 
   /*
    * ------------------------------------------
@@ -157,25 +212,37 @@ const Navbar = () => {
         Skill <span>Swap</span>
       </Link>
 
+
       {/* ====================================== */}
-      {/* DESKTOP NAVIGATION LINKS */}
+      {/* DESKTOP NAVIGATION */}
       {/* ====================================== */}
 
       <div className="navbar-links">
 
-        <Link to="/">
+        <Link
+          to="/"
+          onClick={closeMobileMenu}
+        >
           Home
         </Link>
 
-        <Link to="/find-skills">
+        <Link
+          to="/find-skills"
+          onClick={closeMobileMenu}
+        >
           Find Skills
         </Link>
 
-        <Link to="/how-it-works">
+        <button
+          type="button"
+          className="navbar-link-button"
+          onClick={handleHowItWorks}
+        >
           How it Works
-        </Link>
+        </button>
 
       </div>
+
 
       {/* ====================================== */}
       {/* RIGHT SIDE */}
@@ -205,6 +272,7 @@ const Navbar = () => {
               )}
             </Link>
 
+
             {/* ================================= */}
             {/* SWAP REQUEST NOTIFICATION */}
             {/* ================================= */}
@@ -224,6 +292,7 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
 
             {/* ================================= */}
             {/* USER DROPDOWN */}
@@ -256,14 +325,13 @@ const Navbar = () => {
                 />
               </button>
 
+
               {/* ============================= */}
-              {/* DROPDOWN MENU */}
+              {/* DROPDOWN */}
               {/* ============================= */}
 
               {dropdownOpen && (
                 <div className="dropdown-menu">
-
-                  {/* Profile */}
 
                   <Link
                     to="/profile"
@@ -276,7 +344,6 @@ const Navbar = () => {
                     My Profile
                   </Link>
 
-                  {/* Dashboard */}
 
                   <Link
                     to="/dashboard"
@@ -289,11 +356,9 @@ const Navbar = () => {
                     Dashboard
                   </Link>
 
-                  {/* Divider */}
 
                   <div className="dropdown-divider"></div>
 
-                  {/* Logout */}
 
                   <button
                     className="dropdown-item logout-item"
@@ -311,20 +376,12 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            {/* ================================= */}
-            {/* LOGIN */}
-            {/* ================================= */}
-
             <Link
               to="/login"
               className="login-btn"
             >
               Login
             </Link>
-
-            {/* ================================= */}
-            {/* SIGN UP */}
-            {/* ================================= */}
 
             <Link
               to="/register"
@@ -337,8 +394,9 @@ const Navbar = () => {
 
       </div>
 
+
       {/* ====================================== */}
-      {/* MOBILE HAMBURGER */}
+      {/* MOBILE MENU BUTTON */}
       {/* ====================================== */}
 
       <button
@@ -353,6 +411,7 @@ const Navbar = () => {
           <FaBars />
         )}
       </button>
+
 
       {/* ====================================== */}
       {/* MOBILE MENU */}
@@ -370,6 +429,7 @@ const Navbar = () => {
               Home
             </Link>
 
+
             <Link
               to="/find-skills"
               onClick={closeMobileMenu}
@@ -377,14 +437,17 @@ const Navbar = () => {
               Find Skills
             </Link>
 
-            <Link
-              to="/how-it-works"
-              onClick={closeMobileMenu}
+
+            <button
+              type="button"
+              className="mobile-nav-link-button"
+              onClick={handleHowItWorks}
             >
               How it Works
-            </Link>
+            </button>
 
           </div>
+
 
           {/* ================================= */}
           {/* MOBILE AUTHENTICATED ACTIONS */}
@@ -409,6 +472,7 @@ const Navbar = () => {
 
               </div>
 
+
               <Link
                 to="/chat"
                 className="mobile-action-link"
@@ -420,16 +484,15 @@ const Navbar = () => {
                   Messages
                 </span>
 
-                {unreadMessageCount >
-                  0 && (
+                {unreadMessageCount > 0 && (
                   <span className="mobile-badge">
-                    {unreadMessageCount >
-                    9
+                    {unreadMessageCount > 9
                       ? "9+"
                       : unreadMessageCount}
                   </span>
                 )}
               </Link>
+
 
               <Link
                 to="/swap-requests"
@@ -442,16 +505,15 @@ const Navbar = () => {
                   Swap Requests
                 </span>
 
-                {pendingSwapCount >
-                  0 && (
+                {pendingSwapCount > 0 && (
                   <span className="mobile-badge">
-                    {pendingSwapCount >
-                    9
+                    {pendingSwapCount > 9
                       ? "9+"
                       : pendingSwapCount}
                   </span>
                 )}
               </Link>
+
 
               <Link
                 to="/profile"
@@ -465,6 +527,7 @@ const Navbar = () => {
                 </span>
               </Link>
 
+
               <Link
                 to="/dashboard"
                 className="mobile-action-link"
@@ -476,6 +539,7 @@ const Navbar = () => {
                   Dashboard
                 </span>
               </Link>
+
 
               <button
                 className="mobile-action-link mobile-logout"
