@@ -83,6 +83,7 @@ io.on("connection", (socket) => {
   socket.on(
     "registerUser",
     async (userId) => {
+      socket.userId=userId;
       try {
         // Register the user's socket
         addUser(userId, socket.id);
@@ -150,6 +151,61 @@ io.on("connection", (socket) => {
       }
     }
   );
+
+   // ------------------------------------------
+  // TYPING INDICATOR
+  // ------------------------------------------
+
+  socket.on(
+    "typing",
+    ({ receiverId }) => {
+      if (!receiverId) {
+        return;
+      }
+
+      const receiverSocketId =
+        getUserSocket(receiverId);
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit(
+          "userTyping",
+          {
+            senderId:
+              socket.userId,
+          }
+        );
+      }
+    }
+  );
+
+  // ------------------------------------------
+  // STOP TYPING
+  // ------------------------------------------
+
+  socket.on(
+    "stopTyping",
+    ({ receiverId }) => {
+      if (!receiverId) {
+        return;
+      }
+
+      const receiverSocketId =
+        getUserSocket(receiverId);
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit(
+          "userStoppedTyping",
+          {
+            senderId:
+              socket.userId,
+          }
+        );
+      }
+    }
+  );
+  
+
+
 
   // ----------------------------------------
   // HANDLE DISCONNECT

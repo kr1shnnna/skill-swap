@@ -81,6 +81,15 @@ export const AuthProvider = ({ children }) => {
   ] = useState([]);
 
   // ------------------------------------------
+  // TYPING USER
+  // ------------------------------------------
+
+  const [
+    typingUserId,
+    setTypingUserId,
+  ] = useState(null);
+
+  // ------------------------------------------
   // SOCKET.IO
   // ------------------------------------------
 
@@ -132,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     setLastReceivedMessage(null);
     setDeliveredMessageIds([]);
     setSeenMessageIds([]);
+    setTypingUserId(null);
   };
 
   // ------------------------------------------
@@ -155,6 +165,7 @@ export const AuthProvider = ({ children }) => {
     setLastReceivedMessage(null);
     setDeliveredMessageIds([]);
     setSeenMessageIds([]);
+    setTypingUserId(null);
   };
 
   // ------------------------------------------
@@ -241,6 +252,7 @@ export const AuthProvider = ({ children }) => {
       console.error(
         "Unable to get logged-in user ID."
       );
+
       return;
     }
 
@@ -271,13 +283,10 @@ export const AuthProvider = ({ children }) => {
     socket.on(
       "receiveMessage",
       async (newMessage) => {
-        // Store latest incoming message
-        // for Chat.jsx.
         setLastReceivedMessage(
           newMessage
         );
 
-        // Increase global unread count.
         setUnreadMessageCount(
           (previousCount) =>
             previousCount + 1
@@ -361,6 +370,39 @@ export const AuthProvider = ({ children }) => {
     );
 
     // ----------------------------------------
+    // USER TYPING
+    // ----------------------------------------
+
+    socket.on(
+      "userTyping",
+      ({ senderId }) => {
+        setTypingUserId(
+          senderId?.toString() || null
+        );
+      }
+    );
+
+    // ----------------------------------------
+    // USER STOPPED TYPING
+    // ----------------------------------------
+
+    socket.on(
+      "userStoppedTyping",
+      ({ senderId }) => {
+        const stoppedUserId =
+          senderId?.toString();
+
+        setTypingUserId(
+          (previousId) =>
+            previousId?.toString() ===
+            stoppedUserId
+              ? null
+              : previousId
+        );
+      }
+    );
+
+    // ----------------------------------------
     // SOCKET ERROR
     // ----------------------------------------
 
@@ -381,8 +423,53 @@ export const AuthProvider = ({ children }) => {
     return () => {
       socket.disconnect();
       socketRef.current = null;
+      setTypingUserId(null);
     };
   }, [user, token]);
+
+  // ------------------------------------------
+  // START TYPING
+  // ------------------------------------------
+
+  const startTyping = (receiverId) => {
+    if (!socketRef.current) {
+      return;
+    }
+
+    if (!receiverId) {
+      return;
+    }
+
+    socketRef.current.emit(
+      "typing",
+      {
+        receiverId:
+          receiverId.toString(),
+      }
+    );
+  };
+
+  // ------------------------------------------
+  // STOP TYPING
+  // ------------------------------------------
+
+  const stopTyping = (receiverId) => {
+    if (!socketRef.current) {
+      return;
+    }
+
+    if (!receiverId) {
+      return;
+    }
+
+    socketRef.current.emit(
+      "stopTyping",
+      {
+        receiverId:
+          receiverId.toString(),
+      }
+    );
+  };
 
   // ------------------------------------------
   // FETCH INITIAL SWAP COUNT
@@ -428,6 +515,11 @@ export const AuthProvider = ({ children }) => {
 
     // Seen messages
     seenMessageIds,
+
+    // Typing indicator
+    typingUserId,
+    startTyping,
+    stopTyping,
   };
 
   return (

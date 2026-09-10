@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -21,6 +22,11 @@ const Chat = () => {
     lastReceivedMessage,
     deliveredMessageIds,
     seenMessageIds,
+
+    // Typing
+    typingUserId,
+    startTyping,
+    stopTyping,
   } = useContext(AuthContext);
 
   const [conversations, setConversations] =
@@ -46,6 +52,18 @@ const Chat = () => {
 
   const [error, setError] =
     useState("");
+
+  /*
+   * ------------------------------------------
+   * TYPING
+   * ------------------------------------------
+   */
+
+  const typingTimeoutRef =
+    useRef(null);
+
+  const isTypingRef =
+    useRef(false);
 
   /*
    * ------------------------------------------
@@ -86,6 +104,112 @@ const Chat = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  /*
+   * ------------------------------------------
+   * CLEAR TYPING STATE
+   * ------------------------------------------
+   */
+
+  const clearTypingState = () => {
+    const receiverId =
+      getUserId(selectedUser);
+
+    if (
+      receiverId &&
+      isTypingRef.current
+    ) {
+      stopTyping(receiverId);
+    }
+
+    isTypingRef.current = false;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(
+        typingTimeoutRef.current
+      );
+
+      typingTimeoutRef.current = null;
+    }
+  };
+
+  /*
+   * ------------------------------------------
+   * HANDLE MESSAGE INPUT
+   * ------------------------------------------
+   */
+
+  const handleMessageChange = (event) => {
+    const value =
+      event.target.value;
+
+    setMessageText(value);
+
+    const receiverId =
+      getUserId(selectedUser);
+
+    if (!receiverId) {
+      return;
+    }
+
+    /*
+     * Empty input means the user
+     * has stopped typing.
+     */
+
+    if (!value.trim()) {
+      if (isTypingRef.current) {
+        stopTyping(receiverId);
+
+        isTypingRef.current =
+          false;
+      }
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+
+        typingTimeoutRef.current = null;
+      }
+
+      return;
+    }
+
+    /*
+     * Start typing.
+     *
+     * We only send the "typing" event
+     * once instead of sending it on
+     * every keystroke.
+     */
+
+    if (!isTypingRef.current) {
+      startTyping(receiverId);
+
+      isTypingRef.current = true;
+    }
+
+    /*
+     * Reset the timer every time
+     * the user types.
+     */
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(
+        typingTimeoutRef.current
+      );
+    }
+
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        stopTyping(receiverId);
+
+        isTypingRef.current = false;
+
+        typingTimeoutRef.current = null;
+      }, 1000);
   };
 
   /*
@@ -395,14 +519,6 @@ const Chat = () => {
                 latestMessage:
                   lastReceivedMessage,
 
-                /*
-                 * Open conversation:
-                 *     unread = 0
-                 *
-                 * Closed conversation:
-                 *     increase unread count
-                 */
-
                 unreadCount:
                   isCurrentConversation
                     ? 0
@@ -640,6 +756,13 @@ const Chat = () => {
   const handleSelectConversation = async (
     conversation
   ) => {
+    /*
+     * Stop typing in the previous
+     * conversation.
+     */
+
+    clearTypingState();
+
     const conversationUser =
       conversation.user;
 
@@ -815,6 +938,22 @@ const Chat = () => {
         return;
       }
 
+      /*
+       * Stop typing before sending.
+       */
+
+      stopTyping(receiverId);
+
+      isTypingRef.current = false;
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+
+        typingTimeoutRef.current = null;
+      }
+
       try {
         setSendingMessage(true);
 
@@ -843,9 +982,9 @@ const Chat = () => {
 
         if (newMessage) {
           /*
-           * If the delivery event arrived
+           * If delivery event arrived
            * before this REST response,
-           * preserve the delivered state.
+           * preserve delivered state.
            */
 
           const isAlreadyDelivered =
@@ -973,6 +1112,22 @@ const Chat = () => {
         handleSendMessage();
       }
     };
+
+  /*
+   * ------------------------------------------
+   * CLEANUP TYPING
+   * ------------------------------------------
+   */
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+      }
+    };
+  }, []);
 
   /*
    * ------------------------------------------
@@ -1134,8 +1289,6 @@ const Chat = () => {
 
                         <div className="conversation-info">
 
-                          {/* USER + TIME */}
-
                           <div className="conversation-top-row">
 
                             <h3>
@@ -1152,8 +1305,6 @@ const Chat = () => {
                             )}
 
                           </div>
-
-                          {/* MESSAGE PREVIEW + UNREAD */}
 
                           <div className="conversation-bottom-row">
 
@@ -1199,10 +1350,6 @@ const Chat = () => {
           {/* ================================== */}
 
           <section className="chat-area">
-
-            {/* -------------------------------- */}
-            {/* NO SELECTED CONVERSATION */}
-            {/* -------------------------------- */}
 
             {!selectedUser ? (
 
@@ -1360,6 +1507,31 @@ const Chat = () => {
                 </div>
 
                 {/* ============================ */}
+                {/* TYPING INDICATOR */}
+                {/* ============================ */}
+
+                {typingUserId &&
+                  typingUserId.toString() ===
+                    getUserId(
+                      selectedUser
+                    )?.toString() && (
+                    <div className="typing-indicator">
+
+                      <span className="typing-dot"></span>
+
+                      <span className="typing-dot"></span>
+
+                      <span className="typing-dot"></span>
+
+                      <span className="typing-text">
+                        {selectedUser.name}{" "}
+                        is typing...
+                      </span>
+
+                    </div>
+                  )}
+
+                {/* ============================ */}
                 {/* MESSAGE INPUT */}
                 {/* ============================ */}
 
@@ -1369,10 +1541,8 @@ const Chat = () => {
                     type="text"
                     placeholder={`Message ${selectedUser.name}...`}
                     value={messageText}
-                    onChange={(event) =>
-                      setMessageText(
-                        event.target.value
-                      )
+                    onChange={
+                      handleMessageChange
                     }
                     onKeyDown={
                       handleMessageKeyDown
