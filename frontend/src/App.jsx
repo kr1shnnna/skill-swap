@@ -8,6 +8,8 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Profile from "./pages/Profile/Profile";
 import FindSkills from "./pages/FindSkills/FindSkills";
 import StudentProfile from "./pages/StudentProfile/StudentProfile";
+import SwapRequests from "./pages/SwapRequests/SwapRequests";
+
 
 
 
@@ -58,6 +60,16 @@ const App = () => {
     </ProtectedRoute>
   }
 />
+
+<Route
+  path="/swap-requests"
+  element={
+    <ProtectedRoute>
+      <SwapRequests />
+    </ProtectedRoute>
+  }
+/>
+
 
         
 

@@ -5,6 +5,7 @@ import {
   FaUserEdit,
   FaChalkboardTeacher,
   FaBookOpen,
+  FaExchangeAlt
 } from "react-icons/fa";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -129,6 +130,17 @@ const Dashboard = () => {
           <h2>Quick Actions</h2>
 
           <div className="quick-actions-grid">
+            <Link to="/swap-requests" className="quick-action-card">
+  <div className="action-icon">
+    <FaExchangeAlt />
+  </div>
+
+  <h3>Swap Requests</h3>
+
+  <p>
+    View incoming requests and track the requests you've sent.
+  </p>
+</Link>
 
             <Link
               to="/find-skills"

@@ -1,0 +1,271 @@
+.swap-requests-page {
+  min-height: calc(100vh - 80px);
+  background: #f8fafc;
+  padding: 50px 20px;
+}
+
+.swap-requests-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Header */
+
+.swap-requests-header {
+  margin-bottom: 40px;
+}
+
+.swap-requests-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.swap-requests-header h1 {
+  font-size: 36px;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.swap-requests-header h1 span {
+  color: #2563eb;
+}
+
+.swap-requests-header p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Error */
+
+.swap-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 14px 18px;
+  border-radius: 9px;
+  margin-bottom: 25px;
+}
+
+/* Section */
+
+.requests-section {
+  margin-bottom: 40px;
+}
+
+.requests-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.requests-section-header h2 {
+  color: #111827;
+  font-size: 23px;
+  margin-bottom: 5px;
+}
+
+.requests-section-header p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.request-count {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Request list */
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.request-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+}
+
+.request-user {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.request-user-icon {
+  font-size: 48px;
+  color: #2563eb;
+}
+
+.request-user h3 {
+  color: #111827;
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.request-user p {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* Actions */
+
+.request-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.accept-btn,
+.reject-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.accept-btn {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.accept-btn:hover {
+  background: #bbf7d0;
+}
+
+.reject-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.reject-btn:hover {
+  background: #fecaca;
+}
+
+.accept-btn:disabled,
+.reject-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status */
+
+.request-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.request-status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.request-status.accepted {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.request-status.rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Empty */
+
+.empty-requests {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 40px 25px;
+  text-align: center;
+}
+
+.empty-requests > svg {
+  font-size: 42px;
+  color: #93c5fd;
+  margin-bottom: 15px;
+}
+
+.empty-requests h3 {
+  color: #111827;
+  margin-bottom: 7px;
+}
+
+.empty-requests p {
+  max-width: 500px;
+  margin: 0 auto;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Loading */
+
+.swap-requests-loading {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+/* Mobile */
+
+@media (max-width: 650px) {
+  .swap-requests-page {
+    padding: 35px 15px;
+  }
+
+  .swap-requests-header h1 {
+    font-size: 29px;
+  }
+
+  .request-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .request-actions {
+    width: 100%;
+  }
+
+  .accept-btn,
+  .reject-btn {
+    flex: 1;
+  }
+}
