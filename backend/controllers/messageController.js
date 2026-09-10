@@ -71,7 +71,6 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { userId } = req.params;
-
     const loggedInUserId = req.user.userId;
 
     const messages = await Message.find({
@@ -87,18 +86,34 @@ const getMessages = async (req, res) => {
       ],
     }).sort({ createdAt: 1 });
 
+    /*
+     * Count unread messages sent by the
+     * other user to the logged-in user.
+     */
+    const unreadCount =
+      await Message.countDocuments({
+        sender: userId,
+        receiver: loggedInUserId,
+        read: false,
+      });
+
     res.status(200).json({
       count: messages.length,
+      unreadCount,
       messages,
     });
   } catch (error) {
-    console.error("Get messages error:", error.message);
+    console.error(
+      "Get messages error:",
+      error.message
+    );
 
     res.status(500).json({
       message: "Server error",
     });
   }
 };
+
 
 
 module.exports = {

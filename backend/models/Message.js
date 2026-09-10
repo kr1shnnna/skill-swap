@@ -19,13 +19,21 @@ const messageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    // Tracks whether the receiver has opened/read the message
+    read: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Message = mongoose.model("Message", messageSchema);
+const Message = mongoose.model(
+  "Message",
+  messageSchema
+);
 
 module.exports = Message;
-

@@ -184,6 +184,16 @@ const Chat = () => {
                 const messageData =
                   messageResponse.data;
 
+                  console.log(
+  "Conversation:",
+  conversation.user.name,
+  "Unread:",
+  messageData.unreadCount,
+  "Messages:",
+  messageData.messages
+);
+
+
                 const conversationMessages =
                   messageData.messages || [];
 
