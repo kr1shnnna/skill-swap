@@ -27,6 +27,9 @@ const Chat = () => {
     typingUserId,
     startTyping,
     stopTyping,
+
+    // Online / Offline
+    onlineUserIds,
   } = useContext(AuthContext);
 
   const [conversations, setConversations] =
@@ -96,14 +99,21 @@ const Chat = () => {
 
     const messageDate = new Date(date);
 
-    if (Number.isNaN(messageDate.getTime())) {
+    if (
+      Number.isNaN(
+        messageDate.getTime()
+      )
+    ) {
       return "";
     }
 
-    return messageDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return messageDate.toLocaleTimeString(
+      [],
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
   };
 
   /*
@@ -154,8 +164,7 @@ const Chat = () => {
     }
 
     /*
-     * Empty input means the user
-     * has stopped typing.
+     * Empty input means typing stopped.
      */
 
     if (!value.trim()) {
@@ -179,10 +188,6 @@ const Chat = () => {
 
     /*
      * Start typing.
-     *
-     * We only send the "typing" event
-     * once instead of sending it on
-     * every keystroke.
      */
 
     if (!isTypingRef.current) {
@@ -192,8 +197,7 @@ const Chat = () => {
     }
 
     /*
-     * Reset the timer every time
-     * the user types.
+     * Reset typing timer.
      */
 
     if (typingTimeoutRef.current) {
@@ -226,172 +230,189 @@ const Chat = () => {
     fetchConversations();
   }, [user]);
 
-  const fetchConversations = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  const fetchConversations =
+    async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-      const response = await api.get(
-        "/swaps/accepted"
-      );
+        const response =
+          await api.get(
+            "/swaps/accepted"
+          );
 
-      const swaps =
-        response.data.swaps || [];
+        const swaps =
+          response.data.swaps || [];
 
-      const currentUserId =
-        getUserId(user);
+        const currentUserId =
+          getUserId(user);
 
-      const uniqueUsers = [];
-      const seenUserIds = new Set();
+        const uniqueUsers = [];
+        const seenUserIds = new Set();
 
-      swaps.forEach((swap) => {
-        const senderId =
-          getUserId(swap.sender);
+        swaps.forEach((swap) => {
+          const senderId =
+            getUserId(swap.sender);
 
-        const receiverId =
-          getUserId(swap.receiver);
+          const receiverId =
+            getUserId(swap.receiver);
 
-        let otherUser = null;
+          let otherUser = null;
+
+          /*
+           * Current user is sender.
+           */
+
+          if (
+            senderId ===
+            currentUserId
+          ) {
+            otherUser =
+              swap.receiver;
+          }
+
+          /*
+           * Current user is receiver.
+           */
+
+          else if (
+            receiverId ===
+            currentUserId
+          ) {
+            otherUser =
+              swap.sender;
+          }
+
+          if (!otherUser) {
+            return;
+          }
+
+          const otherUserId =
+            getUserId(otherUser);
+
+          if (!otherUserId) {
+            return;
+          }
+
+          /*
+           * Prevent duplicate conversations.
+           */
+
+          if (
+            !seenUserIds.has(
+              otherUserId
+            )
+          ) {
+            seenUserIds.add(
+              otherUserId
+            );
+
+            uniqueUsers.push({
+              user: otherUser,
+              latestMessage: null,
+              unreadCount: 0,
+            });
+          }
+        });
 
         /*
-         * Current user is sender
+         * Fetch messages for each conversation.
          */
 
-        if (senderId === currentUserId) {
-          otherUser = swap.receiver;
-        }
+        const conversationsWithMessages =
+          await Promise.all(
+            uniqueUsers.map(
+              async (
+                conversation
+              ) => {
+                try {
+                  const otherUserId =
+                    getUserId(
+                      conversation.user
+                    );
 
-        /*
-         * Current user is receiver
-         */
+                  const messageResponse =
+                    await api.get(
+                      `/messages/${otherUserId}`
+                    );
 
-        else if (
-          receiverId === currentUserId
-        ) {
-          otherUser = swap.sender;
-        }
+                  const messageData =
+                    messageResponse.data;
 
-        if (!otherUser) {
-          return;
-        }
+                  const conversationMessages =
+                    messageData.messages ||
+                    [];
 
-        const otherUserId =
-          getUserId(otherUser);
+                  const latestMessage =
+                    conversationMessages.length >
+                    0
+                      ? conversationMessages[
+                          conversationMessages.length -
+                            1
+                        ]
+                      : null;
 
-        if (!otherUserId) {
-          return;
-        }
-
-        /*
-         * Prevent duplicate conversations
-         */
-
-        if (
-          !seenUserIds.has(otherUserId)
-        ) {
-          seenUserIds.add(otherUserId);
-
-          uniqueUsers.push({
-            user: otherUser,
-            latestMessage: null,
-            unreadCount: 0,
-          });
-        }
-      });
-
-      /*
-       * Fetch messages for each conversation.
-       */
-
-      const conversationsWithMessages =
-        await Promise.all(
-          uniqueUsers.map(
-            async (conversation) => {
-              try {
-                const otherUserId =
-                  getUserId(
-                    conversation.user
+                  return {
+                    ...conversation,
+                    latestMessage,
+                    unreadCount:
+                      Number(
+                        messageData.unreadCount
+                      ) || 0,
+                  };
+                } catch (error) {
+                  console.error(
+                    "Fetch conversation messages error:",
+                    error
                   );
 
-                const messageResponse =
-                  await api.get(
-                    `/messages/${otherUserId}`
-                  );
-
-                const messageData =
-                  messageResponse.data;
-
-                const conversationMessages =
-                  messageData.messages || [];
-
-                const latestMessage =
-                  conversationMessages.length >
-                  0
-                    ? conversationMessages[
-                        conversationMessages.length -
-                          1
-                      ]
-                    : null;
-
-                return {
-                  ...conversation,
-                  latestMessage,
-                  unreadCount:
-                    Number(
-                      messageData.unreadCount
-                    ) || 0,
-                };
-              } catch (error) {
-                console.error(
-                  "Fetch conversation messages error:",
-                  error
-                );
-
-                return conversation;
+                  return conversation;
+                }
               }
-            }
-          )
+            )
+          );
+
+        /*
+         * Sort by newest message.
+         */
+
+        conversationsWithMessages.sort(
+          (a, b) => {
+            const dateA =
+              a.latestMessage
+                ? new Date(
+                    a.latestMessage.createdAt
+                  ).getTime()
+                : 0;
+
+            const dateB =
+              b.latestMessage
+                ? new Date(
+                    b.latestMessage.createdAt
+                  ).getTime()
+                : 0;
+
+            return dateB - dateA;
+          }
         );
 
-      /*
-       * Sort by newest message.
-       */
+        setConversations(
+          conversationsWithMessages
+        );
+      } catch (error) {
+        console.error(
+          "Fetch conversations error:",
+          error
+        );
 
-      conversationsWithMessages.sort(
-        (a, b) => {
-          const dateA = a.latestMessage
-            ? new Date(
-                a.latestMessage.createdAt
-              ).getTime()
-            : 0;
-
-          const dateB = b.latestMessage
-            ? new Date(
-                b.latestMessage.createdAt
-              ).getTime()
-            : 0;
-
-          return dateB - dateA;
-        }
-      );
-
-      setConversations(
-        conversationsWithMessages
-      );
-    } catch (error) {
-      console.error(
-        "Fetch conversations error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-          "Unable to load conversations."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        setError(
+          error.response?.data?.message ||
+            "Unable to load conversations."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   /*
    * ------------------------------------------
@@ -404,9 +425,10 @@ const Chat = () => {
       return;
     }
 
-    const senderId = getUserId(
-      lastReceivedMessage.sender
-    );
+    const senderId =
+      getUserId(
+        lastReceivedMessage.sender
+      );
 
     if (!senderId) {
       return;
@@ -419,34 +441,32 @@ const Chat = () => {
       selectedUserId === senderId;
 
     /*
-     * ------------------------------------------
      * MESSAGE RECEIVED IN OPEN CHAT
-     * ------------------------------------------
      */
 
     if (isCurrentConversation) {
-      setMessages((previousMessages) => {
-        const alreadyExists =
-          previousMessages.some(
-            (message) =>
-              message._id ===
-              lastReceivedMessage._id
-          );
+      setMessages(
+        (previousMessages) => {
+          const alreadyExists =
+            previousMessages.some(
+              (message) =>
+                message._id ===
+                lastReceivedMessage._id
+            );
 
-        if (alreadyExists) {
-          return previousMessages;
+          if (alreadyExists) {
+            return previousMessages;
+          }
+
+          return [
+            ...previousMessages,
+            lastReceivedMessage,
+          ];
         }
-
-        return [
-          ...previousMessages,
-          lastReceivedMessage,
-        ];
-      });
+      );
 
       /*
-       * Since this conversation is already
-       * open, immediately mark the new
-       * message as read in MongoDB.
+       * Immediately mark as read.
        */
 
       api
@@ -479,9 +499,7 @@ const Chat = () => {
     }
 
     /*
-     * ------------------------------------------
      * UPDATE SIDEBAR
-     * ------------------------------------------
      */
 
     setConversations(
@@ -596,8 +614,7 @@ const Chat = () => {
     );
 
     /*
-     * Also update the latest message
-     * shown in the conversation sidebar.
+     * Update sidebar latest message.
      */
 
     setConversations(
@@ -612,7 +629,9 @@ const Chat = () => {
 
             if (
               deliveredMessageIds.includes(
-                conversation.latestMessage._id
+                conversation
+                  .latestMessage
+                  ._id
               )
             ) {
               return {
@@ -645,8 +664,7 @@ const Chat = () => {
     }
 
     /*
-     * Update messages currently
-     * displayed in the chat.
+     * Update currently displayed messages.
      */
 
     setMessages(
@@ -670,8 +688,7 @@ const Chat = () => {
     );
 
     /*
-     * Also update the latest message
-     * shown in the conversation sidebar.
+     * Update sidebar latest message.
      */
 
     setConversations(
@@ -686,7 +703,9 @@ const Chat = () => {
 
             if (
               seenMessageIds.includes(
-                conversation.latestMessage._id
+                conversation
+                  .latestMessage
+                  ._id
               )
             ) {
               return {
@@ -715,9 +734,7 @@ const Chat = () => {
   ) => {
     try {
       setMessagesLoading(true);
-
       setMessages([]);
-
       setError("");
 
       const response =
@@ -753,118 +770,57 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const handleSelectConversation = async (
-    conversation
-  ) => {
-    /*
-     * Stop typing in the previous
-     * conversation.
-     */
+  const handleSelectConversation =
+    async (conversation) => {
+      /*
+       * Stop typing in previous chat.
+       */
 
-    clearTypingState();
+      clearTypingState();
 
-    const conversationUser =
-      conversation.user;
+      const conversationUser =
+        conversation.user;
 
-    const otherUserId =
-      getUserId(conversationUser);
+      const otherUserId =
+        getUserId(
+          conversationUser
+        );
 
-    setSelectedUser(
-      conversationUser
-    );
-
-    setMessageText("");
-
-    setError("");
-
-    if (!otherUserId) {
-      return;
-    }
-
-    /*
-     * Remember unread count before
-     * marking messages as read.
-     */
-
-    const unreadCountBeforeRead =
-      Number(
-        conversation.unreadCount
-      ) || 0;
-
-    /*
-     * Immediately clear sidebar badge.
-     */
-
-    if (unreadCountBeforeRead > 0) {
-      setConversations(
-        (previousConversations) =>
-          previousConversations.map(
-            (item) => {
-              if (
-                getUserId(item.user) ===
-                otherUserId
-              ) {
-                return {
-                  ...item,
-                  unreadCount: 0,
-                };
-              }
-
-              return item;
-            }
-          )
-      );
-    }
-
-    /*
-     * Fetch conversation.
-     */
-
-    const messageData =
-      await fetchMessages(
-        otherUserId
+      setSelectedUser(
+        conversationUser
       );
 
-    /*
-     * Backend unread count.
-     */
+      setMessageText("");
+      setError("");
 
-    const backendUnreadCount =
-      Number(
-        messageData?.unreadCount
-      ) || 0;
+      if (!otherUserId) {
+        return;
+      }
 
-    /*
-     * Mark unread messages as read.
-     */
+      /*
+       * Remember unread count.
+       */
 
-    if (
-      backendUnreadCount > 0 ||
-      unreadCountBeforeRead > 0
-    ) {
-      try {
-        const response =
-          await api.patch(
-            `/messages/${otherUserId}/read`
-          );
+      const unreadCountBeforeRead =
+        Number(
+          conversation.unreadCount
+        ) || 0;
 
-        const updatedCount =
-          Number(
-            response.data.updatedCount
-          ) || 0;
+      /*
+       * Immediately clear sidebar badge.
+       */
 
-        /*
-         * Keep conversation read
-         * in sidebar.
-         */
-
+      if (
+        unreadCountBeforeRead > 0
+      ) {
         setConversations(
           (previousConversations) =>
             previousConversations.map(
               (item) => {
                 if (
-                  getUserId(item.user) ===
-                  otherUserId
+                  getUserId(
+                    item.user
+                  ) === otherUserId
                 ) {
                   return {
                     ...item,
@@ -876,29 +832,87 @@ const Chat = () => {
               }
             )
         );
+      }
 
-        /*
-         * Decrease Navbar unread count.
-         */
+      /*
+       * Fetch messages.
+       */
 
-        if (updatedCount > 0) {
-          setUnreadMessageCount(
-            (previousCount) =>
-              Math.max(
-                0,
-                previousCount -
-                  updatedCount
+      const messageData =
+        await fetchMessages(
+          otherUserId
+        );
+
+      const backendUnreadCount =
+        Number(
+          messageData?.unreadCount
+        ) || 0;
+
+      /*
+       * Mark messages as read.
+       */
+
+      if (
+        backendUnreadCount > 0 ||
+        unreadCountBeforeRead > 0
+      ) {
+        try {
+          const response =
+            await api.patch(
+              `/messages/${otherUserId}/read`
+            );
+
+          const updatedCount =
+            Number(
+              response.data.updatedCount
+            ) || 0;
+
+          /*
+           * Keep sidebar read.
+           */
+
+          setConversations(
+            (previousConversations) =>
+              previousConversations.map(
+                (item) => {
+                  if (
+                    getUserId(
+                      item.user
+                    ) === otherUserId
+                  ) {
+                    return {
+                      ...item,
+                      unreadCount: 0,
+                    };
+                  }
+
+                  return item;
+                }
               )
           );
+
+          /*
+           * Update navbar count.
+           */
+
+          if (updatedCount > 0) {
+            setUnreadMessageCount(
+              (previousCount) =>
+                Math.max(
+                  0,
+                  previousCount -
+                    updatedCount
+                )
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Mark messages as read error:",
+            error
+          );
         }
-      } catch (error) {
-        console.error(
-          "Mark messages as read error:",
-          error
-        );
       }
-    }
-  };
+    };
 
   /*
    * ------------------------------------------
@@ -911,17 +925,9 @@ const Chat = () => {
       const trimmedMessage =
         messageText.trim();
 
-      /*
-       * Don't send empty messages.
-       */
-
       if (!trimmedMessage) {
         return;
       }
-
-      /*
-       * No selected user.
-       */
 
       if (!selectedUser) {
         return;
@@ -939,7 +945,7 @@ const Chat = () => {
       }
 
       /*
-       * Stop typing before sending.
+       * Stop typing.
        */
 
       stopTyping(receiverId);
@@ -956,7 +962,6 @@ const Chat = () => {
 
       try {
         setSendingMessage(true);
-
         setError("");
 
         /*
@@ -977,16 +982,10 @@ const Chat = () => {
           response.data.newMessage;
 
         /*
-         * Add sent message immediately.
+         * Add sent message.
          */
 
         if (newMessage) {
-          /*
-           * If delivery event arrived
-           * before this REST response,
-           * preserve delivered state.
-           */
-
           const isAlreadyDelivered =
             deliveredMessageIds?.includes(
               newMessage._id
@@ -1153,6 +1152,7 @@ const Chat = () => {
 
   return (
     <main className="chat-page">
+
       <div className="chat-container">
 
         {/* ================================== */}
@@ -1160,7 +1160,9 @@ const Chat = () => {
         {/* ================================== */}
 
         <div className="chat-page-header">
+
           <div>
+
             <p className="chat-page-tag">
               CONNECT • LEARN • EXCHANGE
             </p>
@@ -1173,7 +1175,9 @@ const Chat = () => {
               Continue your skill exchange
               conversations.
             </p>
+
           </div>
+
         </div>
 
         {/* ================================== */}
@@ -1201,6 +1205,7 @@ const Chat = () => {
             <div className="conversation-header">
 
               <div>
+
                 <h2>
                   Conversations
                 </h2>
@@ -1212,15 +1217,14 @@ const Chat = () => {
                     ? "s"
                     : ""}
                 </p>
+
               </div>
 
               <FaComments />
 
             </div>
 
-            {/* ----------------------------- */}
             {/* NO CONVERSATIONS */}
-            {/* ----------------------------- */}
 
             {conversations.length === 0 ? (
 
@@ -1242,9 +1246,7 @@ const Chat = () => {
 
             ) : (
 
-              /* --------------------------- */
               /* CONVERSATION LIST */
-              /* --------------------------- */
 
               <div className="conversation-list">
 
@@ -1371,6 +1373,7 @@ const Chat = () => {
             ) : (
 
               <>
+
                 {/* ============================ */}
                 {/* CHAT HEADER */}
                 {/* ============================ */}
@@ -1385,8 +1388,30 @@ const Chat = () => {
                       {selectedUser.name}
                     </h2>
 
-                    <p>
-                      Skill Exchange Partner
+                    {/* ONLINE / OFFLINE */}
+
+                    <p
+                      className={
+                        onlineUserIds.includes(
+                          getUserId(
+                            selectedUser
+                          )
+                        )
+                          ? "user-status online"
+                          : "user-status offline"
+                      }
+                    >
+
+                      <span className="status-dot"></span>
+
+                      {onlineUserIds.includes(
+                        getUserId(
+                          selectedUser
+                        )
+                      )
+                        ? "Online"
+                        : "Offline"}
+
                     </p>
 
                   </div>
@@ -1515,6 +1540,7 @@ const Chat = () => {
                     getUserId(
                       selectedUser
                     )?.toString() && (
+
                     <div className="typing-indicator">
 
                       <span className="typing-dot"></span>
@@ -1529,6 +1555,7 @@ const Chat = () => {
                       </span>
 
                     </div>
+
                   )}
 
                 {/* ============================ */}
@@ -1569,12 +1596,15 @@ const Chat = () => {
                 </div>
 
               </>
+
             )}
 
           </section>
 
         </div>
+
       </div>
+
     </main>
   );
 };

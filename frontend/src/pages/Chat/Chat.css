@@ -779,6 +779,42 @@
   }
 }
 
+/* ==========================================
+   ONLINE / OFFLINE STATUS
+   ========================================== */
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+.user-status.online {
+  color: #16a34a;
+}
+
+.user-status.offline {
+  color: #94a3b8;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.user-status.online .status-dot {
+  background: #22c55e;
+}
+
+.user-status.offline .status-dot {
+  background: #94a3b8;
+}
+
+
 
 
 

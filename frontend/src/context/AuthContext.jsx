@@ -90,6 +90,15 @@ export const AuthProvider = ({ children }) => {
   ] = useState(null);
 
   // ------------------------------------------
+  // ONLINE USERS
+  // ------------------------------------------
+
+  const [
+    onlineUserIds,
+    setOnlineUserIds,
+  ] = useState([]);
+
+  // ------------------------------------------
   // SOCKET.IO
   // ------------------------------------------
 
@@ -142,6 +151,7 @@ export const AuthProvider = ({ children }) => {
     setDeliveredMessageIds([]);
     setSeenMessageIds([]);
     setTypingUserId(null);
+    setOnlineUserIds([]);
   };
 
   // ------------------------------------------
@@ -166,6 +176,7 @@ export const AuthProvider = ({ children }) => {
     setDeliveredMessageIds([]);
     setSeenMessageIds([]);
     setTypingUserId(null);
+    setOnlineUserIds([]);
   };
 
   // ------------------------------------------
@@ -277,6 +288,87 @@ export const AuthProvider = ({ children }) => {
     });
 
     // ----------------------------------------
+    // CURRENT ONLINE USERS
+    // ----------------------------------------
+
+    socket.on(
+      "onlineUsers",
+      (userIds) => {
+        if (!Array.isArray(userIds)) {
+          return;
+        }
+
+        const normalizedIds =
+          userIds
+            .filter(Boolean)
+            .map((id) =>
+              id.toString()
+            );
+
+        setOnlineUserIds(
+          normalizedIds
+        );
+      }
+    );
+
+    // ----------------------------------------
+    // USER CAME ONLINE
+    // ----------------------------------------
+
+    socket.on(
+      "userOnline",
+      ({ userId }) => {
+        if (!userId) {
+          return;
+        }
+
+        const normalizedId =
+          userId.toString();
+
+        setOnlineUserIds(
+          (previousIds) => {
+            if (
+              previousIds.includes(
+                normalizedId
+              )
+            ) {
+              return previousIds;
+            }
+
+            return [
+              ...previousIds,
+              normalizedId,
+            ];
+          }
+        );
+      }
+    );
+
+    // ----------------------------------------
+    // USER WENT OFFLINE
+    // ----------------------------------------
+
+    socket.on(
+      "userOffline",
+      ({ userId }) => {
+        if (!userId) {
+          return;
+        }
+
+        const normalizedId =
+          userId.toString();
+
+        setOnlineUserIds(
+          (previousIds) =>
+            previousIds.filter(
+              (id) =>
+                id !== normalizedId
+            )
+        );
+      }
+    );
+
+    // ----------------------------------------
     // RECEIVE MESSAGE
     // ----------------------------------------
 
@@ -356,7 +448,9 @@ export const AuthProvider = ({ children }) => {
                   )
               );
 
-            if (newIds.length === 0) {
+            if (
+              newIds.length === 0
+            ) {
               return previousIds;
             }
 
@@ -377,7 +471,8 @@ export const AuthProvider = ({ children }) => {
       "userTyping",
       ({ senderId }) => {
         setTypingUserId(
-          senderId?.toString() || null
+          senderId?.toString() ||
+            null
         );
       }
     );
@@ -423,7 +518,9 @@ export const AuthProvider = ({ children }) => {
     return () => {
       socket.disconnect();
       socketRef.current = null;
+
       setTypingUserId(null);
+      setOnlineUserIds([]);
     };
   }, [user, token]);
 
@@ -431,7 +528,9 @@ export const AuthProvider = ({ children }) => {
   // START TYPING
   // ------------------------------------------
 
-  const startTyping = (receiverId) => {
+  const startTyping = (
+    receiverId
+  ) => {
     if (!socketRef.current) {
       return;
     }
@@ -453,7 +552,9 @@ export const AuthProvider = ({ children }) => {
   // STOP TYPING
   // ------------------------------------------
 
-  const stopTyping = (receiverId) => {
+  const stopTyping = (
+    receiverId
+  ) => {
     if (!socketRef.current) {
       return;
     }
@@ -520,6 +621,9 @@ export const AuthProvider = ({ children }) => {
     typingUserId,
     startTyping,
     stopTyping,
+
+    // Online users
+    onlineUserIds,
   };
 
   return (
@@ -530,3 +634,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+

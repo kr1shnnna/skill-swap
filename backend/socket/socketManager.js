@@ -16,8 +16,13 @@ const getUserSocket = (userId) => {
   return connectedUsers[userId];
 };
 
+const getConnectedUsers=()=>{
+  return Object.keys(connectedUsers);
+}
+
 module.exports = {
   addUser,
   removeUser,
   getUserSocket,
+  getConnectedUsers,
 };

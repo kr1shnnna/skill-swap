@@ -1,18 +1,26 @@
 const express = require("express");
+
 const cors = require("cors");
+
 const http = require("http");
+
 const { Server } = require("socket.io");
 
 const authRoutes = require("./routes/authRoutes");
+
 const userRoutes = require("./routes/userRoutes");
+
 const matchRoutes = require("./routes/matchRoutes");
+
 const swapRoutes = require("./routes/swapRoutes");
+
 const messageRoutes = require("./routes/messageRoutes");
 
 const {
   addUser,
   removeUser,
   getUserSocket,
+  getConnectedUsers,
 } = require("./socket/socketManager");
 
 const Message = require("./models/Message");
@@ -44,6 +52,7 @@ app.set("io", io);
 // ------------------------------------------
 
 app.use(cors());
+
 app.use(express.json());
 
 // ------------------------------------------
@@ -51,9 +60,13 @@ app.use(express.json());
 // ------------------------------------------
 
 app.use("/api/auth", authRoutes);
+
 app.use("/api/users", userRoutes);
+
 app.use("/api/matches", matchRoutes);
+
 app.use("/api/swaps", swapRoutes);
+
 app.use("/api/messages", messageRoutes);
 
 // ------------------------------------------
@@ -83,27 +96,54 @@ io.on("connection", (socket) => {
   socket.on(
     "registerUser",
     async (userId) => {
-      socket.userId=userId;
+      socket.userId = userId;
+
       try {
-        // Register the user's socket
-        addUser(userId, socket.id);
+        // ------------------------------------
+        // REGISTER USER SOCKET
+        // ------------------------------------
+
+        addUser(
+          userId,
+          socket.id
+        );
+
+        // Send current online users to the newly connected user
+socket.emit(
+  "onlineUsers",
+  getConnectedUsers()
+);
+
+// Notify everyone that this user is online
+io.emit("userOnline", {
+  userId: userId.toString(),
+});
+
 
         console.log(
           `User ${userId} connected with socket ${socket.id}`
         );
 
         // ------------------------------------
+        // ONLINE STATUS
+        // ------------------------------------
+
+        /*
+         * Tell every connected client that
+         * this user is now online.
+         */
+
+        io.emit("userOnline", {
+          userId: userId.toString(),
+        });
+
+        // ------------------------------------
         // OFFLINE DELIVERY SYNC
         // ------------------------------------
 
         /*
-         * Find messages that were sent to this
-         * user while they were offline.
-         *
-         * These messages are already stored in
-         * MongoDB but still have:
-         *
-         * delivered: false
+         * Find messages that were sent to
+         * this user while they were offline.
          */
 
         const undeliveredMessages =
@@ -113,8 +153,8 @@ io.on("connection", (socket) => {
           });
 
         /*
-         * Mark each pending message as
-         * delivered.
+         * Mark each pending message
+         * as delivered.
          */
 
         for (const message of undeliveredMessages) {
@@ -124,8 +164,7 @@ io.on("connection", (socket) => {
 
           /*
            * Notify the original sender that
-           * their message has now been
-           * delivered.
+           * their message has now been delivered.
            */
 
           const senderSocketId =
@@ -152,7 +191,7 @@ io.on("connection", (socket) => {
     }
   );
 
-   // ------------------------------------------
+  // ------------------------------------------
   // TYPING INDICATOR
   // ------------------------------------------
 
@@ -203,13 +242,10 @@ io.on("connection", (socket) => {
       }
     }
   );
-  
 
-
-
-  // ----------------------------------------
+  // ------------------------------------------
   // HANDLE DISCONNECT
-  // ----------------------------------------
+  // ------------------------------------------
 
   socket.on("disconnect", () => {
     console.log(
@@ -217,7 +253,26 @@ io.on("connection", (socket) => {
       socket.id
     );
 
+    /*
+     * Save the user ID before removing
+     * the socket from the manager.
+     */
+
+    const disconnectedUserId =
+      socket.userId;
+
     removeUser(socket.id);
+
+    // ----------------------------------------
+    // OFFLINE STATUS
+    // ----------------------------------------
+
+    if (disconnectedUserId) {
+      io.emit("userOffline", {
+        userId:
+          disconnectedUserId.toString(),
+      });
+    }
   });
 });
 
@@ -235,4 +290,3 @@ server.listen(PORT, () => {
     `Server running on port ${PORT}`
   );
 });
-
