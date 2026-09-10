@@ -3,36 +3,59 @@ const express = require("express");
 const {
   sendMessage,
   getMessages,
+  getUnreadMessageCount,
   markMessagesAsRead,
-  markMessageAsDelivered
+  markMessageAsDelivered,
 } = require("../controllers/messageController");
 
 const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-// Send a message
+// ------------------------------------------
+// SEND A MESSAGE
+// ------------------------------------------
+
 router.post(
   "/",
   protect,
   sendMessage
 );
 
-// Get messages for a specific user
+// ------------------------------------------
+// GET TOTAL UNREAD MESSAGE COUNT
+// ------------------------------------------
+
+router.get(
+  "/unread/count",
+  protect,
+  getUnreadMessageCount
+);
+
+// ------------------------------------------
+// GET MESSAGES FOR A SPECIFIC USER
+// ------------------------------------------
+
 router.get(
   "/:userId",
   protect,
   getMessages
 );
 
-// Mark messages from a specific user as read
+// ------------------------------------------
+// MARK MESSAGES FROM A SPECIFIC USER AS READ
+// ------------------------------------------
+
 router.patch(
   "/:userId/read",
   protect,
   markMessagesAsRead
 );
 
-// Mark a specific message as delivered
+// ------------------------------------------
+// MARK A SPECIFIC MESSAGE AS DELIVERED
+// ------------------------------------------
+
 router.patch(
   "/delivered",
   protect,

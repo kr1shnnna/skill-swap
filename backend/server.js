@@ -12,7 +12,10 @@ const messageRoutes = require("./routes/messageRoutes");
 const {
   addUser,
   removeUser,
+  getUserSocket,
 } = require("./socket/socketManager");
+
+const Message = require("./models/Message");
 
 require("dotenv").config();
 
@@ -22,7 +25,10 @@ const app = express();
 
 const server = http.createServer(app);
 
-// Socket.IO setup
+// ------------------------------------------
+// SOCKET.IO SETUP
+// ------------------------------------------
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -33,47 +39,144 @@ const io = new Server(server, {
 // Make Socket.IO accessible in controllers
 app.set("io", io);
 
-// Middleware
+// ------------------------------------------
+// MIDDLEWARE
+// ------------------------------------------
+
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// ------------------------------------------
+// ROUTES
+// ------------------------------------------
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/swaps", swapRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Test route
+// ------------------------------------------
+// TEST ROUTE
+// ------------------------------------------
+
 app.get("/", (req, res) => {
   res.json({
     message: "SkillSwap API is running",
   });
 });
 
-// Socket.IO connection
+// ------------------------------------------
+// SOCKET.IO CONNECTION
+// ------------------------------------------
+
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  console.log(
+    "A user connected:",
+    socket.id
+  );
 
-  // Register logged-in user
-  socket.on("registerUser", (userId) => {
-    addUser(userId, socket.id);
+  // ----------------------------------------
+  // REGISTER LOGGED-IN USER
+  // ----------------------------------------
 
-    console.log(`User ${userId} connected with socket ${socket.id}`);
-  });
+  socket.on(
+    "registerUser",
+    async (userId) => {
+      try {
+        // Register the user's socket
+        addUser(userId, socket.id);
 
-  // Handle disconnect
+        console.log(
+          `User ${userId} connected with socket ${socket.id}`
+        );
+
+        // ------------------------------------
+        // OFFLINE DELIVERY SYNC
+        // ------------------------------------
+
+        /*
+         * Find messages that were sent to this
+         * user while they were offline.
+         *
+         * These messages are already stored in
+         * MongoDB but still have:
+         *
+         * delivered: false
+         */
+
+        const undeliveredMessages =
+          await Message.find({
+            receiver: userId,
+            delivered: false,
+          });
+
+        /*
+         * Mark each pending message as
+         * delivered.
+         */
+
+        for (const message of undeliveredMessages) {
+          message.delivered = true;
+
+          await message.save();
+
+          /*
+           * Notify the original sender that
+           * their message has now been
+           * delivered.
+           */
+
+          const senderSocketId =
+            getUserSocket(
+              message.sender.toString()
+            );
+
+          if (senderSocketId) {
+            io.to(senderSocketId).emit(
+              "messageDelivered",
+              {
+                messageId:
+                  message._id.toString(),
+              }
+            );
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Offline delivery sync error:",
+          error
+        );
+      }
+    }
+  );
+
+  // ----------------------------------------
+  // HANDLE DISCONNECT
+  // ----------------------------------------
+
   socket.on("disconnect", () => {
-    console.log("A user disconnected:", socket.id);
+    console.log(
+      "A user disconnected:",
+      socket.id
+    );
 
     removeUser(socket.id);
   });
 });
 
-const PORT = process.env.PORT || 5000;
+// ------------------------------------------
+// SERVER
+// ------------------------------------------
+
+const PORT =
+  process.env.PORT || 5000;
 
 connectDB();
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });
+

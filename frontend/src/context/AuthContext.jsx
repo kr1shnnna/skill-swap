@@ -182,6 +182,39 @@ export const AuthProvider = ({ children }) => {
     };
 
   // ------------------------------------------
+  // FETCH UNREAD MESSAGE COUNT
+  // ------------------------------------------
+
+  const fetchUnreadMessageCount =
+    async () => {
+      if (!token) {
+        setUnreadMessageCount(0);
+        return;
+      }
+
+      try {
+        const response =
+          await api.get(
+            "/messages/unread/count"
+          );
+
+        const unreadCount =
+          Number(
+            response.data.unreadCount
+          ) || 0;
+
+        setUnreadMessageCount(
+          unreadCount
+        );
+      } catch (error) {
+        console.error(
+          "Fetch unread message count error:",
+          error
+        );
+      }
+    };
+
+  // ------------------------------------------
   // GLOBAL SOCKET.IO CONNECTION
   // ------------------------------------------
 
@@ -246,9 +279,6 @@ export const AuthProvider = ({ children }) => {
         // DELIVERY CONFIRMATION
         // ------------------------------------
 
-        // Tell backend that this message
-        // successfully reached the receiver.
-
         try {
           await api.patch(
             "/messages/delivered",
@@ -276,7 +306,9 @@ export const AuthProvider = ({ children }) => {
         setDeliveredMessageIds(
           (previousIds) => {
             if (
-              previousIds.includes(messageId)
+              previousIds.includes(
+                messageId
+              )
             ) {
               return previousIds;
             }
@@ -323,14 +355,24 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   // ------------------------------------------
+  // FETCH INITIAL UNREAD MESSAGE COUNT
+  // ------------------------------------------
+
+  useEffect(() => {
+    fetchUnreadMessageCount();
+  }, [token]);
+
+  // ------------------------------------------
   // CONTEXT VALUE
   // ------------------------------------------
 
   const value = {
     user,
     token,
+
     login,
     logout,
+
     isAuthenticated: !!token,
 
     // Swap notifications
@@ -340,6 +382,7 @@ export const AuthProvider = ({ children }) => {
     // Chat notifications
     unreadMessageCount,
     setUnreadMessageCount,
+    fetchUnreadMessageCount,
 
     // Latest real-time message
     lastReceivedMessage,
