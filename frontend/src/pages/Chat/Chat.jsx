@@ -9,6 +9,10 @@ const Chat = () => {
 
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,12 +39,7 @@ const Chat = () => {
 
       const swaps = response.data.swaps || [];
 
-      console.log("Accepted swaps:", swaps);
-      console.log("Logged in user:", user);
-
       const currentUserId = getUserId(user);
-
-      console.log("Current user ID:", currentUserId);
 
       const uniqueUsers = [];
       const seenUserIds = new Set();
@@ -57,24 +56,17 @@ const Chat = () => {
           otherUser = swap.sender;
         }
 
-        if (!otherUser) {
-          return;
-        }
+        if (!otherUser) return;
 
         const otherUserId = getUserId(otherUser);
 
-        if (!otherUserId) {
-          return;
-        }
+        if (!otherUserId) return;
 
-        // Prevent duplicate conversations
         if (!seenUserIds.has(otherUserId)) {
           seenUserIds.add(otherUserId);
           uniqueUsers.push(otherUser);
         }
       });
-
-      console.log("Unique conversations:", uniqueUsers);
 
       setConversations(uniqueUsers);
     } catch (error) {
@@ -86,6 +78,38 @@ const Chat = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load messages when a conversation is selected
+  const fetchMessages = async (userId) => {
+    try {
+      setMessagesLoading(true);
+      setMessages([]);
+      setError("");
+
+      const response = await api.get(`/messages/${userId}`);
+
+      setMessages(response.data.messages || []);
+    } catch (error) {
+      console.error("Fetch messages error:", error);
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to load messages."
+      );
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  const handleSelectConversation = (conversationUser) => {
+    setSelectedUser(conversationUser);
+
+    const otherUserId = getUserId(conversationUser);
+
+    if (otherUserId) {
+      fetchMessages(otherUserId);
     }
   };
 
@@ -169,7 +193,7 @@ const Chat = () => {
                         : ""
                     }`}
                     onClick={() =>
-                      setSelectedUser(conversationUser)
+                      handleSelectConversation(conversationUser)
                     }
                   >
                     <FaUserCircle className="conversation-avatar" />
@@ -225,19 +249,61 @@ const Chat = () => {
 
                 {/* Messages */}
                 <div className="messages-area">
-                  <div className="messages-placeholder">
-                    <p>
-                      Your conversation with{" "}
-                      <strong>
-                        {selectedUser.name}
-                      </strong>{" "}
-                      will appear here.
-                    </p>
+                  {messagesLoading ? (
+                    <div className="messages-placeholder">
+                      <p>
+                        Loading conversation...
+                      </p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="messages-placeholder">
+                      <p>
+                        Your conversation with{" "}
+                        <strong>
+                          {selectedUser.name}
+                        </strong>{" "}
+                        will appear here.
+                      </p>
 
-                    <span>
-                      Start by saying hello 👋
-                    </span>
-                  </div>
+                      <span>
+                        Start by saying hello 👋
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="messages-list">
+                      {messages.map((message) => {
+                        const senderId = getUserId(message.sender);
+                        const currentUserId = getUserId(user);
+
+                        const isMine =
+                          senderId === currentUserId;
+
+                        return (
+                          <div
+                            key={message._id}
+                            className={`message-row ${
+                              isMine ? "mine" : "theirs"
+                            }`}
+                          >
+                            <div className="message-bubble">
+                              <p>
+                                {message.message}
+                              </p>
+
+                              <span>
+                                {new Date(
+                                  message.createdAt
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Message Input */}
