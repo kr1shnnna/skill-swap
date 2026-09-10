@@ -8,6 +8,7 @@ import {
 import {
   FaUserCircle,
   FaComments,
+  FaArrowLeft,
 } from "react-icons/fa";
 
 import api from "../../services/api";
@@ -106,7 +107,8 @@ const Chat = () => {
   const formatMessageTime = (date) => {
     if (!date) return "";
 
-    const messageDate = new Date(date);
+    const messageDate =
+      new Date(date);
 
     if (
       Number.isNaN(
@@ -127,7 +129,7 @@ const Chat = () => {
 
   /*
    * ------------------------------------------
-   * CHECK IF TWO DATES ARE SAME DAY
+   * CHECK SAME DAY
    * ------------------------------------------
    */
 
@@ -201,10 +203,6 @@ const Chat = () => {
       return "Yesterday";
     }
 
-    /*
-     * Current year
-     */
-
     if (
       messageDate.getFullYear() ===
       today.getFullYear()
@@ -218,10 +216,6 @@ const Chat = () => {
         }
       );
     }
-
-    /*
-     * Older years
-     */
 
     return messageDate.toLocaleDateString(
       [],
@@ -272,14 +266,18 @@ const Chat = () => {
       stopTyping(receiverId);
     }
 
-    isTypingRef.current = false;
+    isTypingRef.current =
+      false;
 
-    if (typingTimeoutRef.current) {
+    if (
+      typingTimeoutRef.current
+    ) {
       clearTimeout(
         typingTimeoutRef.current
       );
 
-      typingTimeoutRef.current = null;
+      typingTimeoutRef.current =
+        null;
     }
   };
 
@@ -305,7 +303,7 @@ const Chat = () => {
     }
 
     /*
-     * Empty input means typing stopped.
+     * Empty input = stop typing.
      */
 
     if (!value.trim()) {
@@ -401,6 +399,7 @@ const Chat = () => {
           getUserId(user);
 
         const uniqueUsers = [];
+
         const seenUserIds =
           new Set();
 
@@ -417,23 +416,13 @@ const Chat = () => {
 
           let otherUser = null;
 
-          /*
-           * Current user is sender.
-           */
-
           if (
             senderId ===
             currentUserId
           ) {
             otherUser =
               swap.receiver;
-          }
-
-          /*
-           * Current user is receiver.
-           */
-
-          else if (
+          } else if (
             receiverId ===
             currentUserId
           ) {
@@ -453,10 +442,6 @@ const Chat = () => {
           if (!otherUserId) {
             return;
           }
-
-          /*
-           * Prevent duplicate conversations.
-           */
 
           if (
             !seenUserIds.has(
@@ -534,7 +519,7 @@ const Chat = () => {
           );
 
         /*
-         * Sort by newest message.
+         * Sort newest first.
          */
 
         conversationsWithMessages.sort(
@@ -621,7 +606,9 @@ const Chat = () => {
                 lastReceivedMessage._id
             );
 
-          if (alreadyExists) {
+          if (
+            alreadyExists
+          ) {
             return previousMessages;
           }
 
@@ -631,10 +618,6 @@ const Chat = () => {
           ];
         }
       );
-
-      /*
-       * Scroll after incoming message.
-       */
 
       setTimeout(() => {
         scrollToBottom();
@@ -713,10 +696,8 @@ const Chat = () => {
 
               return {
                 ...conversation,
-
                 latestMessage:
                   lastReceivedMessage,
-
                 unreadCount:
                   isCurrentConversation
                     ? 0
@@ -725,11 +706,6 @@ const Chat = () => {
               };
             }
           );
-
-        /*
-         * Move latest conversation
-         * to the top.
-         */
 
         const latestConversation =
           updatedConversations.find(
@@ -794,10 +770,6 @@ const Chat = () => {
         )
     );
 
-    /*
-     * Update sidebar latest message.
-     */
-
     setConversations(
       (previousConversations) =>
         previousConversations.map(
@@ -846,10 +818,6 @@ const Chat = () => {
       return;
     }
 
-    /*
-     * Update currently displayed messages.
-     */
-
     setMessages(
       (previousMessages) =>
         previousMessages.map(
@@ -869,10 +837,6 @@ const Chat = () => {
           }
         )
     );
-
-    /*
-     * Update sidebar latest message.
-     */
 
     setConversations(
       (previousConversations) =>
@@ -937,11 +901,6 @@ const Chat = () => {
         fetchedMessages
       );
 
-      /*
-       * Scroll to bottom after
-       * message history loads.
-       */
-
       setTimeout(() => {
         scrollToBottom("auto");
       }, 50);
@@ -975,10 +934,6 @@ const Chat = () => {
     async (
       conversation
     ) => {
-      /*
-       * Stop typing in previous chat.
-       */
-
       clearTypingState();
 
       const conversationUser =
@@ -997,20 +952,11 @@ const Chat = () => {
 
       setError("");
 
-      /*
-       * Clear messages while
-       * switching conversations.
-       */
-
       setMessages([]);
 
       if (!otherUserId) {
         return;
       }
-
-      /*
-       * Remember unread count.
-       */
 
       const unreadCountBeforeRead =
         Number(
@@ -1018,7 +964,7 @@ const Chat = () => {
         ) || 0;
 
       /*
-       * Immediately clear sidebar badge.
+       * Clear sidebar badge.
        */
 
       if (
@@ -1081,10 +1027,6 @@ const Chat = () => {
                 .updatedCount
             ) || 0;
 
-          /*
-           * Keep sidebar read.
-           */
-
           setConversations(
             (previousConversations) =>
               previousConversations.map(
@@ -1106,10 +1048,6 @@ const Chat = () => {
               )
           );
 
-          /*
-           * Update navbar count.
-           */
-
           if (
             updatedCount > 0
           ) {
@@ -1130,14 +1068,28 @@ const Chat = () => {
         }
       }
 
-      /*
-       * Make absolutely sure the
-       * conversation ends at bottom.
-       */
-
       setTimeout(() => {
         scrollToBottom("auto");
       }, 100);
+    };
+
+  /*
+   * ------------------------------------------
+   * MOBILE BACK TO CONVERSATIONS
+   * ------------------------------------------
+   */
+
+  const handleBackToConversations =
+    () => {
+      clearTypingState();
+
+      setSelectedUser(null);
+
+      setMessages([]);
+
+      setMessageText("");
+
+      setError("");
     };
 
   /*
@@ -1201,10 +1153,6 @@ const Chat = () => {
 
         setError("");
 
-        /*
-         * Send through REST API.
-         */
-
         const response =
           await api.post(
             "/messages",
@@ -1218,10 +1166,6 @@ const Chat = () => {
         const newMessage =
           response.data
             .newMessage;
-
-        /*
-         * Add sent message.
-         */
 
         if (newMessage) {
           const isAlreadyDelivered =
@@ -1258,16 +1202,12 @@ const Chat = () => {
             }
           );
 
-          /*
-           * Scroll after sent message.
-           */
-
           setTimeout(() => {
             scrollToBottom();
           }, 50);
 
           /*
-           * Update sidebar preview.
+           * Update sidebar.
            */
 
           setConversations(
@@ -1292,10 +1232,6 @@ const Chat = () => {
                     };
                   }
                 );
-
-              /*
-               * Move conversation to top.
-               */
 
               const selectedConversation =
                 updated.find(
@@ -1324,10 +1260,6 @@ const Chat = () => {
             }
           );
         }
-
-        /*
-         * Clear input.
-         */
 
         setMessageText("");
       } catch (error) {
@@ -1452,7 +1384,13 @@ const Chat = () => {
         {/* CHAT WORKSPACE */}
         {/* ================================== */}
 
-        <div className="chat-workspace">
+        <div
+          className={`chat-workspace ${
+            selectedUser
+              ? "mobile-chat-open"
+              : ""
+          }`}
+        >
 
           {/* ================================= */}
           {/* CONVERSATIONS PANEL */}
@@ -1482,8 +1420,6 @@ const Chat = () => {
               <FaComments />
 
             </div>
-
-            {/* NO CONVERSATIONS */}
 
             {conversations.length ===
             0 ? (
@@ -1643,6 +1579,19 @@ const Chat = () => {
 
                 <div className="conversation-chat-header">
 
+                  {/* MOBILE BACK BUTTON */}
+
+                  <button
+                    type="button"
+                    className="mobile-chat-back-btn"
+                    onClick={
+                      handleBackToConversations
+                    }
+                    aria-label="Back to conversations"
+                  >
+                    <FaArrowLeft />
+                  </button>
+
                   <FaUserCircle className="chat-user-avatar" />
 
                   <div>
@@ -1650,8 +1599,6 @@ const Chat = () => {
                     <h2>
                       {selectedUser.name}
                     </h2>
-
-                    {/* ONLINE / OFFLINE */}
 
                     <p
                       className={
@@ -1745,10 +1692,6 @@ const Chat = () => {
                             senderId ===
                             currentUserId;
 
-                          /*
-                           * Previous message
-                           */
-
                           const previousMessage =
                             index >
                             0
@@ -1757,10 +1700,6 @@ const Chat = () => {
                                     1
                                 ]
                               : null;
-
-                          /*
-                           * Date separator
-                           */
 
                           const shouldShowDateSeparator =
                             index ===
@@ -1777,10 +1716,6 @@ const Chat = () => {
                               }
                             >
 
-                              {/* ======================== */}
-                              {/* DATE SEPARATOR */}
-                              {/* ======================== */}
-
                               {shouldShowDateSeparator && (
                                 <div className="message-date-separator">
 
@@ -1792,10 +1727,6 @@ const Chat = () => {
 
                                 </div>
                               )}
-
-                              {/* ======================== */}
-                              {/* MESSAGE */}
-                              {/* ======================== */}
 
                               <div
                                 className={`message-row ${
@@ -1850,9 +1781,7 @@ const Chat = () => {
                         }
                       )}
 
-                      {/* ========================== */}
                       {/* AUTO SCROLL TARGET */}
-                      {/* ========================== */}
 
                       <div
                         ref={
