@@ -46,31 +46,65 @@ const Profile = () => {
     });
   };
 
-  const addTeachSkill = () => {
-    const skill = teachSkill.trim();
+const addTeachSkill = () => {
+  const newSkills = teachSkill
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter((skill) => skill.length > 0);
 
-    if (skill && !profile.skillsToTeach.includes(skill)) {
-      setProfile({
-        ...profile,
-        skillsToTeach: [...profile.skillsToTeach, skill],
-      });
+  if (newSkills.length === 0) {
+    return;
+  }
 
-      setTeachSkill("");
-    }
-  };
+  const uniqueSkills = newSkills.filter(
+    (skill) =>
+      !profile.skillsToTeach.some(
+        (existingSkill) =>
+          existingSkill.toLowerCase() === skill.toLowerCase()
+      )
+  );
 
-  const addLearnSkill = () => {
-    const skill = learnSkill.trim();
+  setProfile({
+    ...profile,
+    skillsToTeach: [
+      ...profile.skillsToTeach,
+      ...uniqueSkills,
+    ],
+  });
 
-    if (skill && !profile.skillsToLearn.includes(skill)) {
-      setProfile({
-        ...profile,
-        skillsToLearn: [...profile.skillsToLearn, skill],
-      });
+  setTeachSkill("");
+};
 
-      setLearnSkill("");
-    }
-  };
+
+const addLearnSkill = () => {
+  const newSkills = learnSkill
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter((skill) => skill.length > 0);
+
+  if (newSkills.length === 0) {
+    return;
+  }
+
+  const uniqueSkills = newSkills.filter(
+    (skill) =>
+      !profile.skillsToLearn.some(
+        (existingSkill) =>
+          existingSkill.toLowerCase() === skill.toLowerCase()
+      )
+  );
+
+  setProfile({
+    ...profile,
+    skillsToLearn: [
+      ...profile.skillsToLearn,
+      ...uniqueSkills,
+    ],
+  });
+
+  setLearnSkill("");
+};
+
 
   const removeTeachSkill = (skill) => {
     setProfile({
