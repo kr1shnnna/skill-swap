@@ -2,11 +2,9 @@ const Message = require("../models/Message");
 const Swap = require("../models/Swap");
 const { getUserSocket } = require("../socket/socketManager");
 
-
 const sendMessage = async (req, res) => {
   try {
     const { receiverId, message } = req.body;
-
     const senderId = req.user.userId;
 
     // Check required fields
@@ -33,7 +31,8 @@ const sendMessage = async (req, res) => {
 
     if (!acceptedSwap) {
       return res.status(403).json({
-        message: "You can only message users with an accepted swap connection",
+        message:
+          "You can only message users with an accepted swap connection",
       });
     }
 
@@ -44,29 +43,35 @@ const sendMessage = async (req, res) => {
       message,
     });
 
-    const io=req.app.get("io"); // Get the io instance from the app
+    // Get Socket.IO instance
+    const io = req.app.get("io");
 
-  
-    const receiverSocketId = getUserSocket(receiverId);
-    
+    const receiverSocketId =
+      getUserSocket(receiverId);
 
-    if(receiverSocketId){
-        io.to(receiverSocketId).emit("receiveMessage",newMessage); // Emit the message to the receiver
+    // Send real-time message to receiver
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit(
+        "receiveMessage",
+        newMessage
+      );
     }
 
-    res.status(201).json({  
+    res.status(201).json({
       message: "Message sent successfully",
       newMessage,
     });
   } catch (error) {
-    console.error("Send message error:", error.message);
+    console.error(
+      "Send message error:",
+      error.message
+    );
 
     res.status(500).json({
       message: "Server error",
     });
   }
 };
-
 
 const getMessages = async (req, res) => {
   try {
@@ -86,10 +91,7 @@ const getMessages = async (req, res) => {
       ],
     }).sort({ createdAt: 1 });
 
-    /*
-     * Count unread messages sent by the
-     * other user to the logged-in user.
-     */
+    // Count unread messages sent by the other user
     const unreadCount =
       await Message.countDocuments({
         sender: userId,
@@ -114,10 +116,54 @@ const getMessages = async (req, res) => {
   }
 };
 
+/*
+ * ------------------------------------------
+ * MARK MESSAGES AS READ
+ * ------------------------------------------
+ */
 
+const markMessagesAsRead = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const loggedInUserId = req.user.userId;
+
+    /*
+     * Mark only messages:
+     * userId -> loggedInUserId
+     *
+     * We do NOT mark our own messages as read.
+     */
+    const result = await Message.updateMany(
+      {
+        sender: userId,
+        receiver: loggedInUserId,
+        read: false,
+      },
+      {
+        $set: {
+          read: true,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "Messages marked as read",
+      updatedCount: result.modifiedCount || 0,
+    });
+  } catch (error) {
+    console.error(
+      "Mark messages as read error:",
+      error.message
+    );
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
 
 module.exports = {
   sendMessage,
-  getMessages
-
+  getMessages,
+  markMessagesAsRead,
 };

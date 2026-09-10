@@ -93,6 +93,10 @@ const Chat = () => {
    */
 
   useEffect(() => {
+    if (!user) {
+      return;
+    }
+
     fetchConversations();
   }, [user]);
 
@@ -139,12 +143,16 @@ const Chat = () => {
           otherUser = swap.sender;
         }
 
-        if (!otherUser) return;
+        if (!otherUser) {
+          return;
+        }
 
         const otherUserId =
           getUserId(otherUser);
 
-        if (!otherUserId) return;
+        if (!otherUserId) {
+          return;
+        }
 
         /*
          * Prevent duplicate conversations
@@ -163,8 +171,7 @@ const Chat = () => {
       });
 
       /*
-       * Fetch latest message and unread count
-       * for every conversation.
+       * Fetch messages for each conversation.
        */
       const conversationsWithMessages =
         await Promise.all(
@@ -184,16 +191,6 @@ const Chat = () => {
                 const messageData =
                   messageResponse.data;
 
-                  console.log(
-  "Conversation:",
-  conversation.user.name,
-  "Unread:",
-  messageData.unreadCount,
-  "Messages:",
-  messageData.messages
-);
-
-
                 const conversationMessages =
                   messageData.messages || [];
 
@@ -210,7 +207,9 @@ const Chat = () => {
                   ...conversation,
                   latestMessage,
                   unreadCount:
-                    messageData.unreadCount || 0,
+                    Number(
+                      messageData.unreadCount
+                    ) || 0,
                 };
               } catch (error) {
                 console.error(
@@ -225,10 +224,7 @@ const Chat = () => {
         );
 
       /*
-       * Sort conversations so the one with
-       * the newest message appears first.
-       *
-       * Conversations with no messages go last.
+       * Sort by newest message.
        */
       conversationsWithMessages.sort(
         (a, b) => {
@@ -268,7 +264,7 @@ const Chat = () => {
 
   /*
    * ------------------------------------------
-   * REAL-TIME SIDEBAR MESSAGE UPDATE
+   * REAL-TIME MESSAGE UPDATE
    * ------------------------------------------
    */
 
@@ -285,94 +281,159 @@ const Chat = () => {
       return;
     }
 
+    const selectedUserId =
+      getUserId(selectedUser);
+
+    const isCurrentConversation =
+      selectedUserId === senderId;
+
+    /*
+     * ------------------------------------------
+     * MESSAGE RECEIVED IN OPEN CHAT
+     * ------------------------------------------
+     */
+
+    if (isCurrentConversation) {
+      setMessages((previousMessages) => {
+        const alreadyExists =
+          previousMessages.some(
+            (message) =>
+              message._id ===
+              lastReceivedMessage._id
+          );
+
+        if (alreadyExists) {
+          return previousMessages;
+        }
+
+        return [
+          ...previousMessages,
+          lastReceivedMessage,
+        ];
+      });
+
+      /*
+       * Since this conversation is already
+       * open, immediately mark the new
+       * message as read in MongoDB.
+       */
+      api
+        .patch(
+          `/messages/${senderId}/read`
+        )
+        .then((response) => {
+          const updatedCount =
+            Number(
+              response.data.updatedCount
+            ) || 0;
+
+          if (updatedCount > 0) {
+            setUnreadMessageCount(
+              (previousCount) =>
+                Math.max(
+                  0,
+                  previousCount -
+                    updatedCount
+                )
+            );
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Mark incoming message as read error:",
+            error
+          );
+        });
+    }
+
+    /*
+     * ------------------------------------------
+     * UPDATE SIDEBAR
+     * ------------------------------------------
+     */
+
     setConversations(
       (previousConversations) => {
-        const existingConversation =
-          previousConversations.find(
+        const conversationExists =
+          previousConversations.some(
             (conversation) =>
               getUserId(
                 conversation.user
               ) === senderId
           );
 
-        /*
-         * If the conversation already exists,
-         * update its latest message.
-         */
-        if (existingConversation) {
-          const updatedConversations =
-            previousConversations.map(
-              (conversation) => {
-                if (
-                  getUserId(
-                    conversation.user
-                  ) !== senderId
-                ) {
-                  return conversation;
-                }
-
-                /*
-                 * If this is not the currently
-                 * selected conversation, increase
-                 * its unread count.
-                 */
-                const selectedUserId =
-                  getUserId(
-                    selectedUser
-                  );
-
-                const isCurrentlyOpen =
-                  selectedUserId ===
-                  senderId;
-
-                return {
-                  ...conversation,
-                  latestMessage:
-                    lastReceivedMessage,
-                  unreadCount:
-                    isCurrentlyOpen
-                      ? conversation.unreadCount
-                      : conversation.unreadCount +
-                        1,
-                };
-              }
-            );
-
-          /*
-           * Move the conversation with the
-           * newest message to the top.
-           */
-          const updatedConversation =
-            updatedConversations.find(
-              (conversation) =>
-                getUserId(
-                  conversation.user
-                ) === senderId
-            );
-
-          const otherConversations =
-            updatedConversations.filter(
-              (conversation) =>
-                getUserId(
-                  conversation.user
-                ) !== senderId
-            );
-
-          return [
-            updatedConversation,
-            ...otherConversations,
-          ];
+        if (!conversationExists) {
+          return previousConversations;
         }
 
+        const updatedConversations =
+          previousConversations.map(
+            (conversation) => {
+              const conversationUserId =
+                getUserId(
+                  conversation.user
+                );
+
+              if (
+                conversationUserId !==
+                senderId
+              ) {
+                return conversation;
+              }
+
+              return {
+                ...conversation,
+
+                latestMessage:
+                  lastReceivedMessage,
+
+                /*
+                 * Open conversation:
+                 *     unread = 0
+                 *
+                 * Closed conversation:
+                 *     increase unread count
+                 */
+                unreadCount:
+                  isCurrentConversation
+                    ? 0
+                    : conversation.unreadCount +
+                      1,
+              };
+            }
+          );
+
         /*
-         * Conversation shouldn't normally
-         * be missing because it comes from
-         * accepted swaps.
+         * Move latest conversation
+         * to the top.
          */
-        return previousConversations;
+        const latestConversation =
+          updatedConversations.find(
+            (conversation) =>
+              getUserId(
+                conversation.user
+              ) === senderId
+          );
+
+        const otherConversations =
+          updatedConversations.filter(
+            (conversation) =>
+              getUserId(
+                conversation.user
+              ) !== senderId
+          );
+
+        return [
+          latestConversation,
+          ...otherConversations,
+        ];
       }
     );
-  }, [lastReceivedMessage]);
+  }, [
+    lastReceivedMessage,
+    selectedUser,
+    setUnreadMessageCount,
+  ]);
 
   /*
    * ------------------------------------------
@@ -419,74 +480,6 @@ const Chat = () => {
 
   /*
    * ------------------------------------------
-   * MARK CONVERSATION AS READ
-   * ------------------------------------------
-   */
-
-  const markConversationAsRead = async (
-    userId,
-    unreadCount
-  ) => {
-    if (!unreadCount || unreadCount <= 0) {
-      return;
-    }
-
-    try {
-      const response =
-        await api.patch(
-          `/messages/${userId}/read`
-        );
-
-      const updatedCount =
-        response.data.updatedCount || 0;
-
-      /*
-       * Update this conversation's unread
-       * count only.
-       */
-      setConversations(
-        (previousConversations) =>
-          previousConversations.map(
-            (conversation) => {
-              if (
-                getUserId(
-                  conversation.user
-                ) === userId
-              ) {
-                return {
-                  ...conversation,
-                  unreadCount: 0,
-                };
-              }
-
-              return conversation;
-            }
-          )
-      );
-
-      /*
-       * Decrease global Navbar notification.
-       */
-      if (updatedCount > 0) {
-        setUnreadMessageCount(
-          (previousCount) =>
-            Math.max(
-              0,
-              previousCount -
-                updatedCount
-            )
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Mark messages as read error:",
-        error
-      );
-    }
-  };
-
-  /*
-   * ------------------------------------------
    * SELECT CONVERSATION
    * ------------------------------------------
    */
@@ -498,9 +491,7 @@ const Chat = () => {
       conversation.user;
 
     const otherUserId =
-      getUserId(
-        conversationUser
-      );
+      getUserId(conversationUser);
 
     setSelectedUser(
       conversationUser
@@ -515,7 +506,40 @@ const Chat = () => {
     }
 
     /*
-     * Fetch conversation messages.
+     * Remember unread count before
+     * marking messages as read.
+     */
+    const unreadCountBeforeRead =
+      Number(
+        conversation.unreadCount
+      ) || 0;
+
+    /*
+     * Immediately clear sidebar badge.
+     */
+    if (unreadCountBeforeRead > 0) {
+      setConversations(
+        (previousConversations) =>
+          previousConversations.map(
+            (item) => {
+              if (
+                getUserId(item.user) ===
+                otherUserId
+              ) {
+                return {
+                  ...item,
+                  unreadCount: 0,
+                };
+              }
+
+              return item;
+            }
+          )
+      );
+    }
+
+    /*
+     * Fetch conversation.
      */
     const messageData =
       await fetchMessages(
@@ -523,18 +547,74 @@ const Chat = () => {
       );
 
     /*
-     * Mark only this conversation
-     * as read.
+     * Backend unread count.
      */
-    const unreadCount =
-      messageData?.unreadCount ||
-      conversation.unreadCount ||
-      0;
+    const backendUnreadCount =
+      Number(
+        messageData?.unreadCount
+      ) || 0;
 
-    await markConversationAsRead(
-      otherUserId,
-      unreadCount
-    );
+    /*
+     * Mark unread messages as read.
+     */
+    if (
+      backendUnreadCount > 0 ||
+      unreadCountBeforeRead > 0
+    ) {
+      try {
+        const response =
+          await api.patch(
+            `/messages/${otherUserId}/read`
+          );
+
+        const updatedCount =
+          Number(
+            response.data.updatedCount
+          ) || 0;
+
+        /*
+         * Keep conversation read
+         * in sidebar.
+         */
+        setConversations(
+          (previousConversations) =>
+            previousConversations.map(
+              (item) => {
+                if (
+                  getUserId(item.user) ===
+                  otherUserId
+                ) {
+                  return {
+                    ...item,
+                    unreadCount: 0,
+                  };
+                }
+
+                return item;
+              }
+            )
+        );
+
+        /*
+         * Decrease Navbar unread count.
+         */
+        if (updatedCount > 0) {
+          setUnreadMessageCount(
+            (previousCount) =>
+              Math.max(
+                0,
+                previousCount -
+                  updatedCount
+              )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Mark messages as read error:",
+          error
+        );
+      }
+    }
   };
 
   /*
@@ -549,23 +629,21 @@ const Chat = () => {
         messageText.trim();
 
       /*
-       * Don't send empty messages
+       * Don't send empty messages.
        */
       if (!trimmedMessage) {
         return;
       }
 
       /*
-       * No selected user
+       * No selected user.
        */
       if (!selectedUser) {
         return;
       }
 
       const receiverId =
-        getUserId(
-          selectedUser
-        );
+        getUserId(selectedUser);
 
       if (!receiverId) {
         setError(
@@ -581,7 +659,7 @@ const Chat = () => {
         setError("");
 
         /*
-         * Send through REST API
+         * Send through REST API.
          */
         const response =
           await api.post(
@@ -597,8 +675,7 @@ const Chat = () => {
           response.data.newMessage;
 
         /*
-         * Add message immediately
-         * for sender.
+         * Add sent message immediately.
          */
         if (newMessage) {
           setMessages(
@@ -622,8 +699,7 @@ const Chat = () => {
           );
 
           /*
-           * Update sidebar preview
-           * for the current conversation.
+           * Update sidebar preview.
            */
           setConversations(
             (previousConversations) => {
@@ -642,13 +718,13 @@ const Chat = () => {
                       ...conversation,
                       latestMessage:
                         newMessage,
+                      unreadCount: 0,
                     };
                   }
                 );
 
               /*
-               * Move this conversation
-               * to the top.
+               * Move conversation to top.
                */
               const selectedConversation =
                 updated.find(
@@ -677,7 +753,7 @@ const Chat = () => {
         }
 
         /*
-         * Clear input
+         * Clear input.
          */
         setMessageText("");
       } catch (error) {
@@ -723,8 +799,7 @@ const Chat = () => {
     return (
       <main className="chat-page">
         <div className="chat-loading">
-          Loading your
-          conversations...
+          Loading your conversations...
         </div>
       </main>
     );
@@ -755,8 +830,8 @@ const Chat = () => {
             </h1>
 
             <p>
-              Continue your skill
-              exchange conversations.
+              Continue your skill exchange
+              conversations.
             </p>
           </div>
         </div>
@@ -793,8 +868,7 @@ const Chat = () => {
                 <p>
                   {conversations.length}{" "}
                   active exchange
-                  {conversations.length !==
-                  1
+                  {conversations.length !== 1
                     ? "s"
                     : ""}
                 </p>
@@ -808,8 +882,7 @@ const Chat = () => {
             {/* NO CONVERSATIONS */}
             {/* ----------------------------- */}
 
-            {conversations.length ===
-            0 ? (
+            {conversations.length === 0 ? (
 
               <div className="empty-conversations">
 
@@ -820,9 +893,8 @@ const Chat = () => {
                 </h3>
 
                 <p>
-                  Accept a skill swap
-                  request to start
-                  chatting with another
+                  Accept a skill swap request
+                  to start chatting with another
                   student.
                 </p>
 
@@ -878,6 +950,7 @@ const Chat = () => {
                         <div className="conversation-info">
 
                           {/* USER + TIME */}
+
                           <div className="conversation-top-row">
 
                             <h3>
@@ -896,6 +969,7 @@ const Chat = () => {
                           </div>
 
                           {/* MESSAGE PREVIEW + UNREAD */}
+
                           <div className="conversation-bottom-row">
 
                             <p
@@ -956,9 +1030,8 @@ const Chat = () => {
                 </h2>
 
                 <p>
-                  Select a conversation
-                  to start chatting with
-                  your skill partner.
+                  Select a conversation to start
+                  chatting with your skill partner.
                 </p>
 
               </div>
@@ -981,8 +1054,7 @@ const Chat = () => {
                     </h2>
 
                     <p>
-                      Skill Exchange
-                      Partner
+                      Skill Exchange Partner
                     </p>
 
                   </div>
@@ -1000,33 +1072,25 @@ const Chat = () => {
                     <div className="messages-placeholder">
 
                       <p>
-                        Loading
-                        conversation...
+                        Loading conversation...
                       </p>
 
                     </div>
 
-                  ) : messages.length ===
-                    0 ? (
+                  ) : messages.length === 0 ? (
 
                     <div className="messages-placeholder">
 
                       <p>
-                        Your
-                        conversation
-                        with{" "}
+                        Your conversation with{" "}
                         <strong>
-                          {
-                            selectedUser.name
-                          }
+                          {selectedUser.name}
                         </strong>{" "}
-                        will appear
-                        here.
+                        will appear here.
                       </p>
 
                       <span>
-                        Start by saying
-                        hello 👋
+                        Start by saying hello 👋
                       </span>
 
                     </div>

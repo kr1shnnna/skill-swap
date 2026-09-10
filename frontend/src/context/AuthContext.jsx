@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { io } from "socket.io-client";
+
 import api from "../services/api";
 
 export const AuthContext = createContext();
@@ -16,7 +17,8 @@ export const AuthProvider = ({ children }) => {
   // ------------------------------------------
 
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
+    const savedUser =
+      localStorage.getItem("user");
 
     return savedUser
       ? JSON.parse(savedUser)
@@ -28,22 +30,37 @@ export const AuthProvider = ({ children }) => {
   // ------------------------------------------
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem("token") || null;
+    return (
+      localStorage.getItem("token") || null
+    );
   });
 
   // ------------------------------------------
   // SWAP REQUEST NOTIFICATION
   // ------------------------------------------
 
-  const [pendingSwapCount, setPendingSwapCount] =
-    useState(0);
+  const [
+    pendingSwapCount,
+    setPendingSwapCount,
+  ] = useState(0);
 
   // ------------------------------------------
   // CHAT NOTIFICATION
   // ------------------------------------------
 
-  const [unreadMessageCount, setUnreadMessageCount] =
-    useState(0);
+  const [
+    unreadMessageCount,
+    setUnreadMessageCount,
+  ] = useState(0);
+
+  // ------------------------------------------
+  // LAST RECEIVED MESSAGE
+  // ------------------------------------------
+
+  const [
+    lastReceivedMessage,
+    setLastReceivedMessage,
+  ] = useState(null);
 
   // ------------------------------------------
   // SOCKET.IO
@@ -56,7 +73,9 @@ export const AuthProvider = ({ children }) => {
   // ------------------------------------------
 
   const getUserId = (userObject) => {
-    if (!userObject) return null;
+    if (!userObject) {
+      return null;
+    }
 
     if (typeof userObject === "string") {
       return userObject;
@@ -73,7 +92,10 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   // ------------------------------------------
 
-  const login = (userData, tokenData) => {
+  const login = (
+    userData,
+    tokenData
+  ) => {
     localStorage.setItem(
       "token",
       tokenData
@@ -87,9 +109,9 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     setToken(tokenData);
 
-    // Reset notifications when logging in
     setPendingSwapCount(0);
     setUnreadMessageCount(0);
+    setLastReceivedMessage(null);
   };
 
   // ------------------------------------------
@@ -97,7 +119,6 @@ export const AuthProvider = ({ children }) => {
   // ------------------------------------------
 
   const logout = () => {
-    // Disconnect Socket.IO
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
@@ -111,51 +132,55 @@ export const AuthProvider = ({ children }) => {
 
     setPendingSwapCount(0);
     setUnreadMessageCount(0);
+    setLastReceivedMessage(null);
   };
 
   // ------------------------------------------
   // FETCH PENDING SWAP COUNT
   // ------------------------------------------
 
-  const fetchPendingSwapCount = async () => {
-    if (!token) {
-      setPendingSwapCount(0);
-      return;
-    }
+  const fetchPendingSwapCount =
+    async () => {
+      if (!token) {
+        setPendingSwapCount(0);
+        return;
+      }
 
-    try {
-      const response = await api.get(
-        "/swaps/received"
-      );
+      try {
+        const response =
+          await api.get(
+            "/swaps/received"
+          );
 
-      const pendingCount = (
-        response.data.swaps || []
-      ).filter(
-        (swap) => swap.status === "pending"
-      ).length;
+        const pendingCount = (
+          response.data.swaps || []
+        ).filter(
+          (swap) =>
+            swap.status === "pending"
+        ).length;
 
-      setPendingSwapCount(
-        pendingCount
-      );
-    } catch (error) {
-      console.error(
-        "Fetch pending swap requests error:",
-        error
-      );
-    }
-  };
+        setPendingSwapCount(
+          pendingCount
+        );
+      } catch (error) {
+        console.error(
+          "Fetch pending swap requests error:",
+          error
+        );
+      }
+    };
 
   // ------------------------------------------
   // GLOBAL SOCKET.IO CONNECTION
   // ------------------------------------------
 
   useEffect(() => {
-    // Don't connect if user is not logged in
     if (!user || !token) {
       return;
     }
 
-    const userId = getUserId(user);
+    const userId =
+      getUserId(user);
 
     if (!userId) {
       console.error(
@@ -169,7 +194,6 @@ export const AuthProvider = ({ children }) => {
       "Creating global Socket.IO connection..."
     );
 
-    // Create Socket.IO connection
     const socket = io(
       "http://localhost:5000",
       {
@@ -188,16 +212,6 @@ export const AuthProvider = ({ children }) => {
         "Global Socket connected:",
         socket.id
       );
-
-      /*
-       * IMPORTANT:
-       *
-       * This must match your backend:
-       *
-       * socket.on("registerUser", (userId) => {
-       *   addUser(userId, socket.id);
-       * });
-       */
 
       socket.emit(
         "registerUser",
@@ -223,13 +237,19 @@ export const AuthProvider = ({ children }) => {
         );
 
         /*
-         * Increase unread message count.
+         * IMPORTANT
          *
-         * We are keeping this manual for now.
-         * Opening /chat will NOT automatically
-         * clear the count yet.
+         * Store the latest incoming message
+         * so Chat.jsx can react to it instantly.
          */
+        setLastReceivedMessage(
+          newMessage
+        );
 
+        /*
+         * Increase global Navbar
+         * unread notification.
+         */
         setUnreadMessageCount(
           (previousCount) =>
             previousCount + 1
@@ -255,12 +275,15 @@ export const AuthProvider = ({ children }) => {
     // SOCKET DISCONNECTED
     // ----------------------------------------
 
-    socket.on("disconnect", (reason) => {
-      console.log(
-        "Global Socket disconnected:",
-        reason
-      );
-    });
+    socket.on(
+      "disconnect",
+      (reason) => {
+        console.log(
+          "Global Socket disconnected:",
+          reason
+        );
+      }
+    );
 
     // ----------------------------------------
     // CLEANUP
@@ -305,6 +328,9 @@ export const AuthProvider = ({ children }) => {
     // Chat notifications
     unreadMessageCount,
     setUnreadMessageCount,
+
+    // Latest real-time message
+    lastReceivedMessage,
   };
 
   return (
