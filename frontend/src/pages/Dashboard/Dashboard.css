@@ -1,0 +1,258 @@
+.dashboard-page {
+  min-height: calc(100vh - 80px);
+  background: #f8fafc;
+  padding: 50px 20px;
+}
+
+.dashboard-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ================= LOADING ================= */
+
+.dashboard-loading {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: #6b7280;
+}
+
+/* ================= WELCOME SECTION ================= */
+
+.dashboard-welcome {
+  margin-bottom: 40px;
+}
+
+.welcome-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.dashboard-welcome h1 {
+  font-size: 36px;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.dashboard-welcome h1 span {
+  color: #2563eb;
+}
+
+.dashboard-welcome p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* ================= SKILLS GRID ================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 45px;
+}
+
+.dashboard-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 25px;
+  min-height: 180px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.card-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 20px;
+  color: #111827;
+}
+
+.card-header h2 svg {
+  color: #2563eb;
+  font-size: 18px;
+}
+
+.card-header a {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.card-header a:hover {
+  text-decoration: underline;
+}
+
+/* ================= SKILLS ================= */
+
+.dashboard-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dashboard-skill {
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dashboard-skill.teach {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dashboard-skill.learn {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty-card {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.empty-card p {
+  margin-bottom: 12px;
+}
+
+.empty-card a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.empty-card a:hover {
+  text-decoration: underline;
+}
+
+/* ================= QUICK ACTIONS ================= */
+
+.quick-actions-section {
+  margin-bottom: 35px;
+}
+
+.quick-actions-section > h2 {
+  font-size: 24px;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.quick-action-card {
+  display: block;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 25px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.action-icon {
+  font-size: 28px;
+  color: #2563eb;
+  margin-bottom: 15px;
+}
+
+.quick-action-card h3 {
+  color: #111827;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.quick-action-card p {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ================= PROFILE REMINDER ================= */
+
+.profile-reminder {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 24px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-reminder h3 {
+  color: #1e3a8a;
+  margin-bottom: 6px;
+}
+
+.profile-reminder p {
+  color: #475569;
+  font-size: 14px;
+}
+
+.profile-reminder a {
+  background: #2563eb;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.profile-reminder a:hover {
+  background: #1d4ed8;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .dashboard-page {
+    padding: 35px 15px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-grid,
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-reminder {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

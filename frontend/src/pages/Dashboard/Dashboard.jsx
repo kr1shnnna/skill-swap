@@ -1,5 +1,12 @@
 import { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import {
+  FaSearch,
+  FaUserEdit,
+  FaChalkboardTeacher,
+  FaBookOpen,
+} from "react-icons/fa";
+
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../services/api";
 import "./Dashboard.css";
@@ -51,13 +58,16 @@ const Dashboard = () => {
           </p>
         </section>
 
-
         {/* Skills Overview */}
         <section className="dashboard-grid">
 
+          {/* Skills to Teach */}
           <div className="dashboard-card">
             <div className="card-header">
-              <h2>Skills I Can Teach</h2>
+              <h2>
+                <FaChalkboardTeacher />
+                Skills I Can Teach
+              </h2>
 
               <Link to="/profile">Edit</Link>
             </div>
@@ -81,10 +91,13 @@ const Dashboard = () => {
             )}
           </div>
 
-
+          {/* Skills to Learn */}
           <div className="dashboard-card">
             <div className="card-header">
-              <h2>Skills I Want to Learn</h2>
+              <h2>
+                <FaBookOpen />
+                Skills I Want to Learn
+              </h2>
 
               <Link to="/profile">Edit</Link>
             </div>
@@ -110,7 +123,6 @@ const Dashboard = () => {
 
         </section>
 
-
         {/* Quick Actions */}
         <section className="quick-actions-section">
 
@@ -122,7 +134,9 @@ const Dashboard = () => {
               to="/find-skills"
               className="quick-action-card"
             >
-              <div className="action-icon">🔍</div>
+              <div className="action-icon">
+                <FaSearch />
+              </div>
 
               <h3>Find Skill Matches</h3>
 
@@ -132,12 +146,13 @@ const Dashboard = () => {
               </p>
             </Link>
 
-
             <Link
               to="/profile"
               className="quick-action-card"
             >
-              <div className="action-icon">✏️</div>
+              <div className="action-icon">
+                <FaUserEdit />
+              </div>
 
               <h3>Update Profile</h3>
 
@@ -150,8 +165,7 @@ const Dashboard = () => {
 
         </section>
 
-
-        {/* Profile Completion */}
+        {/* Profile Completion Reminder */}
         {profile &&
           (profile.skillsToTeach.length === 0 ||
             profile.skillsToLearn.length === 0) && (

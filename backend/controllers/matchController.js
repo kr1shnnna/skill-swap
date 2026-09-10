@@ -4,12 +4,18 @@ const getMatches = async (req, res) => {
   try {
     // Get the logged-in user
     const currentUser = await User.findById(req.user.userId);
+  
+
 
     if (!currentUser) {
       return res.status(404).json({
         message: "User not found",
       });
     }
+
+
+
+
 
     // Skills the current user wants to learn
     const skillsToLearn = currentUser.skillsToLearn.map((skill) =>
@@ -27,6 +33,7 @@ const getMatches = async (req, res) => {
     const users = await User.find({
       _id: { $ne: currentUser._id },
     }).select("-password");
+
 
     const matches = users
       .map((user) => {

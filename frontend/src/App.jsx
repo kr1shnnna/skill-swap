@@ -6,6 +6,8 @@ import Register from "./pages/Register/Register"
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Profile from "./pages/Profile/Profile";
+import FindSkills from "./pages/FindSkills/FindSkills";
+
 
 
 
@@ -36,6 +38,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+  path="/find-skills"
+  element={
+    <ProtectedRoute>
+      <FindSkills />
+    </ProtectedRoute>
+  }
+/>
+
         
 
      </Routes>
