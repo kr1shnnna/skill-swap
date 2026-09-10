@@ -117,6 +117,106 @@ const Chat = () => {
   };
 
   /*
+ * ------------------------------------------
+ * CHECK IF TWO DATES ARE SAME DAY
+ * ------------------------------------------
+ */
+
+const isSameDay = (dateA, dateB) => {
+  const firstDate = new Date(dateA);
+  const secondDate = new Date(dateB);
+
+  return (
+    firstDate.getFullYear() ===
+      secondDate.getFullYear() &&
+    firstDate.getMonth() ===
+      secondDate.getMonth() &&
+    firstDate.getDate() ===
+      secondDate.getDate()
+  );
+};
+
+/*
+ * ------------------------------------------
+ * FORMAT DATE SEPARATOR
+ * ------------------------------------------
+ */
+
+const formatDateSeparator = (date) => {
+  if (!date) return "";
+
+  const messageDate = new Date(date);
+
+  if (
+    Number.isNaN(
+      messageDate.getTime()
+    )
+  ) {
+    return "";
+  }
+
+  const today = new Date();
+
+  const yesterday = new Date();
+  yesterday.setDate(
+    yesterday.getDate() - 1
+  );
+
+  if (
+    isSameDay(
+      messageDate,
+      today
+    )
+  ) {
+    return "Today";
+  }
+
+  if (
+    isSameDay(
+      messageDate,
+      yesterday
+    )
+  ) {
+    return "Yesterday";
+  }
+
+  /*
+   * Messages from the current year:
+   * Monday, September 7
+   */
+
+  if (
+    messageDate.getFullYear() ===
+    today.getFullYear()
+  ) {
+    return messageDate.toLocaleDateString(
+      [],
+      {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }
+    );
+  }
+
+  /*
+   * Older messages:
+   * Monday, September 7, 2025
+   */
+
+  return messageDate.toLocaleDateString(
+    [],
+    {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }
+  );
+};
+
+
+  /*
    * ------------------------------------------
    * CLEAR TYPING STATE
    * ------------------------------------------
@@ -1456,75 +1556,119 @@ const Chat = () => {
 
                     <div className="messages-list">
 
-                      {messages.map(
-                        (message) => {
+                    {messages.map(
+  (message, index) => {
 
-                          const senderId =
-                            getUserId(
-                              message.sender
-                            );
+    const senderId =
+      getUserId(
+        message.sender
+      );
 
-                          const currentUserId =
-                            getUserId(user);
+    const currentUserId =
+      getUserId(user);
 
-                          const isMine =
-                            senderId ===
-                            currentUserId;
+    const isMine =
+      senderId ===
+      currentUserId;
 
-                          return (
-                            <div
-                              key={
-                                message._id
-                              }
-                              className={`message-row ${
-                                isMine
-                                  ? "mine"
-                                  : "theirs"
-                              }`}
-                            >
+    /*
+     * Show a date separator when:
+     *
+     * 1. This is the first message
+     * OR
+     * 2. The previous message is from
+     *    a different day.
+     */
 
-                              <div className="message-bubble">
+    const previousMessage =
+      index > 0
+        ? messages[index - 1]
+        : null;
 
-                                <p>
-                                  {
-                                    message.message
-                                  }
-                                </p>
+    const shouldShowDateSeparator =
+      index === 0 ||
+      !isSameDay(
+        previousMessage.createdAt,
+        message.createdAt
+      );
 
-                                <div className="message-meta">
+    return (
+      <div
+        key={
+          message._id
+        }
+      >
 
-                                  <span>
-                                    {formatMessageTime(
-                                      message.createdAt
-                                    )}
-                                  </span>
+        {/* ============================ */}
+        {/* DATE SEPARATOR */}
+        {/* ============================ */}
 
-                                  {isMine && (
-                                    <span
-                                      className={`message-status ${
-                                        message.read
-                                          ? "seen"
-                                          : message.delivered
-                                          ? "delivered"
-                                          : ""
-                                      }`}
-                                    >
-                                      {message.read
-                                        ? "✓✓"
-                                        : message.delivered
-                                        ? "✓✓"
-                                        : "✓"}
-                                    </span>
-                                  )}
+        {shouldShowDateSeparator && (
+          <div className="message-date-separator">
+            <span>
+              {formatDateSeparator(
+                message.createdAt
+              )}
+            </span>
+          </div>
+        )}
 
-                                </div>
+        {/* ============================ */}
+        {/* MESSAGE */}
+        {/* ============================ */}
 
-                              </div>
+        <div
+          className={`message-row ${
+            isMine
+              ? "mine"
+              : "theirs"
+          }`}
+        >
 
-                            </div>
-                          );
-                        }
-                      )}
+          <div className="message-bubble">
+
+            <p>
+              {
+                message.message
+              }
+            </p>
+
+            <div className="message-meta">
+
+              <span>
+                {formatMessageTime(
+                  message.createdAt
+                )}
+              </span>
+
+              {isMine && (
+                <span
+                  className={`message-status ${
+                    message.read
+                      ? "seen"
+                      : message.delivered
+                      ? "delivered"
+                      : ""
+                  }`}
+                >
+                  {message.read
+                    ? "✓✓"
+                    : message.delivered
+                    ? "✓✓"
+                    : "✓"}
+                </span>
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+)}
 
                     </div>
                   )}
