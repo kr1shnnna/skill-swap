@@ -698,6 +698,19 @@
 }
 
 
+ .message-status.seen {
+  font-size:13px;
+  font-weight: 700;
+  color: #00e5ff;
+  opacity: 1;
+  text-shadow: 0 0 4px rgba(0, 229, 255, 0.35);
+}
+
+
+
+
+
+
 /* ==========================================
    RESPONSIVE
    ========================================== */

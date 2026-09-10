@@ -20,6 +20,7 @@ const Chat = () => {
     setUnreadMessageCount,
     lastReceivedMessage,
     deliveredMessageIds,
+    seenMessageIds,
   } = useContext(AuthContext);
 
   const [conversations, setConversations] =
@@ -131,6 +132,7 @@ const Chat = () => {
         /*
          * Current user is sender
          */
+
         if (senderId === currentUserId) {
           otherUser = swap.receiver;
         }
@@ -138,6 +140,7 @@ const Chat = () => {
         /*
          * Current user is receiver
          */
+
         else if (
           receiverId === currentUserId
         ) {
@@ -158,6 +161,7 @@ const Chat = () => {
         /*
          * Prevent duplicate conversations
          */
+
         if (
           !seenUserIds.has(otherUserId)
         ) {
@@ -509,6 +513,80 @@ const Chat = () => {
         )
     );
   }, [deliveredMessageIds]);
+
+  /*
+   * ------------------------------------------
+   * UPDATE SEEN MESSAGE
+   * ------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !seenMessageIds ||
+      seenMessageIds.length === 0
+    ) {
+      return;
+    }
+
+    /*
+     * Update messages currently
+     * displayed in the chat.
+     */
+
+    setMessages(
+      (previousMessages) =>
+        previousMessages.map(
+          (message) => {
+            if (
+              seenMessageIds.includes(
+                message._id
+              )
+            ) {
+              return {
+                ...message,
+                read: true,
+              };
+            }
+
+            return message;
+          }
+        )
+    );
+
+    /*
+     * Also update the latest message
+     * shown in the conversation sidebar.
+     */
+
+    setConversations(
+      (previousConversations) =>
+        previousConversations.map(
+          (conversation) => {
+            if (
+              !conversation.latestMessage
+            ) {
+              return conversation;
+            }
+
+            if (
+              seenMessageIds.includes(
+                conversation.latestMessage._id
+              )
+            ) {
+              return {
+                ...conversation,
+                latestMessage: {
+                  ...conversation.latestMessage,
+                  read: true,
+                },
+              };
+            }
+
+            return conversation;
+          }
+        )
+    );
+  }, [seenMessageIds]);
 
   /*
    * ------------------------------------------
@@ -1242,6 +1320,7 @@ const Chat = () => {
                                 </p>
 
                                 <div className="message-meta">
+
                                   <span>
                                     {formatMessageTime(
                                       message.createdAt
@@ -1251,16 +1330,21 @@ const Chat = () => {
                                   {isMine && (
                                     <span
                                       className={`message-status ${
-                                        message.delivered
+                                        message.read
+                                          ? "seen"
+                                          : message.delivered
                                           ? "delivered"
                                           : ""
                                       }`}
                                     >
-                                      {message.delivered
+                                      {message.read
+                                        ? "✓✓"
+                                        : message.delivered
                                         ? "✓✓"
                                         : "✓"}
                                     </span>
                                   )}
+
                                 </div>
 
                               </div>

@@ -252,6 +252,7 @@ const getUnreadMessageCount = async (
   }
 };
 
+
 // ------------------------------------------
 // MARK MESSAGES AS READ
 // ------------------------------------------
@@ -266,35 +267,73 @@ const markMessagesAsRead = async (
     const loggedInUserId =
       req.user.userId;
 
-    /*
-     * Mark only messages:
-     *
-     * userId -> loggedInUserId
-     *
-     * We do NOT mark our own messages
-     * as read.
-     */
+    // Find unread messages from the
+    // other user before marking them read.
+    const unreadMessages =
+      await Message.find({
+        sender: userId,
+        receiver: loggedInUserId,
+        read: false,
+      }).select("_id");
 
-    const result =
-      await Message.updateMany(
-        {
-          sender: userId,
-          receiver: loggedInUserId,
-          read: false,
+    // If there are no unread messages,
+    // nothing needs to be marked as seen.
+    if (unreadMessages.length === 0) {
+      return res.status(200).json({
+        message: "No unread messages",
+        updatedCount: 0,
+      });
+    }
+
+    const messageIds =
+      unreadMessages.map(
+        (message) =>
+          message._id
+      );
+
+    // Mark messages as read.
+    await Message.updateMany(
+      {
+        _id: {
+          $in: messageIds,
         },
+      },
+      {
+        $set: {
+          read: true,
+        },
+      }
+    );
+
+    // Get Socket.IO instance.
+    const io = req.app.get("io");
+
+    // Find the original sender's socket.
+    const senderSocketId =
+      getUserSocket(
+        userId.toString()
+      );
+
+    // Tell the sender that these
+    // messages have been seen.
+    if (senderSocketId) {
+      io.to(senderSocketId).emit(
+        "messagesSeen",
         {
-          $set: {
-            read: true,
-          },
+          messageIds:
+            messageIds.map(
+              (id) =>
+                id.toString()
+            ),
         }
       );
+    }
 
     res.status(200).json({
       message:
         "Messages marked as read",
-
       updatedCount:
-        result.modifiedCount || 0,
+        messageIds.length,
     });
   } catch (error) {
     console.error(

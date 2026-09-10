@@ -72,6 +72,15 @@ export const AuthProvider = ({ children }) => {
   ] = useState([]);
 
   // ------------------------------------------
+  // SEEN MESSAGE IDS
+  // ------------------------------------------
+
+  const [
+    seenMessageIds,
+    setSeenMessageIds,
+  ] = useState([]);
+
+  // ------------------------------------------
   // SOCKET.IO
   // ------------------------------------------
 
@@ -122,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     setUnreadMessageCount(0);
     setLastReceivedMessage(null);
     setDeliveredMessageIds([]);
+    setSeenMessageIds([]);
   };
 
   // ------------------------------------------
@@ -144,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     setUnreadMessageCount(0);
     setLastReceivedMessage(null);
     setDeliveredMessageIds([]);
+    setSeenMessageIds([]);
   };
 
   // ------------------------------------------
@@ -230,7 +241,6 @@ export const AuthProvider = ({ children }) => {
       console.error(
         "Unable to get logged-in user ID."
       );
-
       return;
     }
 
@@ -263,13 +273,11 @@ export const AuthProvider = ({ children }) => {
       async (newMessage) => {
         // Store latest incoming message
         // for Chat.jsx.
-
         setLastReceivedMessage(
           newMessage
         );
 
         // Increase global unread count.
-
         setUnreadMessageCount(
           (previousCount) =>
             previousCount + 1
@@ -323,6 +331,36 @@ export const AuthProvider = ({ children }) => {
     );
 
     // ----------------------------------------
+    // MESSAGES SEEN
+    // ----------------------------------------
+
+    socket.on(
+      "messagesSeen",
+      ({ messageIds }) => {
+        setSeenMessageIds(
+          (previousIds) => {
+            const newIds =
+              messageIds.filter(
+                (messageId) =>
+                  !previousIds.includes(
+                    messageId
+                  )
+              );
+
+            if (newIds.length === 0) {
+              return previousIds;
+            }
+
+            return [
+              ...previousIds,
+              ...newIds,
+            ];
+          }
+        );
+      }
+    );
+
+    // ----------------------------------------
     // SOCKET ERROR
     // ----------------------------------------
 
@@ -369,10 +407,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
-
     login,
     logout,
-
     isAuthenticated: !!token,
 
     // Swap notifications
@@ -389,6 +425,9 @@ export const AuthProvider = ({ children }) => {
 
     // Delivered messages
     deliveredMessageIds,
+
+    // Seen messages
+    seenMessageIds,
   };
 
   return (
