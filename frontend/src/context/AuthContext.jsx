@@ -63,6 +63,15 @@ export const AuthProvider = ({ children }) => {
   ] = useState(null);
 
   // ------------------------------------------
+  // DELIVERED MESSAGE IDS
+  // ------------------------------------------
+
+  const [
+    deliveredMessageIds,
+    setDeliveredMessageIds,
+  ] = useState([]);
+
+  // ------------------------------------------
   // SOCKET.IO
   // ------------------------------------------
 
@@ -112,6 +121,7 @@ export const AuthProvider = ({ children }) => {
     setPendingSwapCount(0);
     setUnreadMessageCount(0);
     setLastReceivedMessage(null);
+    setDeliveredMessageIds([]);
   };
 
   // ------------------------------------------
@@ -133,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     setPendingSwapCount(0);
     setUnreadMessageCount(0);
     setLastReceivedMessage(null);
+    setDeliveredMessageIds([]);
   };
 
   // ------------------------------------------
@@ -164,7 +175,7 @@ export const AuthProvider = ({ children }) => {
         );
       } catch (error) {
         console.error(
-          "Fetch pending swap requests error:",
+          "Fetch pending swap count error:",
           error
         );
       }
@@ -216,14 +227,65 @@ export const AuthProvider = ({ children }) => {
 
     socket.on(
       "receiveMessage",
-      (newMessage) => {
+      async (newMessage) => {
+        // Store latest incoming message
+        // for Chat.jsx.
+
         setLastReceivedMessage(
           newMessage
         );
 
+        // Increase global unread count.
+
         setUnreadMessageCount(
           (previousCount) =>
             previousCount + 1
+        );
+
+        // ------------------------------------
+        // DELIVERY CONFIRMATION
+        // ------------------------------------
+
+        // Tell backend that this message
+        // successfully reached the receiver.
+
+        try {
+          await api.patch(
+            "/messages/delivered",
+            {
+              messageId:
+                newMessage._id,
+            }
+          );
+        } catch (error) {
+          console.error(
+            "Message delivery confirmation error:",
+            error
+          );
+        }
+      }
+    );
+
+    // ----------------------------------------
+    // MESSAGE DELIVERED
+    // ----------------------------------------
+
+    socket.on(
+      "messageDelivered",
+      ({ messageId }) => {
+        setDeliveredMessageIds(
+          (previousIds) => {
+            if (
+              previousIds.includes(messageId)
+            ) {
+              return previousIds;
+            }
+
+            return [
+              ...previousIds,
+              messageId,
+            ];
+          }
         );
       }
     );
@@ -267,10 +329,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
-
     login,
     logout,
-
     isAuthenticated: !!token,
 
     // Swap notifications
@@ -283,6 +343,9 @@ export const AuthProvider = ({ children }) => {
 
     // Latest real-time message
     lastReceivedMessage,
+
+    // Delivered messages
+    deliveredMessageIds,
   };
 
   return (

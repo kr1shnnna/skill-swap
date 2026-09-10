@@ -19,6 +19,7 @@ const Chat = () => {
     user,
     setUnreadMessageCount,
     lastReceivedMessage,
+    deliveredMessageIds,
   } = useContext(AuthContext);
 
   const [conversations, setConversations] =
@@ -173,6 +174,7 @@ const Chat = () => {
       /*
        * Fetch messages for each conversation.
        */
+
       const conversationsWithMessages =
         await Promise.all(
           uniqueUsers.map(
@@ -226,6 +228,7 @@ const Chat = () => {
       /*
        * Sort by newest message.
        */
+
       conversationsWithMessages.sort(
         (a, b) => {
           const dateA = a.latestMessage
@@ -317,6 +320,7 @@ const Chat = () => {
        * open, immediately mark the new
        * message as read in MongoDB.
        */
+
       api
         .patch(
           `/messages/${senderId}/read`
@@ -394,6 +398,7 @@ const Chat = () => {
                  * Closed conversation:
                  *     increase unread count
                  */
+
                 unreadCount:
                   isCurrentConversation
                     ? 0
@@ -407,6 +412,7 @@ const Chat = () => {
          * Move latest conversation
          * to the top.
          */
+
         const latestConversation =
           updatedConversations.find(
             (conversation) =>
@@ -434,6 +440,75 @@ const Chat = () => {
     selectedUser,
     setUnreadMessageCount,
   ]);
+
+  /*
+   * ------------------------------------------
+   * UPDATE DELIVERED MESSAGE
+   * ------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !deliveredMessageIds ||
+      deliveredMessageIds.length === 0
+    ) {
+      return;
+    }
+
+    setMessages(
+      (previousMessages) =>
+        previousMessages.map(
+          (message) => {
+            if (
+              deliveredMessageIds.includes(
+                message._id
+              )
+            ) {
+              return {
+                ...message,
+                delivered: true,
+              };
+            }
+
+            return message;
+          }
+        )
+    );
+
+    /*
+     * Also update the latest message
+     * shown in the conversation sidebar.
+     */
+
+    setConversations(
+      (previousConversations) =>
+        previousConversations.map(
+          (conversation) => {
+            if (
+              !conversation.latestMessage
+            ) {
+              return conversation;
+            }
+
+            if (
+              deliveredMessageIds.includes(
+                conversation.latestMessage._id
+              )
+            ) {
+              return {
+                ...conversation,
+                latestMessage: {
+                  ...conversation.latestMessage,
+                  delivered: true,
+                },
+              };
+            }
+
+            return conversation;
+          }
+        )
+    );
+  }, [deliveredMessageIds]);
 
   /*
    * ------------------------------------------
@@ -509,6 +584,7 @@ const Chat = () => {
      * Remember unread count before
      * marking messages as read.
      */
+
     const unreadCountBeforeRead =
       Number(
         conversation.unreadCount
@@ -517,6 +593,7 @@ const Chat = () => {
     /*
      * Immediately clear sidebar badge.
      */
+
     if (unreadCountBeforeRead > 0) {
       setConversations(
         (previousConversations) =>
@@ -541,6 +618,7 @@ const Chat = () => {
     /*
      * Fetch conversation.
      */
+
     const messageData =
       await fetchMessages(
         otherUserId
@@ -549,6 +627,7 @@ const Chat = () => {
     /*
      * Backend unread count.
      */
+
     const backendUnreadCount =
       Number(
         messageData?.unreadCount
@@ -557,6 +636,7 @@ const Chat = () => {
     /*
      * Mark unread messages as read.
      */
+
     if (
       backendUnreadCount > 0 ||
       unreadCountBeforeRead > 0
@@ -576,6 +656,7 @@ const Chat = () => {
          * Keep conversation read
          * in sidebar.
          */
+
         setConversations(
           (previousConversations) =>
             previousConversations.map(
@@ -598,6 +679,7 @@ const Chat = () => {
         /*
          * Decrease Navbar unread count.
          */
+
         if (updatedCount > 0) {
           setUnreadMessageCount(
             (previousCount) =>
@@ -631,6 +713,7 @@ const Chat = () => {
       /*
        * Don't send empty messages.
        */
+
       if (!trimmedMessage) {
         return;
       }
@@ -638,6 +721,7 @@ const Chat = () => {
       /*
        * No selected user.
        */
+
       if (!selectedUser) {
         return;
       }
@@ -661,6 +745,7 @@ const Chat = () => {
         /*
          * Send through REST API.
          */
+
         const response =
           await api.post(
             "/messages",
@@ -677,14 +762,33 @@ const Chat = () => {
         /*
          * Add sent message immediately.
          */
+
         if (newMessage) {
+          /*
+           * If the delivery event arrived
+           * before this REST response,
+           * preserve the delivered state.
+           */
+
+          const isAlreadyDelivered =
+            deliveredMessageIds?.includes(
+              newMessage._id
+            );
+
+          const messageToAdd = {
+            ...newMessage,
+            delivered:
+              newMessage.delivered ||
+              isAlreadyDelivered,
+          };
+
           setMessages(
             (previousMessages) => {
               const alreadyExists =
                 previousMessages.some(
                   (message) =>
                     message._id ===
-                    newMessage._id
+                    messageToAdd._id
                 );
 
               if (alreadyExists) {
@@ -693,7 +797,7 @@ const Chat = () => {
 
               return [
                 ...previousMessages,
-                newMessage,
+                messageToAdd,
               ];
             }
           );
@@ -701,6 +805,7 @@ const Chat = () => {
           /*
            * Update sidebar preview.
            */
+
           setConversations(
             (previousConversations) => {
               const updated =
@@ -717,7 +822,7 @@ const Chat = () => {
                     return {
                       ...conversation,
                       latestMessage:
-                        newMessage,
+                        messageToAdd,
                       unreadCount: 0,
                     };
                   }
@@ -726,6 +831,7 @@ const Chat = () => {
               /*
                * Move conversation to top.
                */
+
               const selectedConversation =
                 updated.find(
                   (conversation) =>
@@ -755,6 +861,7 @@ const Chat = () => {
         /*
          * Clear input.
          */
+
         setMessageText("");
       } catch (error) {
         console.error(
@@ -1134,11 +1241,27 @@ const Chat = () => {
                                   }
                                 </p>
 
-                                <span>
-                                  {formatMessageTime(
-                                    message.createdAt
+                                <div className="message-meta">
+                                  <span>
+                                    {formatMessageTime(
+                                      message.createdAt
+                                    )}
+                                  </span>
+
+                                  {isMine && (
+                                    <span
+                                      className={`message-status ${
+                                        message.delivered
+                                          ? "delivered"
+                                          : ""
+                                      }`}
+                                    >
+                                      {message.delivered
+                                        ? "✓✓"
+                                        : "✓"}
+                                    </span>
                                   )}
-                                </span>
+                                </div>
 
                               </div>
 

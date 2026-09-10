@@ -2,6 +2,7 @@ const Message = require("../models/Message");
 const Swap = require("../models/Swap");
 const { getUserSocket } = require("../socket/socketManager");
 
+
 const sendMessage = async (req, res) => {
   try {
     const { receiverId, message } = req.body;
@@ -10,7 +11,8 @@ const sendMessage = async (req, res) => {
     // Check required fields
     if (!receiverId || !message) {
       return res.status(400).json({
-        message: "Receiver ID and message are required",
+        message:
+          "Receiver ID and message are required",
       });
     }
 
@@ -41,6 +43,8 @@ const sendMessage = async (req, res) => {
       sender: senderId,
       receiver: receiverId,
       message,
+      delivered: false,
+      read: false,
     });
 
     // Get Socket.IO instance
@@ -49,7 +53,7 @@ const sendMessage = async (req, res) => {
     const receiverSocketId =
       getUserSocket(receiverId);
 
-    // Send real-time message to receiver
+    // Send message to receiver
     if (receiverSocketId) {
       io.to(receiverSocketId).emit(
         "receiveMessage",
@@ -72,6 +76,93 @@ const sendMessage = async (req, res) => {
     });
   }
 };
+
+
+const markMessageAsDelivered = async (
+  req,
+  res
+) => {
+  try {
+    const { messageId } = req.body;
+
+    const loggedInUserId =
+      req.user.userId;
+
+    if (!messageId) {
+      return res.status(400).json({
+        message: "Message ID is required",
+      });
+    }
+
+    const message =
+      await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({
+        message: "Message not found",
+      });
+    }
+
+    /*
+     * Only the receiver can mark
+     * a message as delivered.
+     */
+    if (
+      message.receiver.toString() !==
+      loggedInUserId.toString()
+    ) {
+      return res.status(403).json({
+        message:
+          "You cannot mark this message as delivered",
+      });
+    }
+
+    /*
+     * Mark as delivered.
+     */
+    if (!message.delivered) {
+      message.delivered = true;
+
+      await message.save();
+    }
+
+    /*
+     * Tell the original sender that
+     * their message was delivered.
+     */
+    const io = req.app.get("io");
+
+    const senderSocketId =
+      getUserSocket(
+        message.sender.toString()
+      );
+
+    if (senderSocketId) {
+      io.to(senderSocketId).emit(
+        "messageDelivered",
+        {
+          messageId:
+            message._id.toString(),
+        }
+      );
+    }
+
+    res.status(200).json({
+      message:
+        "Message marked as delivered",
+    });
+  } catch (error) {
+    console.error(
+      "Mark message as delivered error:",
+      error.message
+    );
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 
 const getMessages = async (req, res) => {
   try {
@@ -166,4 +257,5 @@ module.exports = {
   sendMessage,
   getMessages,
   markMessagesAsRead,
+  markMessageAsDelivered
 };

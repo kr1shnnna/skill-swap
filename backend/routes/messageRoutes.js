@@ -4,6 +4,7 @@ const {
   sendMessage,
   getMessages,
   markMessagesAsRead,
+  markMessageAsDelivered
 } = require("../controllers/messageController");
 
 const protect = require("../middlewares/authMiddleware");
@@ -29,6 +30,13 @@ router.patch(
   "/:userId/read",
   protect,
   markMessagesAsRead
+);
+
+// Mark a specific message as delivered
+router.patch(
+  "/delivered",
+  protect,
+  markMessageAsDelivered
 );
 
 module.exports = router;
