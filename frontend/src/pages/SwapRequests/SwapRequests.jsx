@@ -1,21 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+
 import {
   FaUserCircle,
   FaCheck,
   FaTimes,
   FaPaperPlane,
 } from "react-icons/fa";
+
 import api from "../../services/api";
+import { AuthContext } from "../../context/AuthContext";
+
 import "./SwapRequests.css";
 
 const SwapRequests = () => {
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
-
   const [error, setError] = useState("");
+
+  const { fetchPendingSwapCount } = useContext(AuthContext);
 
   useEffect(() => {
     fetchRequests();
@@ -52,7 +56,11 @@ const SwapRequests = () => {
 
       await api.patch(`/swaps/${swapId}/accept`);
 
+      // Refresh the swap request list
       await fetchRequests();
+
+      // Immediately update notification badge
+      await fetchPendingSwapCount();
     } catch (error) {
       console.error("Accept swap request error:", error);
 
@@ -72,7 +80,11 @@ const SwapRequests = () => {
 
       await api.patch(`/swaps/${swapId}/reject`);
 
+      // Refresh the swap request list
       await fetchRequests();
+
+      // Immediately update notification badge
+      await fetchPendingSwapCount();
     } catch (error) {
       console.error("Reject swap request error:", error);
 
@@ -127,6 +139,7 @@ const SwapRequests = () => {
           <div className="requests-section-header">
             <div>
               <h2>Incoming Requests</h2>
+
               <p>
                 Students who want to exchange skills with you.
               </p>
@@ -151,13 +164,19 @@ const SwapRequests = () => {
           ) : (
             <div className="requests-list">
               {receivedRequests.map((swap) => (
-                <div className="request-card" key={swap._id}>
+                <div
+                  className="request-card"
+                  key={swap._id}
+                >
                   <div className="request-user">
                     <FaUserCircle className="request-user-icon" />
 
                     <div>
                       <h3>{swap.sender?.name}</h3>
-                      <p>Wants to exchange skills with you</p>
+
+                      <p>
+                        Wants to exchange skills with you
+                      </p>
                     </div>
                   </div>
 
@@ -169,7 +188,9 @@ const SwapRequests = () => {
                           onClick={() =>
                             handleAccept(swap._id)
                           }
-                          disabled={actionLoading === swap._id}
+                          disabled={
+                            actionLoading === swap._id
+                          }
                         >
                           <FaCheck />
 
@@ -183,7 +204,9 @@ const SwapRequests = () => {
                           onClick={() =>
                             handleReject(swap._id)
                           }
-                          disabled={actionLoading === swap._id}
+                          disabled={
+                            actionLoading === swap._id
+                          }
                         >
                           <FaTimes />
                           Reject
@@ -208,6 +231,7 @@ const SwapRequests = () => {
           <div className="requests-section-header">
             <div>
               <h2>Sent Requests</h2>
+
               <p>
                 Track the skill exchange requests you've sent.
               </p>
@@ -232,12 +256,16 @@ const SwapRequests = () => {
           ) : (
             <div className="requests-list">
               {sentRequests.map((swap) => (
-                <div className="request-card" key={swap._id}>
+                <div
+                  className="request-card"
+                  key={swap._id}
+                >
                   <div className="request-user">
                     <FaUserCircle className="request-user-icon" />
 
                     <div>
                       <h3>{swap.receiver?.name}</h3>
+
                       <p>Swap request sent</p>
                     </div>
                   </div>
@@ -254,6 +282,7 @@ const SwapRequests = () => {
             </div>
           )}
         </section>
+
       </div>
     </main>
   );
