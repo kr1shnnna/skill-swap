@@ -16,6 +16,11 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [requestError, setRequestError] = useState("");
+
+
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -35,6 +40,32 @@ const StudentProfile = () => {
 
     fetchStudent();
   }, [userId]);
+
+
+  const handleSendRequest = async () => {
+  setRequestLoading(true);
+  setRequestMessage("");
+  setRequestError("");
+
+  try {
+    const response = await api.post("/swaps", {
+      receiverId: userId,
+    });
+
+    setRequestMessage(
+      response.data.message || "Swap request sent successfully!"
+    );
+  } catch (error) {
+    console.error("Send swap request error:", error);
+
+    setRequestError(
+      error.response?.data?.message ||
+        "Unable to send swap request."
+    );
+  } finally {
+    setRequestLoading(false);
+  }
+};
 
   if (loading) {
     return (
@@ -144,9 +175,28 @@ const StudentProfile = () => {
 
           {/* Action */}
           <div className="student-profile-action">
-            <button className="send-request-btn">
-              Send Swap Request
-            </button>
+            
+            <button
+  className="send-request-btn"
+  onClick={handleSendRequest}
+  disabled={requestLoading}
+>
+  {requestLoading
+    ? "Sending..."
+    : "Send Swap Request"}
+</button>
+
+{requestMessage && (
+  <p className="request-success">
+    {requestMessage}
+  </p>
+)}
+
+{requestError && (
+  <p className="request-error">
+    {requestError}
+  </p>
+)}  
           </div>
 
         </section>
