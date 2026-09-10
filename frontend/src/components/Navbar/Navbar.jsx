@@ -17,6 +17,8 @@ import {
   FaChevronDown,
   FaBell,
   FaComments,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 
 import "./Navbar.css";
@@ -33,6 +35,9 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] =
     useState(false);
 
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
+
   const dropdownRef = useRef(null);
 
   const navigate = useNavigate();
@@ -47,6 +52,7 @@ const Navbar = () => {
     logout();
 
     setDropdownOpen(false);
+    setMobileMenuOpen(false);
 
     navigate("/");
   };
@@ -84,6 +90,54 @@ const Navbar = () => {
 
   /*
    * ------------------------------------------
+   * CLOSE MOBILE MENU WHEN SCREEN BECOMES DESKTOP
+   * ------------------------------------------
+   */
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener(
+      "resize",
+      handleResize
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+    };
+  }, []);
+
+  /*
+   * ------------------------------------------
+   * CLOSE MOBILE MENU
+   * ------------------------------------------
+   */
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  /*
+   * ------------------------------------------
+   * TOGGLE MOBILE MENU
+   * ------------------------------------------
+   */
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(
+      (previous) => !previous
+    );
+  };
+
+  /*
+   * ------------------------------------------
    * UI
    * ------------------------------------------
    */
@@ -98,12 +152,13 @@ const Navbar = () => {
       <Link
         to="/"
         className="navbar-logo"
+        onClick={closeMobileMenu}
       >
         Skill <span>Swap</span>
       </Link>
 
       {/* ====================================== */}
-      {/* NAVIGATION LINKS */}
+      {/* DESKTOP NAVIGATION LINKS */}
       {/* ====================================== */}
 
       <div className="navbar-links">
@@ -129,9 +184,7 @@ const Navbar = () => {
       <div className="navbar-actions">
 
         {isAuthenticated ? (
-
           <>
-
             {/* ================================= */}
             {/* CHAT NOTIFICATION */}
             {/* ================================= */}
@@ -141,7 +194,6 @@ const Navbar = () => {
               className="notification-btn"
               title="Messages"
             >
-
               <FaComments />
 
               {unreadMessageCount > 0 && (
@@ -151,7 +203,6 @@ const Navbar = () => {
                     : unreadMessageCount}
                 </span>
               )}
-
             </Link>
 
             {/* ================================= */}
@@ -163,7 +214,6 @@ const Navbar = () => {
               className="notification-btn"
               title="Swap Requests"
             >
-
               <FaBell />
 
               {pendingSwapCount > 0 && (
@@ -173,7 +223,6 @@ const Navbar = () => {
                     : pendingSwapCount}
                 </span>
               )}
-
             </Link>
 
             {/* ================================= */}
@@ -184,7 +233,6 @@ const Navbar = () => {
               className="user-dropdown"
               ref={dropdownRef}
             >
-
               <button
                 className="user-dropdown-btn"
                 onClick={() =>
@@ -193,7 +241,6 @@ const Navbar = () => {
                   )
                 }
               >
-
                 <FaUserCircle className="user-icon" />
 
                 <span>
@@ -207,15 +254,13 @@ const Navbar = () => {
                       : ""
                   }`}
                 />
-
               </button>
 
-              {/* ================================= */}
+              {/* ============================= */}
               {/* DROPDOWN MENU */}
-              {/* ================================= */}
+              {/* ============================= */}
 
               {dropdownOpen && (
-
                 <div className="dropdown-menu">
 
                   {/* Profile */}
@@ -227,11 +272,8 @@ const Navbar = () => {
                       setDropdownOpen(false)
                     }
                   >
-
                     <FaUser />
-
                     My Profile
-
                   </Link>
 
                   {/* Dashboard */}
@@ -243,11 +285,8 @@ const Navbar = () => {
                       setDropdownOpen(false)
                     }
                   >
-
                     <FaTachometerAlt />
-
                     Dashboard
-
                   </Link>
 
                   {/* Divider */}
@@ -262,25 +301,16 @@ const Navbar = () => {
                       handleLogout
                     }
                   >
-
                     <FaSignOutAlt />
-
                     Logout
-
                   </button>
 
                 </div>
-
               )}
-
             </div>
-
           </>
-
         ) : (
-
           <>
-
             {/* ================================= */}
             {/* LOGIN */}
             {/* ================================= */}
@@ -302,12 +332,193 @@ const Navbar = () => {
             >
               Get Started
             </Link>
-
           </>
-
         )}
 
       </div>
+
+      {/* ====================================== */}
+      {/* MOBILE HAMBURGER */}
+      {/* ====================================== */}
+
+      <button
+        className="mobile-menu-btn"
+        onClick={toggleMobileMenu}
+        aria-label="Toggle navigation menu"
+        aria-expanded={mobileMenuOpen}
+      >
+        {mobileMenuOpen ? (
+          <FaTimes />
+        ) : (
+          <FaBars />
+        )}
+      </button>
+
+      {/* ====================================== */}
+      {/* MOBILE MENU */}
+      {/* ====================================== */}
+
+      {mobileMenuOpen && (
+        <div className="mobile-menu">
+
+          <div className="mobile-menu-links">
+
+            <Link
+              to="/"
+              onClick={closeMobileMenu}
+            >
+              Home
+            </Link>
+
+            <Link
+              to="/find-skills"
+              onClick={closeMobileMenu}
+            >
+              Find Skills
+            </Link>
+
+            <Link
+              to="/how-it-works"
+              onClick={closeMobileMenu}
+            >
+              How it Works
+            </Link>
+
+          </div>
+
+          {/* ================================= */}
+          {/* MOBILE AUTHENTICATED ACTIONS */}
+          {/* ================================= */}
+
+          {isAuthenticated ? (
+            <div className="mobile-user-section">
+
+              <div className="mobile-user-info">
+
+                <FaUserCircle />
+
+                <div>
+                  <strong>
+                    {user?.name}
+                  </strong>
+
+                  <span>
+                    SkillSwap Student
+                  </span>
+                </div>
+
+              </div>
+
+              <Link
+                to="/chat"
+                className="mobile-action-link"
+                onClick={closeMobileMenu}
+              >
+                <FaComments />
+
+                <span>
+                  Messages
+                </span>
+
+                {unreadMessageCount >
+                  0 && (
+                  <span className="mobile-badge">
+                    {unreadMessageCount >
+                    9
+                      ? "9+"
+                      : unreadMessageCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                to="/swap-requests"
+                className="mobile-action-link"
+                onClick={closeMobileMenu}
+              >
+                <FaBell />
+
+                <span>
+                  Swap Requests
+                </span>
+
+                {pendingSwapCount >
+                  0 && (
+                  <span className="mobile-badge">
+                    {pendingSwapCount >
+                    9
+                      ? "9+"
+                      : pendingSwapCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                to="/profile"
+                className="mobile-action-link"
+                onClick={closeMobileMenu}
+              >
+                <FaUser />
+
+                <span>
+                  My Profile
+                </span>
+              </Link>
+
+              <Link
+                to="/dashboard"
+                className="mobile-action-link"
+                onClick={closeMobileMenu}
+              >
+                <FaTachometerAlt />
+
+                <span>
+                  Dashboard
+                </span>
+              </Link>
+
+              <button
+                className="mobile-action-link mobile-logout"
+                onClick={
+                  handleLogout
+                }
+              >
+                <FaSignOutAlt />
+
+                <span>
+                  Logout
+                </span>
+              </button>
+
+            </div>
+          ) : (
+            /* ================================= */
+            /* MOBILE GUEST ACTIONS */
+            /* ================================= */
+
+            <div className="mobile-auth-buttons">
+
+              <Link
+                to="/login"
+                className="mobile-login-btn"
+                onClick={closeMobileMenu}
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/register"
+                className="mobile-signup-btn"
+                onClick={closeMobileMenu}
+              >
+                Get Started
+              </Link>
+
+            </div>
+          )}
+
+        </div>
+      )}
 
     </nav>
   );

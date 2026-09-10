@@ -250,3 +250,428 @@
 }
 
 
+/* ==========================================
+   MOBILE MENU BUTTON
+   ========================================== */
+
+.mobile-menu-btn {
+  display: none;
+
+  border: none;
+  background: transparent;
+
+  color: #111827;
+
+  font-size: 22px;
+
+  cursor: pointer;
+
+  padding: 8px;
+
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ==========================================
+   MOBILE MENU
+   ========================================== */
+
+.mobile-menu {
+  display: none;
+}
+
+
+/* ==========================================
+   TABLET + MOBILE
+   ========================================== */
+
+@media (max-width: 768px) {
+
+  .navbar {
+    height: 64px;
+
+    padding: 0 20px;
+
+    position: relative;
+  }
+
+
+  /* ------------------------------------------
+     LOGO
+     ------------------------------------------ */
+
+  .navbar-logo {
+    font-size: 21px;
+  }
+
+
+  /* ------------------------------------------
+     HIDE DESKTOP NAVIGATION
+     ------------------------------------------ */
+
+  .navbar-links {
+    display: none;
+  }
+
+
+  /* ------------------------------------------
+     HIDE DESKTOP ACTIONS
+     ------------------------------------------ */
+
+  .navbar-actions {
+    display: none;
+  }
+
+
+  /* ------------------------------------------
+     SHOW HAMBURGER
+     ------------------------------------------ */
+
+  .mobile-menu-btn {
+    display: flex;
+
+    margin-left: auto;
+  }
+
+
+  /* ------------------------------------------
+     MOBILE DROPDOWN MENU
+     ------------------------------------------ */
+
+  .mobile-menu {
+    display: block;
+
+    position: absolute;
+
+    top: 64px;
+
+    left: 0;
+    right: 0;
+
+    background: #ffffff;
+
+    border-top: 1px solid #e5e7eb;
+
+    box-shadow:
+      0 10px 25px
+      rgba(0, 0, 0, 0.08);
+
+    z-index: 9999;
+
+    padding: 14px 20px 20px;
+  }
+
+
+  /* ------------------------------------------
+     MOBILE NAV LINKS
+     ------------------------------------------ */
+
+  .mobile-menu-links {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+
+  .mobile-menu-links a {
+    display: block;
+
+    padding: 12px 10px;
+
+    border-radius: 8px;
+
+    color: #374151;
+
+    text-decoration: none;
+
+    font-size: 15px;
+
+    font-weight: 500;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+
+  .mobile-menu-links a:hover {
+    background: #f3f4f6;
+
+    color: #2563eb;
+  }
+
+
+  /* ==========================================
+     MOBILE USER SECTION
+     ========================================== */
+
+  .mobile-user-section {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    padding-top: 14px;
+  }
+
+
+  /* ------------------------------------------
+     USER INFO
+     ------------------------------------------ */
+
+  .mobile-user-info {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px;
+
+    margin-bottom: 7px;
+
+    background: #f8fafc;
+
+    border-radius: 10px;
+  }
+
+
+  .mobile-user-info > svg {
+    font-size: 34px;
+
+    color: #2563eb;
+
+    flex-shrink: 0;
+  }
+
+
+  .mobile-user-info div {
+    display: flex;
+
+    flex-direction: column;
+
+    min-width: 0;
+  }
+
+
+  .mobile-user-info strong {
+    color: #111827;
+
+    font-size: 14px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+  }
+
+
+  .mobile-user-info span {
+    color: #6b7280;
+
+    font-size: 12px;
+
+    margin-top: 2px;
+  }
+
+
+  /* ==========================================
+     MOBILE ACTION LINKS
+     ========================================== */
+
+  .mobile-action-link {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 12px 10px;
+
+    border: none;
+
+    background: transparent;
+
+    border-radius: 8px;
+
+    color: #374151;
+
+    text-decoration: none;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+
+  .mobile-action-link:hover {
+    background: #f3f4f6;
+
+    color: #2563eb;
+  }
+
+
+  .mobile-action-link svg {
+    width: 16px;
+
+    flex-shrink: 0;
+  }
+
+
+  /* ==========================================
+     MOBILE BADGES
+     ========================================== */
+
+  .mobile-badge {
+    margin-left: auto;
+
+    min-width: 20px;
+
+    height: 20px;
+
+    padding: 0 6px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: #dc2626;
+
+    color: #ffffff;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    box-sizing: border-box;
+  }
+
+
+  /* ==========================================
+     MOBILE LOGOUT
+     ========================================== */
+
+  .mobile-logout {
+    margin-top: 6px;
+
+    padding-top: 14px;
+
+    border-top: 1px solid #e5e7eb;
+
+    border-radius: 0;
+
+    color: #dc2626;
+  }
+
+
+  .mobile-logout:hover {
+    background: #fef2f2;
+
+    color: #dc2626;
+  }
+
+
+  /* ==========================================
+     MOBILE AUTH BUTTONS
+     ========================================== */
+
+  .mobile-auth-buttons {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    padding-top: 14px;
+  }
+
+
+  .mobile-login-btn,
+  .mobile-signup-btn {
+    width: 100%;
+
+    display: block;
+
+    padding: 11px 14px;
+
+    border-radius: 8px;
+
+    text-align: center;
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    box-sizing: border-box;
+  }
+
+
+  .mobile-login-btn {
+    border: 1px solid #d1d5db;
+
+    background: #ffffff;
+
+    color: #374151;
+  }
+
+
+  .mobile-signup-btn {
+    border: 1px solid #2563eb;
+
+    background: #2563eb;
+
+    color: #ffffff;
+  }
+
+}
+
+
+/* ==========================================
+   SMALL PHONES
+   ========================================== */
+
+@media (max-width: 420px) {
+
+  .navbar {
+    padding: 0 14px;
+  }
+
+
+  .navbar-logo {
+    font-size: 20px;
+  }
+
+
+  .mobile-menu {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+}
