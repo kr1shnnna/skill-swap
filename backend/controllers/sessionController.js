@@ -59,9 +59,7 @@ const createSession = async (req, res) => {
       status: "pending",
     });
 
-    const populatedSession = await Session.findById(
-      session._id
-    )
+    const populatedSession = await Session.findById(session._id)
       .populate("requester", "name email")
       .populate("partner", "name email");
 
@@ -70,17 +68,13 @@ const createSession = async (req, res) => {
       session: populatedSession,
     });
   } catch (error) {
-    console.error(
-      "Create session error:",
-      error.message
-    );
+    console.error("Create session error:", error.message);
 
     res.status(500).json({
       message: "Server error.",
     });
   }
 };
-
 
 /*
  * ------------------------------------------
@@ -93,10 +87,7 @@ const getMySessions = async (req, res) => {
     const userId = req.user.userId;
 
     const sessions = await Session.find({
-      $or: [
-        { requester: userId },
-        { partner: userId },
-      ],
+      $or: [{ requester: userId }, { partner: userId }],
     })
       .populate("requester", "name email")
       .populate("partner", "name email")
@@ -109,17 +100,13 @@ const getMySessions = async (req, res) => {
       sessions,
     });
   } catch (error) {
-    console.error(
-      "Get sessions error:",
-      error.message
-    );
+    console.error("Get sessions error:", error.message);
 
     res.status(500).json({
       message: "Server error.",
     });
   }
 };
-
 
 /*
  * ------------------------------------------
@@ -132,12 +119,7 @@ const updateSessionStatus = async (req, res) => {
     const { sessionId } = req.params;
     const { status } = req.body;
 
-    const allowedStatuses = [
-      "accepted",
-      "rejected",
-      "cancelled",
-      "completed",
-    ];
+    const allowedStatuses = ["accepted", "rejected", "cancelled", "completed"];
 
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
@@ -155,11 +137,9 @@ const updateSessionStatus = async (req, res) => {
       });
     }
 
-    const isRequester =
-      session.requester.toString() === userId.toString();
+    const isRequester = session.requester.toString() === userId.toString();
 
-    const isPartner =
-      session.partner.toString() === userId.toString();
+    const isPartner = session.partner.toString() === userId.toString();
 
     if (!isRequester && !isPartner) {
       return res.status(403).json({
@@ -203,6 +183,15 @@ const updateSessionStatus = async (req, res) => {
 
     await session.save();
 
+    const io = req.app.get("io");
+
+    if (io) {
+      io.emit("sessionUpdated", {
+        sessionId: session._id.toString(),
+        status: session.status,
+      });
+    }
+
     const updatedSession = await Session.findById(session._id)
       .populate("requester", "name email")
       .populate("partner", "name email");
@@ -212,18 +201,13 @@ const updateSessionStatus = async (req, res) => {
       session: updatedSession,
     });
   } catch (error) {
-    console.error(
-      "Update session status error:",
-      error.message
-    );
+    console.error("Update session status error:", error.message);
 
     res.status(500).json({
       message: "Server error.",
     });
   }
 };
-
-
 
 module.exports = {
   createSession,

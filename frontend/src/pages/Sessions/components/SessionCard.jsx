@@ -38,9 +38,6 @@ const SessionCard = ({
         `/sessions/${session._id}/status`,
         { status }
       );
-
-      // Refresh the page data after status update
-      window.location.reload();
     } catch (error) {
       console.error(
         "Session status update error:",

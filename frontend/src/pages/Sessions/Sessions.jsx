@@ -1,4 +1,6 @@
 import { useContext, useEffect, useState } from "react";
+import { io } from "socket.io-client";
+
 
 import {
   FaCalendarAlt,
@@ -54,6 +56,28 @@ const Sessions = () => {
 
     fetchSessions();
   }, [user]);
+
+  useEffect(() => {
+  const socket = io("http://localhost:5000");
+
+  socket.on("sessionUpdated", (updatedSession) => {
+    setSessions((currentSessions) =>
+      currentSessions.map((session) =>
+        session._id === updatedSession.sessionId
+          ? {
+              ...session,
+              status: updatedSession.status,
+            }
+          : session
+      )
+    );
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+
 
   const fetchSessions = async () => {
     try {
