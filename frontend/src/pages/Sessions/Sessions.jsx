@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import {
   FaCalendarAlt,
@@ -6,13 +6,40 @@ import {
 } from "react-icons/fa";
 
 import api from "../../services/api";
+import { AuthContext } from "../../context/AuthContext";
+
+import SessionCard from "./components/SessionCard";
 
 import "./Sessions.css";
 
 const Sessions = () => {
+  const { user } = useContext(AuthContext);
+
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /*
+   * ------------------------------------------
+   * GET USER ID
+   * ------------------------------------------
+   */
+
+  const getUserId = (userObject) => {
+    if (!userObject) {
+      return null;
+    }
+
+    if (typeof userObject === "string") {
+      return userObject;
+    }
+
+    return (
+      userObject._id?.toString() ||
+      userObject.id?.toString() ||
+      null
+    );
+  };
 
   /*
    * ------------------------------------------
@@ -21,8 +48,12 @@ const Sessions = () => {
    */
 
   useEffect(() => {
+    if (!user) {
+      return;
+    }
+
     fetchSessions();
-  }, []);
+  }, [user]);
 
   const fetchSessions = async () => {
     try {
@@ -31,7 +62,9 @@ const Sessions = () => {
 
       const response = await api.get("/sessions");
 
-      setSessions(response.data.sessions || []);
+      setSessions(
+        response.data.sessions || []
+      );
     } catch (error) {
       console.error(
         "Fetch sessions error:",
@@ -46,6 +79,8 @@ const Sessions = () => {
       setLoading(false);
     }
   };
+
+  const currentUserId = getUserId(user);
 
   /*
    * ------------------------------------------
@@ -80,14 +115,16 @@ const Sessions = () => {
         </div>
 
         {/* ================================== */}
-        {/* SESSION SECTIONS */}
+        {/* UPCOMING SESSIONS */}
         {/* ================================== */}
 
         <section className="sessions-section">
 
           <div className="sessions-section-header">
             <div>
-              <h2>Upcoming Sessions</h2>
+              <h2>
+                Upcoming Sessions
+              </h2>
 
               <p>
                 Your scheduled learning sessions.
@@ -95,9 +132,7 @@ const Sessions = () => {
             </div>
           </div>
 
-          {/* ================================== */}
           {/* LOADING */}
-          {/* ================================== */}
 
           {loading ? (
             <div className="sessions-empty-state">
@@ -114,9 +149,7 @@ const Sessions = () => {
 
           ) : error ? (
 
-            /* ================================== */
             /* ERROR */
-            /* ================================== */
 
             <div className="sessions-empty-state">
               <FaCalendarAlt />
@@ -132,9 +165,7 @@ const Sessions = () => {
 
           ) : sessions.length === 0 ? (
 
-            /* ================================== */
-            /* NO SESSIONS */
-            /* ================================== */
+            /* EMPTY */
 
             <div className="sessions-empty-state">
               <FaCalendarAlt />
@@ -151,24 +182,16 @@ const Sessions = () => {
 
           ) : (
 
-            /* ================================== */
-            /* SESSIONS FOUND */
-            /* ================================== */
+            /* SESSION CARDS */
 
-            <div className="sessions-empty-state">
-              <FaCalendarAlt />
-
-              <h3>
-                {sessions.length}{" "}
-                {sessions.length === 1
-                  ? "session"
-                  : "sessions"}{" "}
-                found
-              </h3>
-
-              <p>
-                Your sessions have been successfully loaded.
-              </p>
+            <div className="sessions-list">
+              {sessions.map((session) => (
+                <SessionCard
+                  key={session._id}
+                  session={session}
+                  currentUserId={currentUserId}
+                />
+              ))}
             </div>
           )}
 
@@ -182,7 +205,9 @@ const Sessions = () => {
 
           <div className="sessions-section-header">
             <div>
-              <h2>Pending Requests</h2>
+              <h2>
+                Pending Requests
+              </h2>
 
               <p>
                 Session requests waiting for a response.

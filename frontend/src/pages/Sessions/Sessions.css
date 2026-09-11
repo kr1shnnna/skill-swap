@@ -145,6 +145,264 @@
   min-height: 170px;
 }
 
+/* ================================
+   SESSION LIST
+================================ */
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 18px;
+}
+
+
+/* ================================
+   SESSION CARD
+================================ */
+
+.session-card {
+  padding: 20px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.session-card:hover {
+  border-color: #cbd5e1;
+
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+
+/* ================================
+   CARD HEADER
+================================ */
+
+.session-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+}
+
+.session-partner {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.session-partner > svg {
+  flex-shrink: 0;
+
+  font-size: 40px;
+  color: #cbd5e1;
+}
+
+.session-label {
+  display: block;
+
+  margin-bottom: 3px;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  color: #94a3b8;
+}
+
+.session-partner h3 {
+  margin: 0;
+
+  font-size: 16px;
+  color: #0f172a;
+}
+
+
+/* ================================
+   STATUS
+================================ */
+
+.session-status {
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-transform: capitalize;
+
+  white-space: nowrap;
+}
+
+.session-status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.session-status.accepted {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.session-status.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.session-status.cancelled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.session-status.completed {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+
+/* ================================
+   SESSION DETAILS
+================================ */
+
+.session-card-details {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+
+  padding-top: 18px;
+
+  border-top: 1px solid #f1f5f9;
+}
+
+.session-detail {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+}
+
+.session-detail > svg {
+  margin-top: 2px;
+
+  flex-shrink: 0;
+
+  font-size: 14px;
+  color: #2563eb;
+}
+
+.session-detail span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  font-size: 11px;
+
+  color: #94a3b8;
+}
+
+.session-detail strong {
+  display: block;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  color: #334155;
+}
+
+
+/* ================================
+   SESSION NOTE
+================================ */
+
+.session-note {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  margin-top: 18px;
+  padding: 12px;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+}
+
+.session-note svg {
+  margin-top: 3px;
+
+  flex-shrink: 0;
+
+  font-size: 13px;
+  color: #64748b;
+}
+
+.session-note p {
+  margin: 0;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #64748b;
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 700px) {
+  .session-card-details {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sessions-list {
+    padding: 12px;
+  }
+
+  .session-card {
+    padding: 16px;
+  }
+
+  .session-card-header {
+    align-items: flex-start;
+  }
+
+  .session-partner > svg {
+    font-size: 36px;
+  }
+
+  .session-status {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .session-card-details {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+
+
 
 /* ================================
    MOBILE
