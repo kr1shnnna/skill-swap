@@ -1,30 +1,65 @@
-
-import { useEffect, useState } from "react"; 
+import { useEffect, useState } from "react";
 
 import {
   FaCalendarAlt,
   FaClock,
-  FaBookOpen,
-  FaUserCircle
-
 } from "react-icons/fa";
 
 import api from "../../services/api";
 
-
-
 import "./Sessions.css";
 
 const Sessions = () => {
-
-    const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /*
+   * ------------------------------------------
+   * FETCH SESSIONS
+   * ------------------------------------------
+   */
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/sessions");
+
+      setSessions(response.data.sessions || []);
+    } catch (error) {
+      console.error(
+        "Fetch sessions error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to load sessions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * ------------------------------------------
+   * UI
+   * ------------------------------------------
+   */
+
   return (
     <main className="sessions-page">
       <div className="sessions-container">
 
+        {/* ================================== */}
         {/* PAGE HEADER */}
+        {/* ================================== */}
 
         <div className="sessions-page-header">
           <div>
@@ -44,49 +79,129 @@ const Sessions = () => {
           <FaCalendarAlt className="sessions-header-icon" />
         </div>
 
+        {/* ================================== */}
         {/* SESSION SECTIONS */}
+        {/* ================================== */}
 
         <section className="sessions-section">
+
           <div className="sessions-section-header">
             <div>
               <h2>Upcoming Sessions</h2>
-              <p>Your scheduled learning sessions.</p>
+
+              <p>
+                Your scheduled learning sessions.
+              </p>
             </div>
           </div>
 
-          {/* EMPTY STATE FOR NOW */}
+          {/* ================================== */}
+          {/* LOADING */}
+          {/* ================================== */}
 
-          <div className="sessions-empty-state">
-            <FaCalendarAlt />
+          {loading ? (
+            <div className="sessions-empty-state">
+              <FaClock />
 
-            <h3>No upcoming sessions</h3>
+              <h3>
+                Loading sessions...
+              </h3>
 
-            <p>
-              Schedule a session with one of your connected
-              skill partners to see it here.
-            </p>
-          </div>
+              <p>
+                Fetching your scheduled sessions.
+              </p>
+            </div>
+
+          ) : error ? (
+
+            /* ================================== */
+            /* ERROR */
+            /* ================================== */
+
+            <div className="sessions-empty-state">
+              <FaCalendarAlt />
+
+              <h3>
+                Unable to load sessions
+              </h3>
+
+              <p>
+                {error}
+              </p>
+            </div>
+
+          ) : sessions.length === 0 ? (
+
+            /* ================================== */
+            /* NO SESSIONS */
+            /* ================================== */
+
+            <div className="sessions-empty-state">
+              <FaCalendarAlt />
+
+              <h3>
+                No upcoming sessions
+              </h3>
+
+              <p>
+                Schedule a session with one of your
+                connected skill partners to see it here.
+              </p>
+            </div>
+
+          ) : (
+
+            /* ================================== */
+            /* SESSIONS FOUND */
+            /* ================================== */
+
+            <div className="sessions-empty-state">
+              <FaCalendarAlt />
+
+              <h3>
+                {sessions.length}{" "}
+                {sessions.length === 1
+                  ? "session"
+                  : "sessions"}{" "}
+                found
+              </h3>
+
+              <p>
+                Your sessions have been successfully loaded.
+              </p>
+            </div>
+          )}
+
         </section>
 
+        {/* ================================== */}
         {/* PENDING REQUESTS */}
+        {/* ================================== */}
 
         <section className="sessions-section">
+
           <div className="sessions-section-header">
             <div>
               <h2>Pending Requests</h2>
-              <p>Session requests waiting for a response.</p>
+
+              <p>
+                Session requests waiting for a response.
+              </p>
             </div>
           </div>
 
           <div className="sessions-empty-state compact">
             <FaClock />
 
-            <h3>No pending requests</h3>
+            <h3>
+              No pending requests
+            </h3>
 
             <p>
               New session requests will appear here.
             </p>
           </div>
+
         </section>
 
       </div>
@@ -95,4 +210,3 @@ const Sessions = () => {
 };
 
 export default Sessions;
-
