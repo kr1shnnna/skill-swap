@@ -1,11 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 
-import {
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 
 import { AuthContext } from "../../context/AuthContext";
 
@@ -32,11 +27,9 @@ const Navbar = () => {
     unreadMessageCount,
   } = useContext(AuthContext);
 
-  const [dropdownOpen, setDropdownOpen] =
-    useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const [mobileMenuOpen, setMobileMenuOpen] =
-    useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const dropdownRef = useRef(null);
 
@@ -57,7 +50,6 @@ const Navbar = () => {
     navigate("/");
   };
 
-
   /*
    * ------------------------------------------
    * HOW IT WORKS
@@ -73,8 +65,7 @@ const Navbar = () => {
      */
 
     if (window.location.pathname === "/") {
-      const section =
-        document.getElementById("how-it-works");
+      const section = document.getElementById("how-it-works");
 
       if (section) {
         section.scrollIntoView({
@@ -95,8 +86,7 @@ const Navbar = () => {
     navigate("/");
 
     setTimeout(() => {
-      const section =
-        document.getElementById("how-it-works");
+      const section = document.getElementById("how-it-works");
 
       if (section) {
         section.scrollIntoView({
@@ -107,7 +97,6 @@ const Navbar = () => {
     }, 100);
   };
 
-
   /*
    * ------------------------------------------
    * CLOSE DROPDOWN WHEN CLICKING OUTSIDE
@@ -116,29 +105,17 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(
-          event.target
-        )
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
 
   /*
    * ------------------------------------------
@@ -153,19 +130,12 @@ const Navbar = () => {
       }
     };
 
-    window.addEventListener(
-      "resize",
-      handleResize
-    );
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener(
-        "resize",
-        handleResize
-      );
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
-
 
   /*
    * ------------------------------------------
@@ -177,7 +147,6 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   };
 
-
   /*
    * ------------------------------------------
    * TOGGLE MOBILE MENU
@@ -185,11 +154,8 @@ const Navbar = () => {
    */
 
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(
-      (previous) => !previous
-    );
+    setMobileMenuOpen((previous) => !previous);
   };
-
 
   /*
    * ------------------------------------------
@@ -199,38 +165,29 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-
       {/* ====================================== */}
       {/* LOGO */}
       {/* ====================================== */}
 
-      <Link
-        to="/"
-        className="navbar-logo"
-        onClick={closeMobileMenu}
-      >
+      <Link to="/" className="navbar-logo" onClick={closeMobileMenu}>
         Skill <span>Swap</span>
       </Link>
-
 
       {/* ====================================== */}
       {/* DESKTOP NAVIGATION */}
       {/* ====================================== */}
 
       <div className="navbar-links">
-
-        <Link
-          to="/"
-          onClick={closeMobileMenu}
-        >
+        <Link to="/" onClick={closeMobileMenu}>
           Home
         </Link>
 
-        <Link
-          to="/find-skills"
-          onClick={closeMobileMenu}
-        >
+        <Link to="/find-skills" onClick={closeMobileMenu}>
           Find Skills
+        </Link>
+
+        <Link to="/sessions" onClick={closeMobileMenu}>
+          Sessions
         </Link>
 
         <button
@@ -240,38 +197,28 @@ const Navbar = () => {
         >
           How it Works
         </button>
-
       </div>
-
 
       {/* ====================================== */}
       {/* RIGHT SIDE */}
       {/* ====================================== */}
 
       <div className="navbar-actions">
-
         {isAuthenticated ? (
           <>
             {/* ================================= */}
             {/* CHAT NOTIFICATION */}
             {/* ================================= */}
 
-            <Link
-              to="/chat"
-              className="notification-btn"
-              title="Messages"
-            >
+            <Link to="/chat" className="notification-btn" title="Messages">
               <FaComments />
 
               {unreadMessageCount > 0 && (
                 <span className="notification-badge">
-                  {unreadMessageCount > 9
-                    ? "9+"
-                    : unreadMessageCount}
+                  {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
                 </span>
               )}
             </Link>
-
 
             {/* ================================= */}
             {/* SWAP REQUEST NOTIFICATION */}
@@ -286,45 +233,28 @@ const Navbar = () => {
 
               {pendingSwapCount > 0 && (
                 <span className="notification-badge">
-                  {pendingSwapCount > 9
-                    ? "9+"
-                    : pendingSwapCount}
+                  {pendingSwapCount > 9 ? "9+" : pendingSwapCount}
                 </span>
               )}
             </Link>
-
 
             {/* ================================= */}
             {/* USER DROPDOWN */}
             {/* ================================= */}
 
-            <div
-              className="user-dropdown"
-              ref={dropdownRef}
-            >
+            <div className="user-dropdown" ref={dropdownRef}>
               <button
                 className="user-dropdown-btn"
-                onClick={() =>
-                  setDropdownOpen(
-                    !dropdownOpen
-                  )
-                }
+                onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <FaUserCircle className="user-icon" />
 
-                <span>
-                  {user?.name}
-                </span>
+                <span>{user?.name}</span>
 
                 <FaChevronDown
-                  className={`dropdown-arrow ${
-                    dropdownOpen
-                      ? "rotate"
-                      : ""
-                  }`}
+                  className={`dropdown-arrow ${dropdownOpen ? "rotate" : ""}`}
                 />
               </button>
-
 
               {/* ============================= */}
               {/* DROPDOWN */}
@@ -332,68 +262,49 @@ const Navbar = () => {
 
               {dropdownOpen && (
                 <div className="dropdown-menu">
-
                   <Link
                     to="/profile"
                     className="dropdown-item"
-                    onClick={() =>
-                      setDropdownOpen(false)
-                    }
+                    onClick={() => setDropdownOpen(false)}
                   >
                     <FaUser />
                     My Profile
                   </Link>
 
-
                   <Link
                     to="/dashboard"
                     className="dropdown-item"
-                    onClick={() =>
-                      setDropdownOpen(false)
-                    }
+                    onClick={() => setDropdownOpen(false)}
                   >
                     <FaTachometerAlt />
                     Dashboard
                   </Link>
 
-
                   <div className="dropdown-divider"></div>
-
 
                   <button
                     className="dropdown-item logout-item"
-                    onClick={
-                      handleLogout
-                    }
+                    onClick={handleLogout}
                   >
                     <FaSignOutAlt />
                     Logout
                   </button>
-
                 </div>
               )}
             </div>
           </>
         ) : (
           <>
-            <Link
-              to="/login"
-              className="login-btn"
-            >
+            <Link to="/login" className="login-btn">
               Login
             </Link>
 
-            <Link
-              to="/register"
-              className="signup-btn"
-            >
+            <Link to="/register" className="signup-btn">
               Get Started
             </Link>
           </>
         )}
-
       </div>
-
 
       {/* ====================================== */}
       {/* MOBILE MENU BUTTON */}
@@ -405,13 +316,8 @@ const Navbar = () => {
         aria-label="Toggle navigation menu"
         aria-expanded={mobileMenuOpen}
       >
-        {mobileMenuOpen ? (
-          <FaTimes />
-        ) : (
-          <FaBars />
-        )}
+        {mobileMenuOpen ? <FaTimes /> : <FaBars />}
       </button>
-
 
       {/* ====================================== */}
       {/* MOBILE MENU */}
@@ -419,24 +325,19 @@ const Navbar = () => {
 
       {mobileMenuOpen && (
         <div className="mobile-menu">
-
           <div className="mobile-menu-links">
-
-            <Link
-              to="/"
-              onClick={closeMobileMenu}
-            >
+            <Link to="/" onClick={closeMobileMenu}>
               Home
             </Link>
 
-
-            <Link
-              to="/find-skills"
-              onClick={closeMobileMenu}
-            >
+            <Link to="/find-skills" onClick={closeMobileMenu}>
               Find Skills
             </Link>
 
+            <Link to="/sessions" onClick={closeMobileMenu}>
+              Sessions
+            </Link>
+            
 
             <button
               type="button"
@@ -445,9 +346,7 @@ const Navbar = () => {
             >
               How it Works
             </button>
-
           </div>
-
 
           {/* ================================= */}
           {/* MOBILE AUTHENTICATED ACTIONS */}
@@ -455,23 +354,15 @@ const Navbar = () => {
 
           {isAuthenticated ? (
             <div className="mobile-user-section">
-
               <div className="mobile-user-info">
-
                 <FaUserCircle />
 
                 <div>
-                  <strong>
-                    {user?.name}
-                  </strong>
+                  <strong>{user?.name}</strong>
 
-                  <span>
-                    SkillSwap Student
-                  </span>
+                  <span>SkillSwap Student</span>
                 </div>
-
               </div>
-
 
               <Link
                 to="/chat"
@@ -480,19 +371,14 @@ const Navbar = () => {
               >
                 <FaComments />
 
-                <span>
-                  Messages
-                </span>
+                <span>Messages</span>
 
                 {unreadMessageCount > 0 && (
                   <span className="mobile-badge">
-                    {unreadMessageCount > 9
-                      ? "9+"
-                      : unreadMessageCount}
+                    {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
                   </span>
                 )}
               </Link>
-
 
               <Link
                 to="/swap-requests"
@@ -501,19 +387,14 @@ const Navbar = () => {
               >
                 <FaBell />
 
-                <span>
-                  Swap Requests
-                </span>
+                <span>Swap Requests</span>
 
                 {pendingSwapCount > 0 && (
                   <span className="mobile-badge">
-                    {pendingSwapCount > 9
-                      ? "9+"
-                      : pendingSwapCount}
+                    {pendingSwapCount > 9 ? "9+" : pendingSwapCount}
                   </span>
                 )}
               </Link>
-
 
               <Link
                 to="/profile"
@@ -522,11 +403,8 @@ const Navbar = () => {
               >
                 <FaUser />
 
-                <span>
-                  My Profile
-                </span>
+                <span>My Profile</span>
               </Link>
-
 
               <Link
                 to="/dashboard"
@@ -535,25 +413,17 @@ const Navbar = () => {
               >
                 <FaTachometerAlt />
 
-                <span>
-                  Dashboard
-                </span>
+                <span>Dashboard</span>
               </Link>
-
 
               <button
                 className="mobile-action-link mobile-logout"
-                onClick={
-                  handleLogout
-                }
+                onClick={handleLogout}
               >
                 <FaSignOutAlt />
 
-                <span>
-                  Logout
-                </span>
+                <span>Logout</span>
               </button>
-
             </div>
           ) : (
             /* ================================= */
@@ -561,7 +431,6 @@ const Navbar = () => {
             /* ================================= */
 
             <div className="mobile-auth-buttons">
-
               <Link
                 to="/login"
                 className="mobile-login-btn"
@@ -577,13 +446,10 @@ const Navbar = () => {
               >
                 Get Started
               </Link>
-
             </div>
           )}
-
         </div>
       )}
-
     </nav>
   );
 };
