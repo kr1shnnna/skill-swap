@@ -1,3 +1,4 @@
+import { useState } from "react";
 
 import {
   FaUserCircle,
@@ -7,20 +8,58 @@ import {
   FaStickyNote,
 } from "react-icons/fa";
 
+import api from "../../../services/api";
+
 const SessionCard = ({
   session,
   currentUserId,
 }) => {
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState("");
+
   const isRequester =
     session.requester?._id?.toString() ===
+    currentUserId?.toString();
+
+  const isPartner =
+    session.partner?._id?.toString() ===
     currentUserId?.toString();
 
   const partner = isRequester
     ? session.partner
     : session.requester;
 
+  const handleStatusUpdate = async (status) => {
+    try {
+      setUpdating(true);
+      setError("");
+
+      await api.patch(
+        `/sessions/${session._id}/status`,
+        { status }
+      );
+
+      // Refresh the page data after status update
+      window.location.reload();
+    } catch (error) {
+      console.error(
+        "Session status update error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to update session."
+      );
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <article className="session-card">
+
+      {/* ================= HEADER ================= */}
 
       <div className="session-card-header">
         <div className="session-partner">
@@ -44,6 +83,8 @@ const SessionCard = ({
         </span>
       </div>
 
+      {/* ================= DETAILS ================= */}
+
       <div className="session-card-details">
 
         <div className="session-detail">
@@ -51,6 +92,7 @@ const SessionCard = ({
 
           <div>
             <span>Date</span>
+
             <strong>
               {new Date(
                 session.date
@@ -69,6 +111,7 @@ const SessionCard = ({
 
           <div>
             <span>Time</span>
+
             <strong>
               {session.time}
             </strong>
@@ -80,6 +123,7 @@ const SessionCard = ({
 
           <div>
             <span>Topic</span>
+
             <strong>
               {session.topic}
             </strong>
@@ -87,6 +131,8 @@ const SessionCard = ({
         </div>
 
       </div>
+
+      {/* ================= NOTE ================= */}
 
       {session.note && (
         <div className="session-note">
@@ -98,9 +144,51 @@ const SessionCard = ({
         </div>
       )}
 
+      {/* ================= ACTIONS ================= */}
+
+      {session.status === "pending" &&
+        isPartner && (
+          <div className="session-actions">
+
+            <button
+              type="button"
+              className="session-reject-btn"
+              onClick={() =>
+                handleStatusUpdate("rejected")
+              }
+              disabled={updating}
+            >
+              {updating
+                ? "Updating..."
+                : "Reject"}
+            </button>
+
+            <button
+              type="button"
+              className="session-accept-btn"
+              onClick={() =>
+                handleStatusUpdate("accepted")
+              }
+              disabled={updating}
+            >
+              {updating
+                ? "Updating..."
+                : "Accept"}
+            </button>
+
+          </div>
+        )}
+
+      {/* ================= ERROR ================= */}
+
+      {error && (
+        <div className="session-action-error">
+          {error}
+        </div>
+      )}
+
     </article>
   );
 };
 
 export default SessionCard;
-

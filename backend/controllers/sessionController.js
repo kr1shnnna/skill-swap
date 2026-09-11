@@ -147,9 +147,7 @@ const updateSessionStatus = async (req, res) => {
 
     const userId = req.user.userId;
 
-    const session = await Session.findById(
-      sessionId
-    );
+    const session = await Session.findById(sessionId);
 
     if (!session) {
       return res.status(404).json({
@@ -157,34 +155,47 @@ const updateSessionStatus = async (req, res) => {
       });
     }
 
-    /*
-     * Only the requester or partner can
-     * update the session.
-     */
-
     const isRequester =
-      session.requester.toString() ===
-      userId.toString();
+      session.requester.toString() === userId.toString();
 
     const isPartner =
-      session.partner.toString() ===
-      userId.toString();
+      session.partner.toString() === userId.toString();
 
     if (!isRequester && !isPartner) {
       return res.status(403).json({
-        message:
-          "You are not authorized to update this session.",
+        message: "You are not authorized to update this session.",
       });
     }
 
-    /*
-     * Prevent changing a completed session.
-     */
-
+    // Completed sessions cannot be changed
     if (session.status === "completed") {
       return res.status(400).json({
+        message: "Completed sessions cannot be changed.",
+      });
+    }
+
+    // Partner can accept or reject a pending request
+    if (
+      (status === "accepted" || status === "rejected") &&
+      (!isPartner || session.status !== "pending")
+    ) {
+      return res.status(403).json({
         message:
-          "Completed sessions cannot be changed.",
+          "Only the session partner can accept or reject a pending request.",
+      });
+    }
+
+    // Requester can cancel their own pending/accepted session
+    if (status === "cancelled" && !isRequester) {
+      return res.status(403).json({
+        message: "Only the session requester can cancel this session.",
+      });
+    }
+
+    // A session can only be completed after it has been accepted
+    if (status === "completed" && session.status !== "accepted") {
+      return res.status(400).json({
+        message: "Only accepted sessions can be marked as completed.",
       });
     }
 
@@ -192,9 +203,7 @@ const updateSessionStatus = async (req, res) => {
 
     await session.save();
 
-    const updatedSession = await Session.findById(
-      session._id
-    )
+    const updatedSession = await Session.findById(session._id)
       .populate("requester", "name email")
       .populate("partner", "name email");
 
@@ -213,6 +222,7 @@ const updateSessionStatus = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {

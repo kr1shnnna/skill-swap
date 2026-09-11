@@ -363,6 +363,102 @@
 }
 
 
+/* ==========================================
+   SESSION ACTIONS
+   ========================================== */
+
+.session-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top: 1px solid #f1f5f9;
+}
+
+.session-accept-btn,
+.session-reject-btn {
+  padding: 9px 16px;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.session-accept-btn {
+  border: 1px solid #16a34a;
+
+  background: #16a34a;
+
+  color: #ffffff;
+}
+
+.session-accept-btn:hover {
+  background: #15803d;
+
+  border-color: #15803d;
+}
+
+.session-reject-btn {
+  border: 1px solid #fecaca;
+
+  background: #ffffff;
+
+  color: #dc2626;
+}
+
+.session-reject-btn:hover {
+  background: #fef2f2;
+
+  border-color: #fca5a5;
+}
+
+.session-accept-btn:disabled,
+.session-reject-btn:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+.session-action-error {
+  margin-top: 12px;
+
+  padding: 9px 12px;
+
+  border-radius: 8px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+  color: #b91c1c;
+
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .session-actions {
+    justify-content: stretch;
+  }
+
+  .session-accept-btn,
+  .session-reject-btn {
+    flex: 1;
+  }
+}
+
+
 /* ================================
    MOBILE
 ================================ */
