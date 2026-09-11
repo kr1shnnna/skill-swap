@@ -11,6 +11,10 @@ import StudentProfile from "./pages/StudentProfile/StudentProfile";
 import SwapRequests from "./pages/SwapRequests/SwapRequests";
 import Chat from "./pages/Chat/Chat";
 
+import Sessions from "./pages/Sessions/Sessions";
+
+
+
 
 
 
@@ -81,6 +85,13 @@ const App = () => {
   }
 />
 
+  <Route
+  path="/sessions"
+  element={<Sessions />}
+/>
+
+
+   
 
 
         
