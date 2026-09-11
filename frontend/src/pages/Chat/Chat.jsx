@@ -2,15 +2,14 @@ import { useContext, useEffect, useRef, useState } from "react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
-import {
-  FaUserCircle,
-  FaComments,
-  FaArrowLeft,
-  FaPaperPlane,
-} from "react-icons/fa";
+import { FaComments } from "react-icons/fa";
 
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import MessageInput from "./components/MessageInput";
+import ChatHeader from "./components/ChatHeader";
+import MessageList from "./components/MessageList";
+import ConversationList from "./components/ConversationList";
 
 import "./Chat.css";
 
@@ -967,103 +966,14 @@ const Chat = () => {
           {/* CONVERSATIONS PANEL */}
           {/* ================================= */}
 
-          <aside className="conversation-panel">
-            <div className="conversation-header">
-              <div>
-                <h2>Conversations</h2>
-
-                <p>
-                  {conversations.length} active exchange
-                  {conversations.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-
-              <FaComments />
-            </div>
-
-            {conversations.length === 0 ? (
-              <div className="empty-conversations">
-                <FaComments />
-
-                <h3>No conversations yet</h3>
-
-                <p>
-                  Accept a skill swap request to start chatting with another
-                  student.
-                </p>
-              </div>
-            ) : (
-              <div className="conversation-list">
-                {conversations.map((conversation) => {
-                  const conversationUser = conversation.user;
-
-                  const conversationUserId = getUserId(conversationUser);
-
-                  const selectedUserId = getUserId(selectedUser);
-
-                  const latestMessage = conversation.latestMessage;
-
-                  return (
-                    <button
-                      key={conversationUserId}
-                      className={`conversation-item ${
-                        selectedUserId === conversationUserId ? "active" : ""
-                      }`}
-                      onClick={() => handleSelectConversation(conversation)}
-                    >
-                      <div className="conversation-avatar-wrapper">
-                        <FaUserCircle className="conversation-avatar" />
-
-                        <span
-                          className={`conversation-status-dot ${
-                            onlineUserIds.includes(conversationUserId)
-                              ? "online"
-                              : "offline"
-                          }`}
-                        />
-                      </div>
-
-                      <div className="conversation-info">
-                        <div className="conversation-top-row">
-                          <h3>
-                            {conversationUser.name || "SkillSwap Student"}
-                          </h3>
-
-                          {latestMessage && (
-                            <span className="conversation-time">
-                              {formatMessageTime(latestMessage.createdAt)}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="conversation-bottom-row">
-                          <p
-                            className={
-                              conversation.unreadCount > 0
-                                ? "unread-preview"
-                                : ""
-                            }
-                          >
-                            {latestMessage
-                              ? latestMessage.message
-                              : "Skill exchange partner"}
-                          </p>
-
-                          {conversation.unreadCount > 0 && (
-                            <span className="conversation-unread-badge">
-                              {conversation.unreadCount > 9
-                                ? "9+"
-                                : conversation.unreadCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </aside>
+          <ConversationList
+            conversations={conversations}
+            selectedUser={selectedUser}
+            getUserId={getUserId}
+            onlineUserIds={onlineUserIds}
+            formatMessageTime={formatMessageTime}
+            onSelectConversation={handleSelectConversation}
+          />
 
           {/* ================================== */}
           {/* CHAT AREA */}
@@ -1087,38 +997,12 @@ const Chat = () => {
                 {/* CHAT HEADER */}
                 {/* ============================ */}
 
-                <div className="conversation-chat-header">
-                  {/* MOBILE BACK BUTTON */}
-
-                  <button
-                    type="button"
-                    className="mobile-chat-back-btn"
-                    onClick={handleBackToConversations}
-                    aria-label="Back to conversations"
-                  >
-                    <FaArrowLeft />
-                  </button>
-
-                  <FaUserCircle className="chat-user-avatar" />
-
-                  <div>
-                    <h2>{selectedUser.name}</h2>
-
-                    <p
-                      className={
-                        onlineUserIds.includes(getUserId(selectedUser))
-                          ? "user-status online"
-                          : "user-status offline"
-                      }
-                    >
-                      <span className="status-dot"></span>
-
-                      {onlineUserIds.includes(getUserId(selectedUser))
-                        ? "Online"
-                        : "Offline"}
-                    </p>
-                  </div>
-                </div>
+                <ChatHeader
+                  selectedUser={selectedUser}
+                  onlineUserIds={onlineUserIds}
+                  getUserId={getUserId}
+                  onBack={handleBackToConversations}
+                />
 
                 {/* ============================ */}
                 {/* MESSAGES */}
@@ -1139,75 +1023,15 @@ const Chat = () => {
                       <span>Start by saying hello 👋</span>
                     </div>
                   ) : (
-                    <div className="messages-list">
-                      {messages.map((message, index) => {
-                        const senderId = getUserId(message.sender);
-
-                        const currentUserId = getUserId(user);
-
-                        const isMine = senderId === currentUserId;
-
-                        const previousMessage =
-                          index > 0 ? messages[index - 1] : null;
-
-                        const shouldShowDateSeparator =
-                          index === 0 ||
-                          !isSameDay(
-                            previousMessage.createdAt,
-                            message.createdAt,
-                          );
-
-                        return (
-                          <div key={message._id}>
-                            {shouldShowDateSeparator && (
-                              <div className="message-date-separator">
-                                <span>
-                                  {formatDateSeparator(message.createdAt)}
-                                </span>
-                              </div>
-                            )}
-
-                            <div
-                              className={`message-row ${
-                                isMine ? "mine" : "theirs"
-                              }`}
-                            >
-                              <div className="message-bubble">
-                                <p>{message.message}</p>
-
-                                <div className="message-meta">
-                                  <span>
-                                    {formatMessageTime(message.createdAt)}
-                                  </span>
-
-                                  {isMine && (
-                                    <span
-                                      className={`message-status ${
-                                        message.read
-                                          ? "seen"
-                                          : message.delivered
-                                            ? "delivered"
-                                            : ""
-                                      }`}
-                                    >
-                                      {message.read
-                                        ? "✓✓"
-                                        : message.delivered
-                                          ? "✓✓"
-                                          : "✓"}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* AUTO SCROLL TARGET */}
-
-                      <div ref={messagesEndRef} />
-                    </div>
+                    <MessageList
+                      messages={messages}
+                      user={user}
+                      getUserId={getUserId}
+                      isSameDay={isSameDay}
+                      formatDateSeparator={formatDateSeparator}
+                      formatMessageTime={formatMessageTime}
+                      messagesEndRef={messagesEndRef}
+                    />
                   )}
                 </div>
 
@@ -1235,30 +1059,14 @@ const Chat = () => {
                 {/* MESSAGE INPUT */}
                 {/* ============================ */}
 
-                <div className="message-input-area">
-                  <input
-                    type="text"
-                    placeholder={`Message ${selectedUser.name}...`}
-                    value={messageText}
-                    onChange={handleMessageChange}
-                    onKeyDown={handleMessageKeyDown}
-                    disabled={sendingMessage}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={handleSendMessage}
-                    disabled={sendingMessage || !messageText.trim()}
-                    aria-label="Send message"
-                    title="Send message"
-                  >
-                    {sendingMessage ? (
-                      <span className="send-spinner"></span>
-                    ) : (
-                      <FaPaperPlane />
-                    )}
-                  </button>
-                </div>
+                <MessageInput
+                  messageText={messageText}
+                  selectedUser={selectedUser}
+                  onMessageChange={handleMessageChange}
+                  onKeyDown={handleMessageKeyDown}
+                  onSend={handleSendMessage}
+                  sendingMessage={sendingMessage}
+                />
               </>
             )}
           </section>
