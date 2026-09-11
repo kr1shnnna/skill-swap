@@ -10,6 +10,7 @@ import MessageInput from "./components/MessageInput";
 import ChatHeader from "./components/ChatHeader";
 import MessageList from "./components/MessageList";
 import ConversationList from "./components/ConversationList";
+import ScheduleSessionModal from "./components/ScheduleSessionModal";
 
 import "./Chat.css";
 
@@ -32,7 +33,6 @@ const Chat = () => {
     // Online / Offline
     onlineUserIds,
   } = useContext(AuthContext);
-  
 
   const [conversations, setConversations] = useState([]);
 
@@ -49,6 +49,18 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  // Schedule Session Modal
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  //
+  const handleOpenScheduleModal = () => {
+    setShowScheduleModal(true);
+  };
+
+  const handleCloseScheduleModal = () => {
+    setShowScheduleModal(false);
+  };
 
   /*
    * ------------------------------------------
@@ -1003,6 +1015,7 @@ const Chat = () => {
                   onlineUserIds={onlineUserIds}
                   getUserId={getUserId}
                   onBack={handleBackToConversations}
+                  onSchedule={handleOpenScheduleModal}
                 />
 
                 {/* ============================ */}
@@ -1072,6 +1085,17 @@ const Chat = () => {
             )}
           </section>
         </div>
+        
+        {/* ================================== */}
+        {/* SCHEDULE SESSION MODAL */}
+        {/* ================================== */}
+
+        {showScheduleModal && (
+          <ScheduleSessionModal
+            selectedUser={selectedUser}
+            onClose={handleCloseScheduleModal}
+          />
+        )}
       </div>
     </main>
   );
