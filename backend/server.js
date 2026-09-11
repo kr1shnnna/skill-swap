@@ -16,6 +16,9 @@ const swapRoutes = require("./routes/swapRoutes");
 
 const messageRoutes = require("./routes/messageRoutes");
 
+const sessionRoutes = require("./routes/sessionRoutes");
+
+
 const {
   addUser,
   removeUser,
@@ -68,6 +71,9 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/swaps", swapRoutes);
 
 app.use("/api/messages", messageRoutes);
+
+app.use("/api/sessions", sessionRoutes);
+
 
 // ------------------------------------------
 // TEST ROUTE
