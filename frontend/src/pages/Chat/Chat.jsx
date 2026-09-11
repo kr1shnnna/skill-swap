@@ -12,6 +12,9 @@ import MessageList from "./components/MessageList";
 import ConversationList from "./components/ConversationList";
 import ScheduleSessionModal from "./components/ScheduleSessionModal";
 
+import IncomingCall from "../../features/calls/components/IncomingCall";
+import "../../features/calls/calls.css";
+
 import "./Chat.css";
 
 const Chat = () => {
@@ -49,6 +52,9 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  //temporary state for testing incoming call UI
+  const [showTestCall, setShowTestCall] = useState(false);
 
   // Schedule Session Modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -1010,6 +1016,10 @@ const Chat = () => {
                 {/* CHAT HEADER */}
                 {/* ============================ */}
 
+                <button type="button" onClick={() => setShowTestCall(true)}>
+                  Test Incoming Call
+                </button>
+
                 <ChatHeader
                   selectedUser={selectedUser}
                   onlineUserIds={onlineUserIds}
@@ -1085,7 +1095,7 @@ const Chat = () => {
             )}
           </section>
         </div>
-        
+
         {/* ================================== */}
         {/* SCHEDULE SESSION MODAL */}
         {/* ================================== */}
@@ -1097,6 +1107,23 @@ const Chat = () => {
           />
         )}
       </div>
+
+
+      {showTestCall && (
+  <IncomingCall
+    caller={{ name: "Test Student" }}
+    callType="video"
+    onAccept={() => {
+      console.log("Call accepted");
+      setShowTestCall(false);
+    }}
+    onReject={() => {
+      console.log("Call rejected");
+      setShowTestCall(false);
+    }}
+  />
+)}
+
     </main>
   );
 };

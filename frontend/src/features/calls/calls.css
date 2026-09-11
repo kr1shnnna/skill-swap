@@ -1,0 +1,132 @@
+.incoming-call-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.incoming-call-card {
+  width: min(100%, 380px);
+  padding: 32px 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  animation: incomingCallAppear 0.2s ease-out;
+}
+
+.incoming-call-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.incoming-call-icon svg {
+  font-size: 72px;
+  color: #cbd5e1;
+}
+
+.incoming-call-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #64748b;
+}
+
+.incoming-call-card h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.incoming-call-message {
+  margin: 10px auto 26px;
+  max-width: 280px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.incoming-call-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.incoming-call-actions button {
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.incoming-call-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.incoming-call-actions button:active {
+  transform: translateY(0);
+}
+
+.incoming-call-reject {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.incoming-call-reject:hover {
+  box-shadow: 0 6px 16px rgba(185, 28, 28, 0.12);
+}
+
+.incoming-call-accept {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.incoming-call-accept:hover {
+  box-shadow: 0 6px 16px rgba(21, 128, 61, 0.12);
+}
+
+@keyframes incomingCallAppear {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .incoming-call-card {
+    padding: 28px 20px;
+  }
+
+  .incoming-call-actions {
+    gap: 10px;
+  }
+
+  .incoming-call-actions button {
+    min-width: 110px;
+  }
+}
