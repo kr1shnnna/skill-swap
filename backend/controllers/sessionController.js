@@ -63,6 +63,14 @@ const createSession = async (req, res) => {
       .populate("requester", "name email")
       .populate("partner", "name email");
 
+    const io = req.app.get("io");
+
+    if (io) {
+      io.emit("sessionCreated", {
+        session: populatedSession,
+      });
+    }
+
     res.status(201).json({
       message: "Session scheduled successfully.",
       session: populatedSession,
@@ -189,7 +197,7 @@ const updateSessionStatus = async (req, res) => {
       io.emit("sessionUpdated", {
         sessionId: session._id.toString(),
         status: session.status,
-        statusUpdatedBy: userId.toString()
+        statusUpdatedBy: userId.toString(),
       });
     }
 

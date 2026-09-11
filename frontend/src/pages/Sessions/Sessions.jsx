@@ -52,6 +52,23 @@ const Sessions = () => {
   useEffect(() => {
     const socket = io("http://localhost:5000");
 
+    socket.on("sessionCreated", (data) => {
+      const newSession = data.session;
+
+      setSessions((currentSessions) => {
+        const alreadyExists = currentSessions.some(
+          (session) => session._id === newSession._id,
+        );
+
+        if (alreadyExists) {
+          return currentSessions;
+        }
+
+        return [...currentSessions, newSession];
+      });
+    });
+    
+
     socket.on("sessionUpdated", (updatedSession) => {
       setSessions((currentSessions) =>
         currentSessions.map((session) =>
