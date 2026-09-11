@@ -80,7 +80,24 @@ const Sessions = () => {
     }
   };
 
+  /*
+   * ------------------------------------------
+   * FILTER SESSIONS
+   * ------------------------------------------
+   */
+
   const currentUserId = getUserId(user);
+
+  const upcomingSessions = sessions.filter(
+    (session) =>
+      session.status === "accepted" ||
+      session.status === "completed"
+  );
+
+  const pendingSessions = sessions.filter(
+    (session) =>
+      session.status === "pending"
+  );
 
   /*
    * ------------------------------------------
@@ -163,7 +180,7 @@ const Sessions = () => {
               </p>
             </div>
 
-          ) : sessions.length === 0 ? (
+          ) : upcomingSessions.length === 0 ? (
 
             /* EMPTY */
 
@@ -175,8 +192,7 @@ const Sessions = () => {
               </h3>
 
               <p>
-                Schedule a session with one of your
-                connected skill partners to see it here.
+                Accepted sessions will appear here.
               </p>
             </div>
 
@@ -185,13 +201,15 @@ const Sessions = () => {
             /* SESSION CARDS */
 
             <div className="sessions-list">
-              {sessions.map((session) => (
-                <SessionCard
-                  key={session._id}
-                  session={session}
-                  currentUserId={currentUserId}
-                />
-              ))}
+              {upcomingSessions.map(
+                (session) => (
+                  <SessionCard
+                    key={session._id}
+                    session={session}
+                    currentUserId={currentUserId}
+                  />
+                )
+              )}
             </div>
           )}
 
@@ -215,17 +233,38 @@ const Sessions = () => {
             </div>
           </div>
 
-          <div className="sessions-empty-state compact">
-            <FaClock />
+          {pendingSessions.length === 0 ? (
 
-            <h3>
-              No pending requests
-            </h3>
+            /* NO PENDING REQUESTS */
 
-            <p>
-              New session requests will appear here.
-            </p>
-          </div>
+            <div className="sessions-empty-state compact">
+              <FaClock />
+
+              <h3>
+                No pending requests
+              </h3>
+
+              <p>
+                New session requests will appear here.
+              </p>
+            </div>
+
+          ) : (
+
+            /* PENDING SESSION CARDS */
+
+            <div className="sessions-list">
+              {pendingSessions.map(
+                (session) => (
+                  <SessionCard
+                    key={session._id}
+                    session={session}
+                    currentUserId={currentUserId}
+                  />
+                )
+              )}
+            </div>
+          )}
 
         </section>
 
@@ -235,3 +274,4 @@ const Sessions = () => {
 };
 
 export default Sessions;
+
