@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaUserCircle,
@@ -13,6 +13,8 @@ import api from "../../services/api";
 import "./FindSkills.css";
 
 const FindSkills = () => {
+  const navigate = useNavigate();
+
   const [matches, setMatches] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,6 @@ const FindSkills = () => {
         receiverId,
       });
 
-      // Update the card immediately without refreshing
       setMatches((previousMatches) =>
         previousMatches.map((match) =>
           match.user.id.toString() === receiverId.toString()
@@ -71,6 +72,14 @@ const FindSkills = () => {
     } finally {
       setSendingRequest(null);
     }
+  };
+
+  const handleOpenChat = (userId) => {
+    navigate("/chat", {
+      state: {
+        userId: userId.toString(),
+      },
+    });
   };
 
   const renderRelationshipAction = (match) => {
@@ -97,13 +106,14 @@ const FindSkills = () => {
 
     if (status === "connected") {
       return (
-        <Link
-          to="/chat"
+        <button
+          type="button"
           className="relationship-action connected"
+          onClick={() => handleOpenChat(userId)}
         >
           <FaComments />
           <span>Connected · Chat</span>
-        </Link>
+        </button>
       );
     }
 
@@ -178,10 +188,7 @@ const FindSkills = () => {
 
             <p>{message}</p>
 
-            <Link
-              to="/profile"
-              className="profile-btn"
-            >
+            <Link to="/profile" className="profile-btn">
               Add Learning Skills
             </Link>
           </div>
@@ -201,10 +208,7 @@ const FindSkills = () => {
               skills you're looking for.
             </p>
 
-            <Link
-              to="/profile"
-              className="profile-btn"
-            >
+            <Link to="/profile" className="profile-btn">
               Update My Skills
             </Link>
           </div>
@@ -253,6 +257,7 @@ const FindSkills = () => {
 
                   {/* Relationship status */}
                   <div className="relationship-status">
+
                     {match.relationshipStatus === "request_sent" && (
                       <span className="status-badge status-request-sent">
                         <FaPaperPlane />
@@ -280,6 +285,7 @@ const FindSkills = () => {
                         Available
                       </span>
                     )}
+
                   </div>
 
                   {/* Bio */}
@@ -323,6 +329,7 @@ const FindSkills = () => {
             </div>
           </section>
         )}
+
       </div>
     </main>
   );

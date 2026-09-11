@@ -5,6 +5,10 @@ import {
   useState,
 } from "react";
 
+import { useLocation,
+  useNavigate
+ } from "react-router-dom";
+
 import {
   FaUserCircle,
   FaComments,
@@ -17,6 +21,9 @@ import { AuthContext } from "../../context/AuthContext";
 import "./Chat.css";
 
 const Chat = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const {
     user,
     setUnreadMessageCount,
@@ -381,8 +388,8 @@ const Chat = () => {
     fetchConversations();
   }, [user]);
 
-  const fetchConversations =
-    async () => {
+    
+  const fetchConversations =async () => {
       try {
         setLoading(true);
         setError("");
@@ -562,6 +569,57 @@ const Chat = () => {
         setLoading(false);
       }
     };
+
+
+    /*
+ * ------------------------------------------
+ * OPEN CONVERSATION FROM NAVIGATION
+ * ------------------------------------------
+ */
+
+useEffect(() => {
+  const requestedUserId =
+    location.state?.userId;
+
+  if (
+    !requestedUserId ||
+    conversations.length === 0
+  ) {
+    return;
+  }
+
+  const conversation =
+    conversations.find(
+      (item) =>
+        getUserId(item.user)?.toString() ===
+        requestedUserId.toString()
+    );
+
+  if (!conversation) {
+    return;
+  }
+
+  const currentlySelectedUserId =
+    getUserId(selectedUser);
+
+  if (
+    currentlySelectedUserId?.toString() ===
+    requestedUserId.toString()
+  ) {
+    return;
+  }
+
+  handleSelectConversation(conversation);
+  
+  navigate("/chat", {
+  replace: true,
+  state: {},
+});
+}, [
+  location.state,
+  conversations,
+  selectedUser,
+]);
 
   /*
    * ------------------------------------------
