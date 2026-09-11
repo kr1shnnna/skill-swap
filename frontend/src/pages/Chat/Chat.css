@@ -209,6 +209,49 @@
   color: #2563eb;
 }
 
+/* ==========================================
+   CONVERSATION AVATAR WRAPPER
+   ========================================== */
+
+.conversation-avatar-wrapper {
+  position: relative;
+
+  width: 40px;
+  height: 40px;
+
+  flex-shrink: 0;
+}
+
+
+/* ==========================================
+   CONVERSATION STATUS DOT
+   ========================================== */
+
+.conversation-status-dot {
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  border: 2px solid white;
+
+  box-sizing: border-box;
+}
+
+.conversation-status-dot.online {
+  background: #22c55e;
+}
+
+.conversation-status-dot.offline {
+  background: #cbd5e1;
+}
+
+
 
 /* ==========================================
    CONVERSATION CONTENT
@@ -1241,11 +1284,18 @@
 
   .conversation-avatar {
     width: 42px;
-
     height: 42px;
-
     font-size: 42px;
   }
+
+
+  .conversation-avatar-wrapper {
+  width: 42px;
+  height: 42px;
+}
+
+
+
 
 
   /* ------------------------------------------
@@ -1449,14 +1499,16 @@
     padding: 13px 12px;
   }
 
-
   .conversation-avatar {
     width: 40px;
-
     height: 40px;
-
     font-size: 40px;
   }
+
+  .conversation-avatar-wrapper {
+  width: 40px;
+  height: 40px;
+}
 
 
   .conversation-time {

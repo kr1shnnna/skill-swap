@@ -610,7 +610,7 @@ useEffect(() => {
   }
 
   handleSelectConversation(conversation);
-  
+
   navigate("/chat", {
   replace: true,
   state: {},
@@ -1542,7 +1542,20 @@ useEffect(() => {
                         }
                       >
 
-                        <FaUserCircle className="conversation-avatar" />
+                        <div className="conversation-avatar-wrapper">
+  <FaUserCircle className="conversation-avatar" />
+
+  <span
+    className={`conversation-status-dot ${
+      onlineUserIds.includes(
+        conversationUserId
+      )
+        ? "online"
+        : "offline"
+    }`}
+  />
+</div>
+
 
                         <div className="conversation-info">
 
