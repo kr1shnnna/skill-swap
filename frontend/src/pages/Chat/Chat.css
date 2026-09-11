@@ -1032,21 +1032,22 @@
 .message-input-area button {
   flex-shrink: 0;
 
-  min-width: 72px;
+  width: 44px;
+  min-width: 44px;
 
   height: 42px;
 
-  padding: 0 20px;
+  padding: 0;
 
   border: none;
-
-  border-radius: 8px;
+  border-radius: 50%;
 
   background: #2563eb;
-
   color: white;
 
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   font-family: inherit;
 
@@ -1054,6 +1055,7 @@
 
   transition:
     background 0.18s ease,
+    transform 0.15s ease,
     opacity 0.18s ease;
 }
 
@@ -1065,6 +1067,32 @@
   opacity: 0.55;
 
   cursor: not-allowed;
+}
+
+.message-input-area button svg {
+  font-size: 15px;
+}
+
+/* ==========================================
+   SEND SPINNER
+   ========================================== */
+
+.send-spinner {
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+
+  border-radius: 50%;
+
+  animation: sendSpin 0.7s linear infinite;
+}
+
+@keyframes sendSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 
@@ -1412,13 +1440,12 @@
   }
 
   .message-input-area button {
-    min-width: 64px;
-
+   
+    width:42px;
+    min-width: 42px;
     height: 42px;
+    padding: 0;
 
-    padding: 0 14px;
-
-    font-size: 13px;
   }
 
 
@@ -1534,13 +1561,11 @@
 
 
   .message-input-area button {
-    min-width: 60px;
-
+   
+    width:40px;
+    min-width: 40px;
     height: 40px;
-
-    padding: 0 12px;
-
-    font-size: 12px;
+    padding: 0;
   }
 
 }
