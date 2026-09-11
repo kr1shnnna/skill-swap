@@ -1,21 +1,16 @@
 const User = require("../models/User");
+const Swap = require("../models/Swap");
 
 const getMatches = async (req, res) => {
   try {
     // Get the logged-in user
     const currentUser = await User.findById(req.user.userId);
-  
-
 
     if (!currentUser) {
       return res.status(404).json({
         message: "User not found",
       });
     }
-
-
-
-
 
     // Skills the current user wants to learn
     const skillsToLearn = currentUser.skillsToLearn.map((skill) =>
@@ -34,6 +29,16 @@ const getMatches = async (req, res) => {
       _id: { $ne: currentUser._id },
     }).select("-password");
 
+   
+
+
+    // Get all swap relationships involving the current user
+    const swaps = await Swap.find({
+      $or: [
+        { sender: currentUser._id },
+        { receiver: currentUser._id },
+      ],
+    });
 
     const matches = users
       .map((user) => {
@@ -49,6 +54,43 @@ const getMatches = async (req, res) => {
         const matchScore =
           (matchedSkills.length / skillsToLearn.length) * 100;
 
+        // Find relationship with this user
+        const relationship = swaps.find(
+          (swap) =>
+            swap.sender.toString() === user._id.toString() ||
+            swap.receiver.toString() === user._id.toString()
+        );
+
+        let relationshipStatus = "available";
+
+        if (relationship) {
+          // Current user sent the request
+          if (
+            relationship.sender.toString() === currentUser._id.toString()
+          ) {
+            if (relationship.status === "pending") {
+              relationshipStatus = "request_sent";
+            } else if (relationship.status === "accepted") {
+              relationshipStatus = "connected";
+            } else if (relationship.status === "rejected") {
+              relationshipStatus = "available";
+            }
+          }
+
+          // Current user received the request
+          else if (
+            relationship.receiver.toString() === currentUser._id.toString()
+          ) {
+            if (relationship.status === "pending") {
+              relationshipStatus = "request_received";
+            } else if (relationship.status === "accepted") {
+              relationshipStatus = "connected";
+            } else if (relationship.status === "rejected") {
+              relationshipStatus = "available";
+            }
+          }
+        }
+
         return {
           user: {
             id: user._id,
@@ -57,6 +99,7 @@ const getMatches = async (req, res) => {
           },
           matchScore: Number(matchScore.toFixed(2)),
           matchedSkills,
+          relationshipStatus,
         };
       })
       .filter((match) => match.matchScore > 0)

@@ -4,6 +4,10 @@ import {
   FaSearch,
   FaUserCircle,
   FaArrowRight,
+  FaPaperPlane,
+  FaCheck,
+  FaComments,
+  FaUserClock,
 } from "react-icons/fa";
 import api from "../../services/api";
 import "./FindSkills.css";
@@ -13,6 +17,7 @@ const FindSkills = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -35,6 +40,94 @@ const FindSkills = () => {
 
     fetchMatches();
   }, []);
+
+  const handleSendRequest = async (receiverId) => {
+    try {
+      setSendingRequest(receiverId);
+      setError("");
+
+      await api.post("/swaps", {
+        receiverId,
+      });
+
+      // Update the card immediately without refreshing
+      setMatches((previousMatches) =>
+        previousMatches.map((match) =>
+          match.user.id.toString() === receiverId.toString()
+            ? {
+                ...match,
+                relationshipStatus: "request_sent",
+              }
+            : match
+        )
+      );
+    } catch (error) {
+      console.error("Send swap request error:", error);
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to send swap request."
+      );
+    } finally {
+      setSendingRequest(null);
+    }
+  };
+
+  const renderRelationshipAction = (match) => {
+    const status = match.relationshipStatus || "available";
+    const userId = match.user.id;
+
+    if (status === "request_sent") {
+      return (
+        <div className="relationship-action request-sent">
+          <FaPaperPlane />
+          <span>Request Sent</span>
+        </div>
+      );
+    }
+
+    if (status === "request_received") {
+      return (
+        <div className="relationship-action request-received">
+          <FaUserClock />
+          <span>Request Received</span>
+        </div>
+      );
+    }
+
+    if (status === "connected") {
+      return (
+        <Link
+          to="/chat"
+          className="relationship-action connected"
+        >
+          <FaComments />
+          <span>Connected · Chat</span>
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className="relationship-action available"
+        onClick={() => handleSendRequest(userId)}
+        disabled={sendingRequest === userId}
+      >
+        {sendingRequest === userId ? (
+          <>
+            <span className="button-spinner"></span>
+            <span>Sending...</span>
+          </>
+        ) : (
+          <>
+            <FaPaperPlane />
+            <span>Send Swap Request</span>
+          </>
+        )}
+      </button>
+    );
+  };
 
   if (loading) {
     return (
@@ -85,7 +178,10 @@ const FindSkills = () => {
 
             <p>{message}</p>
 
-            <Link to="/profile" className="profile-btn">
+            <Link
+              to="/profile"
+              className="profile-btn"
+            >
               Add Learning Skills
             </Link>
           </div>
@@ -101,11 +197,14 @@ const FindSkills = () => {
             <h2>No matches found yet</h2>
 
             <p>
-              We couldn't find anyone who teaches the skills
-              you're looking for.
+              We couldn't find anyone who teaches the
+              skills you're looking for.
             </p>
 
-            <Link to="/profile" className="profile-btn">
+            <Link
+              to="/profile"
+              className="profile-btn"
+            >
               Update My Skills
             </Link>
           </div>
@@ -118,20 +217,25 @@ const FindSkills = () => {
             <div className="matches-top">
               <div>
                 <h2>Your Matches</h2>
+
                 <p>
                   We found {matches.length}{" "}
-                  {matches.length === 1 ? "student" : "students"} who
-                  can help you learn.
+                  {matches.length === 1
+                    ? "student"
+                    : "students"}{" "}
+                  who can help you learn.
                 </p>
               </div>
             </div>
 
             <div className="matches-grid">
+
               {matches.map((match) => (
                 <div
                   className="match-card"
                   key={match.user.id}
                 >
+
                   {/* Match score */}
                   <div className="match-score">
                     <span>{match.matchScore}%</span>
@@ -145,6 +249,37 @@ const FindSkills = () => {
                     <div>
                       <h3>{match.user.name}</h3>
                     </div>
+                  </div>
+
+                  {/* Relationship status */}
+                  <div className="relationship-status">
+                    {match.relationshipStatus === "request_sent" && (
+                      <span className="status-badge status-request-sent">
+                        <FaPaperPlane />
+                        Request Sent
+                      </span>
+                    )}
+
+                    {match.relationshipStatus === "request_received" && (
+                      <span className="status-badge status-request-received">
+                        <FaUserClock />
+                        Request Received
+                      </span>
+                    )}
+
+                    {match.relationshipStatus === "connected" && (
+                      <span className="status-badge status-connected">
+                        <FaCheck />
+                        Connected
+                      </span>
+                    )}
+
+                    {(!match.relationshipStatus ||
+                      match.relationshipStatus === "available") && (
+                      <span className="status-badge status-available">
+                        Available
+                      </span>
+                    )}
                   </div>
 
                   {/* Bio */}
@@ -170,7 +305,7 @@ const FindSkills = () => {
                     </div>
                   </div>
 
-                  {/* Action */}
+                  {/* View profile */}
                   <Link
                     to={`/profile/${match.user.id}`}
                     className="view-profile-btn"
@@ -178,8 +313,13 @@ const FindSkills = () => {
                     View Profile
                     <FaArrowRight />
                   </Link>
+
+                  {/* Relationship action */}
+                  {renderRelationshipAction(match)}
+
                 </div>
               ))}
+
             </div>
           </section>
         )}

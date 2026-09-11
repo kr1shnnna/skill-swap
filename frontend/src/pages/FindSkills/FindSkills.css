@@ -277,6 +277,120 @@
   background: #eff6ff;
 }
 
+
+/* Relationship Status */
+
+.relationship-status {
+  margin-bottom: 18px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-available {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.status-request-sent {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.status-request-received {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-connected {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+/* Relationship Action */
+
+.relationship-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.relationship-action.available {
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.relationship-action.available:hover {
+  background: #1d4ed8;
+}
+
+.relationship-action.available:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.relationship-action.request-sent {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.relationship-action.request-received {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.relationship-action.connected {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+  transition: background 0.2s ease;
+}
+
+.relationship-action.connected:hover {
+  background: #ede9fe;
+}
+
+/* Small loading spinner inside button */
+
+.button-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: relationshipSpin 0.7s linear infinite;
+}
+
+@keyframes relationshipSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
 /* Responsive */
 
 @media (max-width: 768px) {
