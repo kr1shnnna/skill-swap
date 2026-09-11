@@ -144,40 +144,89 @@ const SessionCard = ({
         </div>
       )}
 
-      {/* ================= ACTIONS ================= */}
 
-      {session.status === "pending" &&
-        isPartner && (
-          <div className="session-actions">
+       
+       {/* ================= ACTIONS ================= */}
 
-            <button
-              type="button"
-              className="session-reject-btn"
-              onClick={() =>
-                handleStatusUpdate("rejected")
-              }
-              disabled={updating}
-            >
-              {updating
-                ? "Updating..."
-                : "Reject"}
-            </button>
+{/* Pending request actions */}
+{session.status === "pending" && (
+  <div className="session-actions">
 
-            <button
-              type="button"
-              className="session-accept-btn"
-              onClick={() =>
-                handleStatusUpdate("accepted")
-              }
-              disabled={updating}
-            >
-              {updating
-                ? "Updating..."
-                : "Accept"}
-            </button>
+    {isPartner && (
+      <>
+        <button
+          type="button"
+          className="session-reject-btn"
+          onClick={() =>
+            handleStatusUpdate("rejected")
+          }
+          disabled={updating}
+        >
+          {updating ? "Updating..." : "Reject"}
+        </button>
 
-          </div>
-        )}
+        <button
+          type="button"
+          className="session-accept-btn"
+          onClick={() =>
+            handleStatusUpdate("accepted")
+          }
+          disabled={updating}
+        >
+          {updating ? "Updating..." : "Accept"}
+        </button>
+      </>
+    )}
+
+    {isRequester && (
+      <button
+        type="button"
+        className="session-cancel-btn"
+        onClick={() =>
+          handleStatusUpdate("cancelled")
+        }
+        disabled={updating}
+      >
+        {updating ? "Updating..." : "Cancel Request"}
+      </button>
+    )}
+
+  </div>
+)}
+
+{/* Accepted session actions */}
+{session.status === "accepted" && (
+  <div className="session-actions">
+
+    <button
+      type="button"
+      className="session-complete-btn"
+      onClick={() =>
+        handleStatusUpdate("completed")
+      }
+      disabled={updating}
+    >
+      {updating
+        ? "Updating..."
+        : "Mark as Completed"}
+    </button>
+
+    {isRequester && (
+      <button
+        type="button"
+        className="session-cancel-btn"
+        onClick={() =>
+          handleStatusUpdate("cancelled")
+        }
+        disabled={updating}
+      >
+        {updating ? "Updating..." : "Cancel Session"}
+      </button>
+    )}
+
+  </div>
+)}
+
 
       {/* ================= ERROR ================= */}
 
