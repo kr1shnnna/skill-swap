@@ -1,4 +1,5 @@
 import{ useState } from "react";
+import api from "../../../services/api";
 
 const ScheduleSessionModal = ({
   selectedUser,
@@ -9,23 +10,65 @@ const ScheduleSessionModal = ({
   const [topic, setTopic] = useState("");
   const [note, setNote] = useState("");
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   if (!selectedUser) {
     return null;
   }
 
-  const handleSubmit = (event) => {
+  const partnerId =
+    selectedUser._id || selectedUser.id;
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Backend integration will be added later.
-    console.log("Session details:", {
-      date,
-      time,
-      topic,
-      note,
-      partnerId:
-        selectedUser._id ||
-        selectedUser.id,
-    });
+    if (!date || !time || !topic.trim()) {
+      setError(
+        "Please fill in the date, time, and topic."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
+
+     await api.post("/sessions", {
+        
+        partnerId,
+        date,
+        time,
+        topic: topic.trim(),
+        note: note.trim(),
+      });
+
+      setSuccess(
+        "Session request sent successfully!"
+      );
+
+      /*
+       * Close the modal shortly after
+       * successful creation.
+       */
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    } catch (error) {
+      console.error(
+        "Schedule session error:",
+        error
+      );
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to schedule the session."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -39,8 +82,6 @@ const ScheduleSessionModal = ({
           event.stopPropagation()
         }
       >
-        {/* HEADER */}
-
         <div className="schedule-modal-header">
           <div>
             <p className="schedule-modal-tag">
@@ -52,8 +93,8 @@ const ScheduleSessionModal = ({
             </h2>
 
             <p>
-              Plan your next learning
-              session with{" "}
+              Plan your next learning session
+              with{" "}
               <strong>
                 {selectedUser.name}
               </strong>
@@ -65,19 +106,28 @@ const ScheduleSessionModal = ({
             className="schedule-modal-close"
             onClick={onClose}
             aria-label="Close scheduling window"
+            disabled={submitting}
           >
             ×
           </button>
         </div>
 
-        {/* FORM */}
+        {error && (
+          <div className="schedule-error">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="schedule-success">
+            {success}
+          </div>
+        )}
 
         <form
           className="schedule-form"
           onSubmit={handleSubmit}
         >
-          {/* DATE + TIME */}
-
           <div className="schedule-form-row">
             <div className="schedule-field">
               <label htmlFor="session-date">
@@ -91,6 +141,7 @@ const ScheduleSessionModal = ({
                 onChange={(event) =>
                   setDate(event.target.value)
                 }
+                disabled={submitting}
                 required
               />
             </div>
@@ -107,12 +158,11 @@ const ScheduleSessionModal = ({
                 onChange={(event) =>
                   setTime(event.target.value)
                 }
+                disabled={submitting}
                 required
               />
             </div>
           </div>
-
-          {/* TOPIC */}
 
           <div className="schedule-field">
             <label htmlFor="session-topic">
@@ -128,11 +178,10 @@ const ScheduleSessionModal = ({
                 setTopic(event.target.value)
               }
               maxLength={100}
+              disabled={submitting}
               required
             />
           </div>
-
-          {/* NOTE */}
 
           <div className="schedule-field">
             <label htmlFor="session-note">
@@ -151,16 +200,16 @@ const ScheduleSessionModal = ({
               }
               maxLength={300}
               rows={3}
+              disabled={submitting}
             />
           </div>
-
-          {/* ACTIONS */}
 
           <div className="schedule-modal-actions">
             <button
               type="button"
               className="schedule-cancel-btn"
               onClick={onClose}
+              disabled={submitting}
             >
               Cancel
             </button>
@@ -168,8 +217,11 @@ const ScheduleSessionModal = ({
             <button
               type="submit"
               className="schedule-submit-btn"
+              disabled={submitting}
             >
-              Schedule Session
+              {submitting
+                ? "Scheduling..."
+                : "Schedule Session"}
             </button>
           </div>
         </form>

@@ -1444,6 +1444,35 @@
 }
 
 
+.schedule-error,
+.schedule-success {
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.schedule-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.schedule-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.schedule-submit-btn:disabled,
+.schedule-cancel-btn:disabled,
+.schedule-modal-close:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
 /* ================================
    MOBILE
 ================================ */
