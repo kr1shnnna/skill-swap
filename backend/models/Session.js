@@ -40,22 +40,21 @@ const sessionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "accepted",
-        "rejected",
-        "cancelled",
-        "completed",
-      ],
+      enum: ["pending", "accepted", "rejected", "cancelled", "completed"],
       default: "pending",
+    },
+    
+    statusUpdatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Session = mongoose.model("Session", sessionSchema);
 
 module.exports = Session;
-

@@ -1,11 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-
-import {
-  FaCalendarAlt,
-  FaClock,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaClock } from "react-icons/fa";
 
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -36,11 +32,7 @@ const Sessions = () => {
       return userObject;
     }
 
-    return (
-      userObject._id?.toString() ||
-      userObject.id?.toString() ||
-      null
-    );
+    return userObject._id?.toString() || userObject.id?.toString() || null;
   };
 
   /*
@@ -58,26 +50,26 @@ const Sessions = () => {
   }, [user]);
 
   useEffect(() => {
-  const socket = io("http://localhost:5000");
+    const socket = io("http://localhost:5000");
 
-  socket.on("sessionUpdated", (updatedSession) => {
-    setSessions((currentSessions) =>
-      currentSessions.map((session) =>
-        session._id === updatedSession.sessionId
-          ? {
-              ...session,
-              status: updatedSession.status,
-            }
-          : session
-      )
-    );
-  });
+    socket.on("sessionUpdated", (updatedSession) => {
+      setSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session._id === updatedSession.sessionId
+            ? {
+                ...session,
+                status: updatedSession.status,
+                statusUpdatedBy: updatedSession.statusUpdatedBy,
+              }
+            : session,
+        ),
+      );
+    });
 
-  return () => {
-    socket.disconnect();
-  };
-}, []);
-
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const fetchSessions = async () => {
     try {
@@ -86,19 +78,11 @@ const Sessions = () => {
 
       const response = await api.get("/sessions");
 
-      setSessions(
-        response.data.sessions || []
-      );
+      setSessions(response.data.sessions || []);
     } catch (error) {
-      console.error(
-        "Fetch sessions error:",
-        error
-      );
+      console.error("Fetch sessions error:", error);
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to load sessions."
-      );
+      setError(error.response?.data?.message || "Unable to load sessions.");
     } finally {
       setLoading(false);
     }
@@ -113,14 +97,18 @@ const Sessions = () => {
   const currentUserId = getUserId(user);
 
   const upcomingSessions = sessions.filter(
-    (session) =>
-      session.status === "accepted" ||
-      session.status === "completed"
+    (session) => session.status === "accepted",
   );
 
   const pendingSessions = sessions.filter(
+    (session) => session.status === "pending",
+  );
+
+  const sessionHistory = sessions.filter(
     (session) =>
-      session.status === "pending"
+      session.status === "completed" ||
+      session.status === "rejected" ||
+      session.status === "cancelled",
   );
 
   /*
@@ -132,24 +120,19 @@ const Sessions = () => {
   return (
     <main className="sessions-page">
       <div className="sessions-container">
-
         {/* ================================== */}
         {/* PAGE HEADER */}
         {/* ================================== */}
 
         <div className="sessions-page-header">
           <div>
-            <p className="sessions-page-tag">
-              PLAN • LEARN • GROW
-            </p>
+            <p className="sessions-page-tag">PLAN • LEARN • GROW</p>
 
             <h1>
               My <span>Sessions</span>
             </h1>
 
-            <p>
-              Manage your upcoming skill exchange sessions.
-            </p>
+            <p>Manage your upcoming skill exchange sessions.</p>
           </div>
 
           <FaCalendarAlt className="sessions-header-icon" />
@@ -160,16 +143,11 @@ const Sessions = () => {
         {/* ================================== */}
 
         <section className="sessions-section">
-
           <div className="sessions-section-header">
             <div>
-              <h2>
-                Upcoming Sessions
-              </h2>
+              <h2>Upcoming Sessions</h2>
 
-              <p>
-                Your scheduled learning sessions.
-              </p>
+              <p>Your scheduled learning sessions.</p>
             </div>
           </div>
 
@@ -179,64 +157,43 @@ const Sessions = () => {
             <div className="sessions-empty-state">
               <FaClock />
 
-              <h3>
-                Loading sessions...
-              </h3>
+              <h3>Loading sessions...</h3>
 
-              <p>
-                Fetching your scheduled sessions.
-              </p>
+              <p>Fetching your scheduled sessions.</p>
             </div>
-
           ) : error ? (
-
             /* ERROR */
 
             <div className="sessions-empty-state">
               <FaCalendarAlt />
 
-              <h3>
-                Unable to load sessions
-              </h3>
+              <h3>Unable to load sessions</h3>
 
-              <p>
-                {error}
-              </p>
+              <p>{error}</p>
             </div>
-
           ) : upcomingSessions.length === 0 ? (
-
             /* EMPTY */
 
             <div className="sessions-empty-state">
               <FaCalendarAlt />
 
-              <h3>
-                No upcoming sessions
-              </h3>
+              <h3>No upcoming sessions</h3>
 
-              <p>
-                Accepted sessions will appear here.
-              </p>
+              <p>Accepted sessions will appear here.</p>
             </div>
-
           ) : (
-
             /* SESSION CARDS */
 
             <div className="sessions-list">
-              {upcomingSessions.map(
-                (session) => (
-                  <SessionCard
-                    key={session._id}
-                    session={session}
-                    currentUserId={currentUserId}
-                  />
-                )
-              )}
+              {upcomingSessions.map((session) => (
+                <SessionCard
+                  key={session._id}
+                  session={session}
+                  currentUserId={currentUserId}
+                />
+              ))}
             </div>
           )}
-
         </section>
 
         {/* ================================== */}
@@ -244,58 +201,74 @@ const Sessions = () => {
         {/* ================================== */}
 
         <section className="sessions-section">
-
           <div className="sessions-section-header">
             <div>
-              <h2>
-                Pending Requests
-              </h2>
+              <h2>Pending Requests</h2>
 
-              <p>
-                Session requests waiting for a response.
-              </p>
+              <p>Session requests waiting for a response.</p>
             </div>
           </div>
 
           {pendingSessions.length === 0 ? (
-
             /* NO PENDING REQUESTS */
 
             <div className="sessions-empty-state compact">
               <FaClock />
 
-              <h3>
-                No pending requests
-              </h3>
+              <h3>No pending requests</h3>
 
-              <p>
-                New session requests will appear here.
-              </p>
+              <p>New session requests will appear here.</p>
             </div>
-
           ) : (
-
             /* PENDING SESSION CARDS */
 
             <div className="sessions-list">
-              {pendingSessions.map(
-                (session) => (
-                  <SessionCard
-                    key={session._id}
-                    session={session}
-                    currentUserId={currentUserId}
-                  />
-                )
-              )}
+              {pendingSessions.map((session) => (
+                <SessionCard
+                  key={session._id}
+                  session={session}
+                  currentUserId={currentUserId}
+                />
+              ))}
             </div>
           )}
-
         </section>
 
+        {/* ==================================
+    SESSION HISTORY
+================================== */}
+
+        <section className="sessions-section">
+          <div className="sessions-section-header">
+            <div>
+              <h2>Session History</h2>
+              <p>Completed, rejected, and cancelled sessions.</p>
+            </div>
+          </div>
+
+          {sessionHistory.length === 0 ? (
+            <div className="sessions-empty-state compact">
+              <FaCalendarAlt />
+
+              <h3>No session history</h3>
+
+              <p>Completed or cancelled sessions will appear here.</p>
+            </div>
+          ) : (
+            <div className="sessions-list">
+              {sessionHistory.map((session) => (
+                <SessionCard
+                  key={session._id}
+                  session={session}
+                  currentUserId={currentUserId}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
 };
 
 export default Sessions;
-

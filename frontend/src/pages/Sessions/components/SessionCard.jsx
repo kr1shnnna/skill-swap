@@ -25,6 +25,11 @@ const SessionCard = ({
     session.partner?._id?.toString() ===
     currentUserId?.toString();
 
+    const statusChangedByCurrentUser =
+    session.statusUpdatedBy?.toString() ===
+    currentUserId?.toString();
+
+
   const partner = isRequester
     ? session.partner
     : session.requester;
@@ -76,7 +81,15 @@ const SessionCard = ({
         <span
           className={`session-status ${session.status}`}
         >
-          {session.status}
+          {session.status === "cancelled"
+    ? statusChangedByCurrentUser
+      ? "Cancelled by you"
+      : "Cancelled by requester"
+    : session.status === "rejected"
+    ? statusChangedByCurrentUser
+      ? "Rejected by you"
+      : "Rejected by partner"
+    : session.status}
         </span>
       </div>
 

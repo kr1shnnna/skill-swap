@@ -189,6 +189,7 @@ const updateSessionStatus = async (req, res) => {
       io.emit("sessionUpdated", {
         sessionId: session._id.toString(),
         status: session.status,
+        statusUpdatedBy: userId.toString()
       });
     }
 
