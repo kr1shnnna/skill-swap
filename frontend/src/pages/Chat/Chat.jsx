@@ -58,8 +58,44 @@ const Chat = () => {
 
   const [error, setError] = useState("");
 
-  //temporary state for testing incoming call UI
-  const [showTestCall, setShowTestCall] = useState(false);
+ 
+
+
+//call state
+  const [incomingCaller, setIncomingCaller] = useState(null);
+
+// ------------------------------------------
+// FETCH INCOMING CALLER
+// ------------------------------------------
+
+useEffect(() => {
+  const fetchIncomingCaller = async () => {
+    if (!incomingCall?.callerId) {
+      setIncomingCaller(null);
+      return;
+    }
+
+    try {
+      const response = await api.get(
+        `/users/${incomingCall.callerId}`
+      );
+
+      setIncomingCaller(response.data.user);
+    } catch (error) {
+      console.error(
+        "Failed to fetch incoming caller:",
+        error
+      );
+
+      setIncomingCaller({
+        name: "SkillSwap Student",
+      });
+    }
+  };
+
+  fetchIncomingCaller();
+}, [incomingCall]);
+
 
   // Schedule Session Modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -1055,10 +1091,7 @@ const Chat = () => {
                 {/* CHAT HEADER */}
                 {/* ============================ */}
 
-                <button type="button" onClick={() => setShowTestCall(true)}>
-                  Test Incoming Call
-                </button>
-
+                
                 <ChatHeader
                   selectedUser={selectedUser}
                   onlineUserIds={onlineUserIds}
@@ -1149,33 +1182,22 @@ const Chat = () => {
         )}
       </div>
 
-      {showTestCall && (
-        <IncomingCall
-          caller={{ name: "Test Student" }}
-          callType="video"
-          onAccept={() => {
-            console.log("Call accepted");
-            setShowTestCall(false);
-          }}
-          onReject={() => {
-            console.log("Call rejected");
-            setShowTestCall(false);
-          }}
-        />
-      )}
+      
 
 
       {incomingCall && (
   <IncomingCall
-    caller={{ name: "SkillSwap Student" }}
+    caller={incomingCaller}
     callType={incomingCall.callType}
     onAccept={() => {
       console.log("Call accepted:", incomingCall);
       setIncomingCall(null);
+      setIncomingCaller(null);
     }}
     onReject={() => {
       console.log("Call rejected:", incomingCall);
       setIncomingCall(null);
+      setIncomingCaller(null);
     }}
   />
 )}
