@@ -15,6 +15,8 @@ import ScheduleSessionModal from "./components/ScheduleSessionModal";
 import IncomingCall from "../../features/calls/components/IncomingCall";
 import "../../features/calls/calls.css";
 
+import JitsiCall from "../../features/calls/components/JitsiCall";
+
 import "./Chat.css";
 
 const Chat = () => {
@@ -58,44 +60,37 @@ const Chat = () => {
 
   const [error, setError] = useState("");
 
- 
+  const [activeCall, setActiveCall] = useState(null);
 
-
-//call state
+  //call state
   const [incomingCaller, setIncomingCaller] = useState(null);
 
-// ------------------------------------------
-// FETCH INCOMING CALLER
-// ------------------------------------------
+  // ------------------------------------------
+  // FETCH INCOMING CALLER
+  // ------------------------------------------
 
-useEffect(() => {
-  const fetchIncomingCaller = async () => {
-    if (!incomingCall?.callerId) {
-      setIncomingCaller(null);
-      return;
-    }
+  useEffect(() => {
+    const fetchIncomingCaller = async () => {
+      if (!incomingCall?.callerId) {
+        setIncomingCaller(null);
+        return;
+      }
 
-    try {
-      const response = await api.get(
-        `/users/${incomingCall.callerId}`
-      );
+      try {
+        const response = await api.get(`/users/${incomingCall.callerId}`);
 
-      setIncomingCaller(response.data.user);
-    } catch (error) {
-      console.error(
-        "Failed to fetch incoming caller:",
-        error
-      );
+        setIncomingCaller(response.data.user);
+      } catch (error) {
+        console.error("Failed to fetch incoming caller:", error);
 
-      setIncomingCaller({
-        name: "SkillSwap Student",
-      });
-    }
-  };
+        setIncomingCaller({
+          name: "SkillSwap Student",
+        });
+      }
+    };
 
-  fetchIncomingCaller();
-}, [incomingCall]);
-
+    fetchIncomingCaller();
+  }, [incomingCall]);
 
   // Schedule Session Modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -1091,7 +1086,6 @@ useEffect(() => {
                 {/* CHAT HEADER */}
                 {/* ============================ */}
 
-                
                 <ChatHeader
                   selectedUser={selectedUser}
                   onlineUserIds={onlineUserIds}
@@ -1180,27 +1174,40 @@ useEffect(() => {
             onClose={handleCloseScheduleModal}
           />
         )}
+
+        {activeCall && (
+          <JitsiCall
+            roomName={activeCall.roomName}
+            displayName={user?.name}
+            onClose={() => {
+              setActiveCall(null);
+            }}
+          />
+        )}
       </div>
 
-      
-
-
       {incomingCall && (
-  <IncomingCall
-    caller={incomingCaller}
-    callType={incomingCall.callType}
-    onAccept={() => {
-      console.log("Call accepted:", incomingCall);
-      setIncomingCall(null);
-      setIncomingCaller(null);
-    }}
-    onReject={() => {
-      console.log("Call rejected:", incomingCall);
-      setIncomingCall(null);
-      setIncomingCaller(null);
-    }}
-  />
-)}
+        <IncomingCall
+          caller={incomingCaller}
+          callType={incomingCall.callType}
+          onAccept={() => {
+            const roomName = `SkillSwap-${incomingCall.callerId}-${getUserId(user)}`;
+
+            setActiveCall({
+              roomName,
+              callType: incomingCall.callType,
+            });
+
+            setIncomingCall(null);
+            setIncomingCaller(null);
+          }}
+          onReject={() => {
+            console.log("Call rejected:", incomingCall);
+            setIncomingCall(null);
+            setIncomingCaller(null);
+          }}
+        />
+      )}
     </main>
   );
 };
