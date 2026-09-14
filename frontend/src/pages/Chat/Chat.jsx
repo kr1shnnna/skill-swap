@@ -59,6 +59,14 @@ const Chat = () => {
   // Schedule Session Modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
 
+  const handleAudioCall = () => {
+    console.log("Starting audio call with:", selectedUser);
+  };
+
+  const handleVideoCall = () => {
+    console.log("Starting video call with:", selectedUser);
+  };
+
   //
   const handleOpenScheduleModal = () => {
     setShowScheduleModal(true);
@@ -1026,6 +1034,9 @@ const Chat = () => {
                   getUserId={getUserId}
                   onBack={handleBackToConversations}
                   onSchedule={handleOpenScheduleModal}
+                  onAudioCall={handleAudioCall}
+                  onVideoCall={handleVideoCall}
+                  
                 />
 
                 {/* ============================ */}
@@ -1108,22 +1119,20 @@ const Chat = () => {
         )}
       </div>
 
-
       {showTestCall && (
-  <IncomingCall
-    caller={{ name: "Test Student" }}
-    callType="video"
-    onAccept={() => {
-      console.log("Call accepted");
-      setShowTestCall(false);
-    }}
-    onReject={() => {
-      console.log("Call rejected");
-      setShowTestCall(false);
-    }}
-  />
-)}
-
+        <IncomingCall
+          caller={{ name: "Test Student" }}
+          callType="video"
+          onAccept={() => {
+            console.log("Call accepted");
+            setShowTestCall(false);
+          }}
+          onReject={() => {
+            console.log("Call rejected");
+            setShowTestCall(false);
+          }}
+        />
+      )}
     </main>
   );
 };

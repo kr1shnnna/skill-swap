@@ -249,6 +249,33 @@ io.emit("userOnline", {
     }
   );
 
+
+  // ------------------------------------------
+// CALL SIGNALING
+// ------------------------------------------
+
+socket.on("callUser", ({ receiverId, callType }) => {
+  if (!receiverId || !callType) {
+    return;
+  }
+
+  const receiverSocketId = getUserSocket(receiverId);
+
+  if (!receiverSocketId) {
+    socket.emit("callFailed", {
+      message: "User is currently offline.",
+    });
+
+    return;
+  }
+
+  io.to(receiverSocketId).emit("incomingCall", {
+    callerId: socket.userId.toString(),
+    callType,
+  });
+});
+
+
   // ------------------------------------------
   // HANDLE DISCONNECT
   // ------------------------------------------
