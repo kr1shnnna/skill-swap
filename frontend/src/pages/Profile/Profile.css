@@ -55,7 +55,8 @@
 }
 
 .profile-section textarea,
-.profile-section input {
+.profile-section input ,
+.profile-section select {
   width: 100%;
   padding: 13px 14px;
   border: 1px solid #d1d5db;
@@ -71,7 +72,8 @@
 }
 
 .profile-section input:focus,
-.profile-section textarea:focus {
+.profile-section textarea:focus,
+.profile-section select:focus {
   border-color: #2563eb;
 }
 

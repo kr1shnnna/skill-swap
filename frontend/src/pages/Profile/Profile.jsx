@@ -6,6 +6,7 @@ const Profile = () => {
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
+    gender: "Prefer not to say",
     skillsToTeach: [],
     skillsToLearn: [],
   });
@@ -26,6 +27,7 @@ const Profile = () => {
         setProfile({
           name: response.data.user.name || "",
           bio: response.data.user.bio || "",
+          gender: response.data.user.gender || "Prefer not to say",
           skillsToTeach: response.data.user.skillsToTeach || [],
           skillsToLearn: response.data.user.skillsToLearn || [],
         });
@@ -46,81 +48,69 @@ const Profile = () => {
     });
   };
 
-const addTeachSkill = () => {
-  const newSkills = teachSkill
-    .split(",")
-    .map((skill) => skill.trim())
-    .filter((skill) => skill.length > 0);
+  const addTeachSkill = () => {
+    const newSkills = teachSkill
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
 
-  if (newSkills.length === 0) {
-    return;
-  }
+    if (newSkills.length === 0) {
+      return;
+    }
 
-  const uniqueSkills = newSkills.filter(
-    (skill) =>
-      !profile.skillsToTeach.some(
-        (existingSkill) =>
-          existingSkill.toLowerCase() === skill.toLowerCase()
-      )
-  );
+    const uniqueSkills = newSkills.filter(
+      (skill) =>
+        !profile.skillsToTeach.some(
+          (existingSkill) =>
+            existingSkill.toLowerCase() === skill.toLowerCase(),
+        ),
+    );
 
-  setProfile({
-    ...profile,
-    skillsToTeach: [
-      ...profile.skillsToTeach,
-      ...uniqueSkills,
-    ],
-  });
+    setProfile({
+      ...profile,
+      skillsToTeach: [...profile.skillsToTeach, ...uniqueSkills],
+    });
 
-  setTeachSkill("");
-};
+    setTeachSkill("");
+  };
 
+  const addLearnSkill = () => {
+    const newSkills = learnSkill
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0);
 
-const addLearnSkill = () => {
-  const newSkills = learnSkill
-    .split(",")
-    .map((skill) => skill.trim())
-    .filter((skill) => skill.length > 0);
+    if (newSkills.length === 0) {
+      return;
+    }
 
-  if (newSkills.length === 0) {
-    return;
-  }
+    const uniqueSkills = newSkills.filter(
+      (skill) =>
+        !profile.skillsToLearn.some(
+          (existingSkill) =>
+            existingSkill.toLowerCase() === skill.toLowerCase(),
+        ),
+    );
 
-  const uniqueSkills = newSkills.filter(
-    (skill) =>
-      !profile.skillsToLearn.some(
-        (existingSkill) =>
-          existingSkill.toLowerCase() === skill.toLowerCase()
-      )
-  );
+    setProfile({
+      ...profile,
+      skillsToLearn: [...profile.skillsToLearn, ...uniqueSkills],
+    });
 
-  setProfile({
-    ...profile,
-    skillsToLearn: [
-      ...profile.skillsToLearn,
-      ...uniqueSkills,
-    ],
-  });
-
-  setLearnSkill("");
-};
-
+    setLearnSkill("");
+  };
 
   const removeTeachSkill = (skill) => {
     setProfile({
       ...profile,
-      skillsToTeach: profile.skillsToTeach.filter(
-        (item) => item !== skill
-      ),
+      skillsToTeach: profile.skillsToTeach.filter((item) => item !== skill),
     });
   };
 
   const removeLearnSkill = (skill) => {
     setProfile({
       ...profile,
-      skillsToLearn: profile.skillsToLearn.filter(
-        (item) => item !== skill
-      ),
+      skillsToLearn: profile.skillsToLearn.filter((item) => item !== skill),
     });
   };
 
@@ -139,10 +129,7 @@ const addLearnSkill = () => {
     } catch (error) {
       console.error("Profile update error:", error);
 
-      setMessage(
-        error.response?.data?.message ||
-          "Failed to update profile"
-      );
+      setMessage(error.response?.data?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -155,17 +142,15 @@ const addLearnSkill = () => {
   return (
     <main className="profile-page">
       <div className="profile-container">
-
         <div className="profile-header">
           <h1>Build Your Profile</h1>
           <p>
-            Tell the SkillSwap community what you can teach
-            and what you want to learn.
+            Tell the SkillSwap community what you can teach and what you want to
+            learn.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="profile-form">
-
           {/* Basic Information */}
           <section className="profile-section">
             <h2>About You</h2>
@@ -193,6 +178,21 @@ const addLearnSkill = () => {
                 rows="4"
               />
             </div>
+
+            <div className="form-group">
+              <label htmlFor="gender">Gender</label>
+
+              <select
+                id="gender"
+                name="gender"
+                value={profile.gender}
+                onChange={handleChange}
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
           </section>
 
           {/* Skills to Teach */}
@@ -210,10 +210,7 @@ const addLearnSkill = () => {
                 placeholder="Example: React, Python, Photoshop"
               />
 
-              <button
-                type="button"
-                onClick={addTeachSkill}
-              >
+              <button type="button" onClick={addTeachSkill}>
                 Add
               </button>
             </div>
@@ -223,10 +220,7 @@ const addLearnSkill = () => {
                 <span key={skill} className="skill-tag teach-tag">
                   {skill}
 
-                  <button
-                    type="button"
-                    onClick={() => removeTeachSkill(skill)}
-                  >
+                  <button type="button" onClick={() => removeTeachSkill(skill)}>
                     ×
                   </button>
                 </span>
@@ -249,10 +243,7 @@ const addLearnSkill = () => {
                 placeholder="Example: UI/UX, Node.js, Machine Learning"
               />
 
-              <button
-                type="button"
-                onClick={addLearnSkill}
-              >
+              <button type="button" onClick={addLearnSkill}>
                 Add
               </button>
             </div>
@@ -262,10 +253,7 @@ const addLearnSkill = () => {
                 <span key={skill} className="skill-tag learn-tag">
                   {skill}
 
-                  <button
-                    type="button"
-                    onClick={() => removeLearnSkill(skill)}
-                  >
+                  <button type="button" onClick={() => removeLearnSkill(skill)}>
                     ×
                   </button>
                 </span>
@@ -273,18 +261,11 @@ const addLearnSkill = () => {
             </div>
           </section>
 
-          {message && (
-            <p className="profile-message">{message}</p>
-          )}
+          {message && <p className="profile-message">{message}</p>}
 
-          <button
-            type="submit"
-            className="save-profile-btn"
-            disabled={saving}
-          >
+          <button type="submit" className="save-profile-btn" disabled={saving}>
             {saving ? "Saving..." : "Save Profile"}
           </button>
-
         </form>
       </div>
     </main>

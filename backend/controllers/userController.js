@@ -28,7 +28,7 @@ const getProfile = async (req, res) => {
 const updateProfile=async (req,res)=>{
     try{
 
-        const { name, bio, skillsToTeach, skillsToLearn } = req.body;
+        const { name, bio, gender,skillsToTeach, skillsToLearn } = req.body;
 
         const user=await User.findById(req.user.userId);
 
@@ -41,6 +41,7 @@ const updateProfile=async (req,res)=>{
             // Update only fields that were provided
     if (name !== undefined) user.name = name;
     if (bio !== undefined) user.bio = bio;
+    if (gender !== undefined) user.gender = gender;
     if (skillsToTeach !== undefined) user.skillsToTeach = skillsToTeach;
     if (skillsToLearn !== undefined) user.skillsToLearn = skillsToLearn;
 
@@ -52,6 +53,7 @@ const updateProfile=async (req,res)=>{
             name: updatedUser.name,
             email: updatedUser.email,
             bio: updatedUser.bio,
+            gender: updatedUser.gender,
             skillsToTeach: updatedUser.skillsToTeach,
             skillsToLearn: updatedUser.skillsToLearn,
         }
