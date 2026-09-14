@@ -33,6 +33,8 @@ const Chat = () => {
     startTyping,
     stopTyping,
 
+    startCall,
+    
     // Online / Offline
     onlineUserIds,
   } = useContext(AuthContext);
@@ -60,11 +62,37 @@ const Chat = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   const handleAudioCall = () => {
-    console.log("Starting audio call with:", selectedUser);
+    if (!selectedUser) {
+      return;
+    }
+
+    const receiverId = getUserId(selectedUser);
+
+    if (!receiverId) {
+      console.error("Unable to get receiver ID.");
+      return;
+    }
+
+    startCall(receiverId, "audio");
+
+    console.log("Starting audio call with:", selectedUser.name);
   };
 
   const handleVideoCall = () => {
-    console.log("Starting video call with:", selectedUser);
+    if (!selectedUser) {
+      return;
+    }
+
+    const receiverId = getUserId(selectedUser);
+
+    if (!receiverId) {
+      console.error("Unable to get receiver ID.");
+      return;
+    }
+
+    startCall(receiverId, "video");
+
+    console.log("Starting video call with:", selectedUser.name);
   };
 
   //
@@ -1036,7 +1064,6 @@ const Chat = () => {
                   onSchedule={handleOpenScheduleModal}
                   onAudioCall={handleAudioCall}
                   onVideoCall={handleVideoCall}
-                  
                 />
 
                 {/* ============================ */}

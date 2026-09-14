@@ -573,6 +573,30 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ------------------------------------------
+// START CALL
+// ------------------------------------------
+
+const startCall = (
+  receiverId,
+  callType
+) => {
+  if (!socketRef.current) {
+    console.error("Socket is not connected.");
+    return;
+  }
+
+  if (!receiverId || !callType) {
+    return;
+  }
+
+  socketRef.current.emit("callUser", {
+    receiverId: receiverId.toString(),
+    callType,
+  });
+};
+
+
+  // ------------------------------------------
   // FETCH INITIAL SWAP COUNT
   // ------------------------------------------
 
@@ -621,6 +645,9 @@ export const AuthProvider = ({ children }) => {
     typingUserId,
     startTyping,
     stopTyping,
+
+    //calls
+    startCall,
 
     // Online users
     onlineUserIds,
