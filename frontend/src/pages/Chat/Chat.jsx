@@ -107,7 +107,16 @@ const Chat = () => {
       return;
     }
 
-    startCall(receiverId, "audio");
+    const callerId = getUserId(user);
+
+    if (!callerId) {
+      console.error("Unable to get caller ID.");
+      return;
+    }
+
+    const roomName = `SkillSwap-${callerId}-${receiverId}`;
+
+    startCall(receiverId, "audio", roomName);
 
     console.log("Starting audio call with:", selectedUser.name);
   };
@@ -124,7 +133,16 @@ const Chat = () => {
       return;
     }
 
-    startCall(receiverId, "video");
+    const callerId = getUserId(user);
+
+    if (!callerId) {
+      console.error("Unable to get caller ID.");
+      return;
+    }
+
+    const roomName = `SkillSwap-${callerId}-${receiverId}`;
+
+    startCall(receiverId, "video", roomName);
 
     console.log("Starting video call with:", selectedUser.name);
   };
@@ -1191,16 +1209,17 @@ const Chat = () => {
           caller={incomingCaller}
           callType={incomingCall.callType}
           onAccept={() => {
-            const roomName = `SkillSwap-${incomingCall.callerId}-${getUserId(user)}`;
-
+             console.log("INCOMING CALL DATA:", incomingCall);
+             
             setActiveCall({
-              roomName,
+              roomName: incomingCall.roomName,
               callType: incomingCall.callType,
             });
 
             setIncomingCall(null);
             setIncomingCaller(null);
           }}
+
           onReject={() => {
             console.log("Call rejected:", incomingCall);
             setIncomingCall(null);

@@ -514,14 +514,15 @@ const [
 
 socket.on(
   "incomingCall",
-  ({ callerId, callType }) => {
-    if (!callerId || !callType) {
+  ({ callerId, callType , roomName }) => {
+    if (!callerId || !callType || !roomName) {
       return;
     }
 
     setIncomingCall({
       callerId: callerId.toString(),
       callType,
+      roomName,
     });
   }
 );
@@ -608,22 +609,25 @@ socket.on(
 
 const startCall = (
   receiverId,
-  callType
+  callType,
+  roomName
 ) => {
   if (!socketRef.current) {
     console.error("Socket is not connected.");
     return;
   }
 
-  if (!receiverId || !callType) {
+  if (!receiverId || !callType || !roomName) {
     return;
   }
 
   socketRef.current.emit("callUser", {
     receiverId: receiverId.toString(),
     callType,
+    roomName,
   });
 };
+
 
 
   // ------------------------------------------

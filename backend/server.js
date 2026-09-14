@@ -254,26 +254,34 @@ io.emit("userOnline", {
 // CALL SIGNALING
 // ------------------------------------------
 
-socket.on("callUser", ({ receiverId, callType }) => {
-  if (!receiverId || !callType) {
-    return;
+socket.on(
+  "callUser",
+  ({ receiverId, callType, roomName }) => {
+    if (!receiverId || !callType || !roomName) {
+      return;
+    }
+
+    const receiverSocketId =
+      getUserSocket(receiverId);
+
+    if (!receiverSocketId) {
+      socket.emit("callFailed", {
+        message: "User is currently offline.",
+      });
+
+      return;
+    }
+
+    io.to(receiverSocketId).emit(
+      "incomingCall",
+      {
+        callerId: socket.userId.toString(),
+        callType,
+        roomName,
+      }
+    );
   }
-
-  const receiverSocketId = getUserSocket(receiverId);
-
-  if (!receiverSocketId) {
-    socket.emit("callFailed", {
-      message: "User is currently offline.",
-    });
-
-    return;
-  }
-
-  io.to(receiverSocketId).emit("incomingCall", {
-    callerId: socket.userId.toString(),
-    callType,
-  });
-});
+);
 
 
   // ------------------------------------------
