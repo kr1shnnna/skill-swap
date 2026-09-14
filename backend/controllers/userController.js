@@ -1,4 +1,6 @@
 const User=require("../models/User");
+const Swap = require("../models/Swap");
+
 
 
 
@@ -72,9 +74,7 @@ const updateProfile=async (req,res)=>{
 
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select(
-      "-password"
-    );
+    const user = await User.findById(req.params.userId).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -82,8 +82,40 @@ const getUserById = async (req, res) => {
       });
     }
 
+    const swap = await Swap.findOne({
+      $or: [
+        {
+          sender: req.user.userId,
+          receiver: req.params.userId,
+        },
+        {
+          sender: req.params.userId,
+          receiver: req.user.userId,
+        },
+      ],
+    }).sort({ updatedAt: -1 });
+
+    let relationshipStatus = "available";
+
+    if (swap) {
+      if (swap.status === "accepted") {
+        relationshipStatus = "connected";
+      } else if (
+        swap.status === "pending" &&
+        swap.sender.toString() === req.user.userId.toString()
+      ) {
+        relationshipStatus = "request_sent";
+      } else if (
+        swap.status === "pending" &&
+        swap.receiver.toString() === req.user.userId.toString()
+      ) {
+        relationshipStatus = "request_received";
+      }
+    }
+
     res.status(200).json({
       user,
+      relationshipStatus,
     });
   } catch (error) {
     console.error("Get user by ID error:", error.message);
@@ -93,6 +125,7 @@ const getUserById = async (req, res) => {
     });
   }
 };
+
 
 module.exports={
     getProfile,

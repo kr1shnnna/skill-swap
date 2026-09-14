@@ -1,18 +1,26 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState  } from "react";
+import { Link, useParams ,useNavigate } from "react-router-dom";
 import {
   FaUserCircle,
   FaChalkboardTeacher,
   FaBookOpen,
   FaArrowLeft,
+   FaComments,
+  FaPaperPlane,
+  FaUserClock,
+
 } from "react-icons/fa";
 import api from "../../services/api";
 import "./StudentProfile.css";
 
 const StudentProfile = () => {
   const { userId } = useParams();
+   const navigate = useNavigate();
+   
 
   const [student, setStudent] = useState(null);
+  const [relationshipStatus, setRelationshipStatus] = useState("available");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,6 +33,7 @@ const StudentProfile = () => {
       try {
         const response = await api.get(`/users/${userId}`);
         setStudent(response.data.user);
+        setRelationshipStatus(response.data.relationshipStatus || "available");
       } catch (error) {
         console.error("Student profile error:", error);
 
@@ -38,6 +47,14 @@ const StudentProfile = () => {
 
     fetchStudent();
   }, [userId]);
+
+  const handleOpenChat = () => {
+    navigate("/chat", {
+      state: {
+        userId: userId.toString(),
+      },
+    });
+  };
 
   const handleSendRequest = async () => {
     setRequestLoading(true);
@@ -107,7 +124,6 @@ const StudentProfile = () => {
               {student.gender && student.gender !== "Prefer not to say" && (
                 <p className="student-gender">Gender: {student.gender}</p>
               )}
-              
             </div>
           </div>
 
@@ -162,13 +178,36 @@ const StudentProfile = () => {
 
           {/* Action */}
           <div className="student-profile-action">
-            <button
-              className="send-request-btn"
-              onClick={handleSendRequest}
-              disabled={requestLoading}
-            >
-              {requestLoading ? "Sending..." : "Send Swap Request"}
-            </button>
+           
+           {relationshipStatus === "connected" ? (
+  <button
+    type="button"
+    className="send-request-btn"
+    onClick={handleOpenChat}
+  >
+    <FaComments />
+    Connected · Chat
+  </button>
+) : relationshipStatus === "request_sent" ? (
+  <div className="relationship-action request-sent">
+    <FaPaperPlane />
+    <span>Request Sent</span>
+  </div>
+) : relationshipStatus === "request_received" ? (
+  <div className="relationship-action request-received">
+    <FaUserClock />
+    <span>Request Received</span>
+  </div>
+) : (
+  <button
+    type="button"
+    className="send-request-btn"
+    onClick={handleSendRequest}
+    disabled={requestLoading}
+  >
+    {requestLoading ? "Sending..." : "Send Swap Request"}
+  </button>
+)}
 
             {requestMessage && (
               <p className="request-success">{requestMessage}</p>

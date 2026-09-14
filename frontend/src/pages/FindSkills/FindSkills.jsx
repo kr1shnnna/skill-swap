@@ -32,8 +32,7 @@ const FindSkills = () => {
         console.error("Fetch matches error:", error);
 
         setError(
-          error.response?.data?.message ||
-            "Unable to load skill matches."
+          error.response?.data?.message || "Unable to load skill matches.",
         );
       } finally {
         setLoading(false);
@@ -59,16 +58,13 @@ const FindSkills = () => {
                 ...match,
                 relationshipStatus: "request_sent",
               }
-            : match
-        )
+            : match,
+        ),
       );
     } catch (error) {
       console.error("Send swap request error:", error);
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to send swap request."
-      );
+      setError(error.response?.data?.message || "Unable to send swap request.");
     } finally {
       setSendingRequest(null);
     }
@@ -153,29 +149,22 @@ const FindSkills = () => {
   return (
     <main className="find-skills-page">
       <div className="find-skills-container">
-
         {/* Header */}
         <section className="find-skills-header">
-          <p className="find-skills-tag">
-            DISCOVER • CONNECT • LEARN
-          </p>
+          <p className="find-skills-tag">DISCOVER • CONNECT • LEARN</p>
 
           <h1>
             Find Your <span>Skill Matches</span>
           </h1>
 
           <p className="find-skills-description">
-            Discover students who can teach you the skills
-            you're looking to learn.
+            Discover students who can teach you the skills you're looking to
+            learn.
           </p>
         </section>
 
         {/* Error */}
-        {error && (
-          <div className="matches-message error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="matches-message error-message">{error}</div>}
 
         {/* No skills message */}
         {!error && message && matches.length === 0 && (
@@ -204,8 +193,7 @@ const FindSkills = () => {
             <h2>No matches found yet</h2>
 
             <p>
-              We couldn't find anyone who teaches the
-              skills you're looking for.
+              We couldn't find anyone who teaches the skills you're looking for.
             </p>
 
             <Link to="/profile" className="profile-btn">
@@ -217,29 +205,21 @@ const FindSkills = () => {
         {/* Match results */}
         {matches.length > 0 && (
           <section className="matches-section">
-
             <div className="matches-top">
               <div>
                 <h2>Your Matches</h2>
 
                 <p>
                   We found {matches.length}{" "}
-                  {matches.length === 1
-                    ? "student"
-                    : "students"}{" "}
-                  who can help you learn.
+                  {matches.length === 1 ? "student" : "students"} who can help
+                  you learn.
                 </p>
               </div>
             </div>
 
             <div className="matches-grid">
-
               {matches.map((match) => (
-                <div
-                  className="match-card"
-                  key={match.user.id}
-                >
-
+                <div className="match-card" key={match.user.id}>
                   {/* Match score */}
                   <div className="match-score">
                     <span>{match.matchScore}%</span>
@@ -252,12 +232,17 @@ const FindSkills = () => {
 
                     <div>
                       <h3>{match.user.name}</h3>
+
+                      {match.user.gender &&
+                        match.user.gender !== "Prefer not to say" && (
+                          <p className="match-gender">{match.user.gender}</p>
+                        )}
+                        
                     </div>
                   </div>
 
                   {/* Relationship status */}
                   <div className="relationship-status">
-
                     {match.relationshipStatus === "request_sent" && (
                       <span className="status-badge status-request-sent">
                         <FaPaperPlane />
@@ -285,14 +270,11 @@ const FindSkills = () => {
                         Available
                       </span>
                     )}
-
                   </div>
 
                   {/* Bio */}
                   {match.user.bio && (
-                    <p className="match-bio">
-                      {match.user.bio}
-                    </p>
+                    <p className="match-bio">{match.user.bio}</p>
                   )}
 
                   {/* Matched skills */}
@@ -301,10 +283,7 @@ const FindSkills = () => {
 
                     <div className="matched-skills">
                       {match.matchedSkills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="matched-skill"
-                        >
+                        <span key={skill} className="matched-skill">
                           {skill}
                         </span>
                       ))}
@@ -322,14 +301,11 @@ const FindSkills = () => {
 
                   {/* Relationship action */}
                   {renderRelationshipAction(match)}
-
                 </div>
               ))}
-
             </div>
           </section>
         )}
-
       </div>
     </main>
   );

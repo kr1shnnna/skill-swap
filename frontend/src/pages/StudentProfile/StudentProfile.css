@@ -138,6 +138,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
+
+   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .send-request-btn:hover {

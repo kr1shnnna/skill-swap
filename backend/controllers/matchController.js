@@ -96,6 +96,7 @@ const getMatches = async (req, res) => {
             id: user._id,
             name: user.name,
             bio: user.bio,
+            gender: user.gender,
           },
           matchScore: Number(matchScore.toFixed(2)),
           matchedSkills,
