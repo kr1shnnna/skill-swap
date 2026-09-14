@@ -98,6 +98,16 @@ export const AuthProvider = ({ children }) => {
     setOnlineUserIds,
   ] = useState([]);
 
+
+  // ------------------------------------------
+// INCOMING CALL
+// ------------------------------------------
+
+const [
+  incomingCall,
+  setIncomingCall,
+] = useState(null);
+
   // ------------------------------------------
   // SOCKET.IO
   // ------------------------------------------
@@ -497,6 +507,26 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+
+    // ----------------------------------------
+// INCOMING CALL
+// ----------------------------------------
+
+socket.on(
+  "incomingCall",
+  ({ callerId, callType }) => {
+    if (!callerId || !callType) {
+      return;
+    }
+
+    setIncomingCall({
+      callerId: callerId.toString(),
+      callType,
+    });
+  }
+);
+
+
     // ----------------------------------------
     // SOCKET ERROR
     // ----------------------------------------
@@ -648,6 +678,9 @@ const startCall = (
 
     //calls
     startCall,
+    incomingCall,
+    setIncomingCall,
+  
 
     // Online users
     onlineUserIds,

@@ -33,8 +33,11 @@ const Chat = () => {
     startTyping,
     stopTyping,
 
+    //call
     startCall,
-    
+    incomingCall,
+    setIncomingCall,
+
     // Online / Offline
     onlineUserIds,
   } = useContext(AuthContext);
@@ -1160,6 +1163,22 @@ const Chat = () => {
           }}
         />
       )}
+
+
+      {incomingCall && (
+  <IncomingCall
+    caller={{ name: "SkillSwap Student" }}
+    callType={incomingCall.callType}
+    onAccept={() => {
+      console.log("Call accepted:", incomingCall);
+      setIncomingCall(null);
+    }}
+    onReject={() => {
+      console.log("Call rejected:", incomingCall);
+      setIncomingCall(null);
+    }}
+  />
+)}
     </main>
   );
 };
