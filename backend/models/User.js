@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    gender: {
+  type: String,
+  enum: ["Male", "Female", "Prefer not to say"],
+  default: "Prefer not to say",
+},
+
     skillsToTeach: {
       type: [String],
       default: [],
