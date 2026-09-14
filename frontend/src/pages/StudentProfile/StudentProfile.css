@@ -58,6 +58,14 @@
   font-size: 14px;
 }
 
+.student-gender {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
 /* Sections */
 
 .student-profile-section {
