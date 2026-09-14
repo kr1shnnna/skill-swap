@@ -15,8 +15,6 @@ import ScheduleSessionModal from "./components/ScheduleSessionModal";
 import IncomingCall from "../../features/calls/components/IncomingCall";
 import "../../features/calls/calls.css";
 
-import JitsiCall from "../../features/calls/components/JitsiCall";
-
 import "./Chat.css";
 
 const Chat = () => {
@@ -35,7 +33,7 @@ const Chat = () => {
     startTyping,
     stopTyping,
 
-    //call
+    // Calls
     startCall,
     incomingCall,
     setIncomingCall,
@@ -60,10 +58,38 @@ const Chat = () => {
 
   const [error, setError] = useState("");
 
-  const [activeCall, setActiveCall] = useState(null);
+  // ------------------------------------------
+  // INCOMING CALLER
+  // ------------------------------------------
 
-  //call state
   const [incomingCaller, setIncomingCaller] = useState(null);
+
+  // ------------------------------------------
+  // SCHEDULE SESSION MODAL
+  // ------------------------------------------
+
+  const [showScheduleModal, setShowScheduleModal] =
+    useState(false);
+
+  // ------------------------------------------
+  // GET USER ID
+  // ------------------------------------------
+
+  const getUserId = (userObject) => {
+    if (!userObject) {
+      return null;
+    }
+
+    if (typeof userObject === "string") {
+      return userObject;
+    }
+
+    return (
+      userObject._id?.toString() ||
+      userObject.id?.toString() ||
+      null
+    );
+  };
 
   // ------------------------------------------
   // FETCH INCOMING CALLER
@@ -77,11 +103,16 @@ const Chat = () => {
       }
 
       try {
-        const response = await api.get(`/users/${incomingCall.callerId}`);
+        const response = await api.get(
+          `/users/${incomingCall.callerId}`
+        );
 
         setIncomingCaller(response.data.user);
       } catch (error) {
-        console.error("Failed to fetch incoming caller:", error);
+        console.error(
+          "Failed to fetch incoming caller:",
+          error
+        );
 
         setIncomingCaller({
           name: "SkillSwap Student",
@@ -92,8 +123,33 @@ const Chat = () => {
     fetchIncomingCaller();
   }, [incomingCall]);
 
-  // Schedule Session Modal
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  // ------------------------------------------
+  // OPEN JITSI ROOM
+  // ------------------------------------------
+
+  const openJitsiRoom = (roomName) => {
+    if (!roomName) {
+      console.error(
+        "Unable to open Jitsi: room name is missing."
+      );
+
+      return;
+    }
+
+    const jitsiUrl = `https://meet.jit.si/${encodeURIComponent(
+      roomName
+    )}`;
+
+    window.open(
+      jitsiUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  // ------------------------------------------
+  // AUDIO CALL
+  // ------------------------------------------
 
   const handleAudioCall = () => {
     if (!selectedUser) {
@@ -103,23 +159,45 @@ const Chat = () => {
     const receiverId = getUserId(selectedUser);
 
     if (!receiverId) {
-      console.error("Unable to get receiver ID.");
+      console.error(
+        "Unable to get receiver ID."
+      );
+
       return;
     }
 
     const callerId = getUserId(user);
 
     if (!callerId) {
-      console.error("Unable to get caller ID.");
+      console.error(
+        "Unable to get caller ID."
+      );
+
       return;
     }
 
-    const roomName = `SkillSwap-${callerId}-${receiverId}`;
+    const roomName =
+      `SkillSwap-${callerId}-${receiverId}`;
 
-    startCall(receiverId, "audio", roomName);
+    // Notify receiver
+    startCall(
+      receiverId,
+      "audio",
+      roomName
+    );
 
-    console.log("Starting audio call with:", selectedUser.name);
+    // Open Jitsi for caller
+    openJitsiRoom(roomName);
+
+    console.log(
+      "Starting audio call with:",
+      selectedUser.name
+    );
   };
+
+  // ------------------------------------------
+  // VIDEO CALL
+  // ------------------------------------------
 
   const handleVideoCall = () => {
     if (!selectedUser) {
@@ -129,25 +207,46 @@ const Chat = () => {
     const receiverId = getUserId(selectedUser);
 
     if (!receiverId) {
-      console.error("Unable to get receiver ID.");
+      console.error(
+        "Unable to get receiver ID."
+      );
+
       return;
     }
 
     const callerId = getUserId(user);
 
     if (!callerId) {
-      console.error("Unable to get caller ID.");
+      console.error(
+        "Unable to get caller ID."
+      );
+
       return;
     }
 
-    const roomName = `SkillSwap-${callerId}-${receiverId}`;
+    const roomName =
+      `SkillSwap-${callerId}-${receiverId}`;
 
-    startCall(receiverId, "video", roomName);
+    // Notify receiver
+    startCall(
+      receiverId,
+      "video",
+      roomName
+    );
 
-    console.log("Starting video call with:", selectedUser.name);
+    // Open Jitsi for caller
+    openJitsiRoom(roomName);
+
+    console.log(
+      "Starting video call with:",
+      selectedUser.name
+    );
   };
 
-  //
+  // ------------------------------------------
+  // SCHEDULE SESSION
+  // ------------------------------------------
+
   const handleOpenScheduleModal = () => {
     setShowScheduleModal(true);
   };
@@ -176,28 +275,14 @@ const Chat = () => {
 
   /*
    * ------------------------------------------
-   * GET USER ID
-   * ------------------------------------------
-   */
-
-  const getUserId = (userObject) => {
-    if (!userObject) return null;
-
-    if (typeof userObject === "string") {
-      return userObject;
-    }
-
-    return userObject._id?.toString() || userObject.id?.toString() || null;
-  };
-
-  /*
-   * ------------------------------------------
    * FORMAT MESSAGE TIME
    * ------------------------------------------
    */
 
   const formatMessageTime = (date) => {
-    if (!date) return "";
+    if (!date) {
+      return "";
+    }
 
     const messageDate = new Date(date);
 
@@ -219,13 +304,15 @@ const Chat = () => {
 
   const isSameDay = (dateA, dateB) => {
     const firstDate = new Date(dateA);
-
     const secondDate = new Date(dateB);
 
     return (
-      firstDate.getFullYear() === secondDate.getFullYear() &&
-      firstDate.getMonth() === secondDate.getMonth() &&
-      firstDate.getDate() === secondDate.getDate()
+      firstDate.getFullYear() ===
+        secondDate.getFullYear() &&
+      firstDate.getMonth() ===
+        secondDate.getMonth() &&
+      firstDate.getDate() ===
+        secondDate.getDate()
     );
   };
 
@@ -236,7 +323,9 @@ const Chat = () => {
    */
 
   const formatDateSeparator = (date) => {
-    if (!date) return "";
+    if (!date) {
+      return "";
+    }
 
     const messageDate = new Date(date);
 
@@ -248,7 +337,9 @@ const Chat = () => {
 
     const yesterday = new Date();
 
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(
+      yesterday.getDate() - 1
+    );
 
     if (isSameDay(messageDate, today)) {
       return "Today";
@@ -258,20 +349,29 @@ const Chat = () => {
       return "Yesterday";
     }
 
-    if (messageDate.getFullYear() === today.getFullYear()) {
-      return messageDate.toLocaleDateString([], {
+    if (
+      messageDate.getFullYear() ===
+      today.getFullYear()
+    ) {
+      return messageDate.toLocaleDateString(
+        [],
+        {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        }
+      );
+    }
+
+    return messageDate.toLocaleDateString(
+      [],
+      {
         weekday: "long",
         month: "long",
         day: "numeric",
-      });
-    }
-
-    return messageDate.toLocaleDateString([], {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+        year: "numeric",
+      }
+    );
   };
 
   /*
@@ -280,7 +380,9 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const scrollToBottom = (behavior = "smooth") => {
+  const scrollToBottom = (
+    behavior = "smooth"
+  ) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior,
@@ -296,16 +398,22 @@ const Chat = () => {
    */
 
   const clearTypingState = () => {
-    const receiverId = getUserId(selectedUser);
+    const receiverId =
+      getUserId(selectedUser);
 
-    if (receiverId && isTypingRef.current) {
+    if (
+      receiverId &&
+      isTypingRef.current
+    ) {
       stopTyping(receiverId);
     }
 
     isTypingRef.current = false;
 
     if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+      clearTimeout(
+        typingTimeoutRef.current
+      );
 
       typingTimeoutRef.current = null;
     }
@@ -318,19 +426,17 @@ const Chat = () => {
    */
 
   const handleMessageChange = (event) => {
-    const value = event.target.value;
+    const value =
+      event.target.value;
 
     setMessageText(value);
 
-    const receiverId = getUserId(selectedUser);
+    const receiverId =
+      getUserId(selectedUser);
 
     if (!receiverId) {
       return;
     }
-
-    /*
-     * Empty input = stop typing.
-     */
 
     if (!value.trim()) {
       if (isTypingRef.current) {
@@ -340,7 +446,9 @@ const Chat = () => {
       }
 
       if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+        clearTimeout(
+          typingTimeoutRef.current
+        );
 
         typingTimeoutRef.current = null;
       }
@@ -348,31 +456,26 @@ const Chat = () => {
       return;
     }
 
-    /*
-     * Start typing.
-     */
-
     if (!isTypingRef.current) {
       startTyping(receiverId);
 
       isTypingRef.current = true;
     }
 
-    /*
-     * Reset typing timer.
-     */
-
     if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+      clearTimeout(
+        typingTimeoutRef.current
+      );
     }
 
-    typingTimeoutRef.current = setTimeout(() => {
-      stopTyping(receiverId);
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        stopTyping(receiverId);
 
-      isTypingRef.current = false;
+        isTypingRef.current = false;
 
-      typingTimeoutRef.current = null;
-    }, 1000);
+        typingTimeoutRef.current = null;
+      }, 1000);
   };
 
   /*
@@ -394,41 +497,64 @@ const Chat = () => {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/swaps/accepted");
+      const response =
+        await api.get(
+          "/swaps/accepted"
+        );
 
-      const swaps = response.data.swaps || [];
+      const swaps =
+        response.data.swaps || [];
 
-      const currentUserId = getUserId(user);
+      const currentUserId =
+        getUserId(user);
 
       const uniqueUsers = [];
 
-      const seenUserIds = new Set();
+      const seenUserIds =
+        new Set();
 
       swaps.forEach((swap) => {
-        const senderId = getUserId(swap.sender);
+        const senderId =
+          getUserId(swap.sender);
 
-        const receiverId = getUserId(swap.receiver);
+        const receiverId =
+          getUserId(swap.receiver);
 
         let otherUser = null;
 
-        if (senderId === currentUserId) {
-          otherUser = swap.receiver;
-        } else if (receiverId === currentUserId) {
-          otherUser = swap.sender;
+        if (
+          senderId ===
+          currentUserId
+        ) {
+          otherUser =
+            swap.receiver;
+        } else if (
+          receiverId ===
+          currentUserId
+        ) {
+          otherUser =
+            swap.sender;
         }
 
         if (!otherUser) {
           return;
         }
 
-        const otherUserId = getUserId(otherUser);
+        const otherUserId =
+          getUserId(otherUser);
 
         if (!otherUserId) {
           return;
         }
 
-        if (!seenUserIds.has(otherUserId)) {
-          seenUserIds.add(otherUserId);
+        if (
+          !seenUserIds.has(
+            otherUserId
+          )
+        ) {
+          seenUserIds.add(
+            otherUserId
+          );
 
           uniqueUsers.push({
             user: otherUser,
@@ -438,61 +564,89 @@ const Chat = () => {
         }
       });
 
-      /*
-       * Fetch messages for each conversation.
-       */
+      const conversationsWithMessages =
+        await Promise.all(
+          uniqueUsers.map(
+            async (conversation) => {
+              try {
+                const otherUserId =
+                  getUserId(
+                    conversation.user
+                  );
 
-      const conversationsWithMessages = await Promise.all(
-        uniqueUsers.map(async (conversation) => {
-          try {
-            const otherUserId = getUserId(conversation.user);
+                const messageResponse =
+                  await api.get(
+                    `/messages/${otherUserId}`
+                  );
 
-            const messageResponse = await api.get(`/messages/${otherUserId}`);
+                const messageData =
+                  messageResponse.data;
 
-            const messageData = messageResponse.data;
+                const conversationMessages =
+                  messageData.messages ||
+                  [];
 
-            const conversationMessages = messageData.messages || [];
+                const latestMessage =
+                  conversationMessages.length >
+                  0
+                    ? conversationMessages[
+                        conversationMessages.length -
+                          1
+                      ]
+                    : null;
 
-            const latestMessage =
-              conversationMessages.length > 0
-                ? conversationMessages[conversationMessages.length - 1]
-                : null;
+                return {
+                  ...conversation,
+                  latestMessage,
+                  unreadCount:
+                    Number(
+                      messageData.unreadCount
+                    ) || 0,
+                };
+              } catch (error) {
+                console.error(
+                  "Fetch conversation messages error:",
+                  error
+                );
 
-            return {
-              ...conversation,
-              latestMessage,
-              unreadCount: Number(messageData.unreadCount) || 0,
-            };
-          } catch (error) {
-            console.error("Fetch conversation messages error:", error);
+                return conversation;
+              }
+            }
+          )
+        );
 
-            return conversation;
-          }
-        }),
+      conversationsWithMessages.sort(
+        (a, b) => {
+          const dateA =
+            a.latestMessage
+              ? new Date(
+                  a.latestMessage.createdAt
+                ).getTime()
+              : 0;
+
+          const dateB =
+            b.latestMessage
+              ? new Date(
+                  b.latestMessage.createdAt
+                ).getTime()
+              : 0;
+
+          return dateB - dateA;
+        }
       );
 
-      /*
-       * Sort newest first.
-       */
-
-      conversationsWithMessages.sort((a, b) => {
-        const dateA = a.latestMessage
-          ? new Date(a.latestMessage.createdAt).getTime()
-          : 0;
-
-        const dateB = b.latestMessage
-          ? new Date(b.latestMessage.createdAt).getTime()
-          : 0;
-
-        return dateB - dateA;
-      });
-
-      setConversations(conversationsWithMessages);
+      setConversations(
+        conversationsWithMessages
+      );
     } catch (error) {
-      console.error("Fetch conversations error:", error);
+      console.error(
+        "Fetch conversations error:",
+        error
+      );
 
       setError(
-        error.response?.data?.message || "Unable to load conversations.",
+        error.response?.data?.message ||
+          "Unable to load conversations."
       );
     } finally {
       setLoading(false);
@@ -506,33 +660,52 @@ const Chat = () => {
    */
 
   useEffect(() => {
-    const requestedUserId = location.state?.userId;
+    const requestedUserId =
+      location.state?.userId;
 
-    if (!requestedUserId || conversations.length === 0) {
+    if (
+      !requestedUserId ||
+      conversations.length === 0
+    ) {
       return;
     }
 
-    const conversation = conversations.find(
-      (item) => getUserId(item.user)?.toString() === requestedUserId.toString(),
-    );
+    const conversation =
+      conversations.find(
+        (item) =>
+          getUserId(
+            item.user
+          )?.toString() ===
+          requestedUserId.toString()
+      );
 
     if (!conversation) {
       return;
     }
 
-    const currentlySelectedUserId = getUserId(selectedUser);
+    const currentlySelectedUserId =
+      getUserId(selectedUser);
 
-    if (currentlySelectedUserId?.toString() === requestedUserId.toString()) {
+    if (
+      currentlySelectedUserId?.toString() ===
+      requestedUserId.toString()
+    ) {
       return;
     }
 
-    handleSelectConversation(conversation);
+    handleSelectConversation(
+      conversation
+    );
 
     navigate("/chat", {
       replace: true,
       state: {},
     });
-  }, [location.state, conversations, selectedUser]);
+  }, [
+    location.state,
+    conversations,
+    selectedUser,
+  ]);
 
   /*
    * ------------------------------------------
@@ -545,95 +718,144 @@ const Chat = () => {
       return;
     }
 
-    const senderId = getUserId(lastReceivedMessage.sender);
+    const senderId =
+      getUserId(
+        lastReceivedMessage.sender
+      );
 
     if (!senderId) {
       return;
     }
 
-    const selectedUserId = getUserId(selectedUser);
+    const selectedUserId =
+      getUserId(selectedUser);
 
-    const isCurrentConversation = selectedUserId === senderId;
-
-    /*
-     * MESSAGE RECEIVED IN OPEN CHAT
-     */
+    const isCurrentConversation =
+      selectedUserId === senderId;
 
     if (isCurrentConversation) {
-      setMessages((previousMessages) => {
-        const alreadyExists = previousMessages.some(
-          (message) => message._id === lastReceivedMessage._id,
-        );
+      setMessages(
+        (previousMessages) => {
+          const alreadyExists =
+            previousMessages.some(
+              (message) =>
+                message._id ===
+                lastReceivedMessage._id
+            );
 
-        if (alreadyExists) {
-          return previousMessages;
+          if (alreadyExists) {
+            return previousMessages;
+          }
+
+          return [
+            ...previousMessages,
+            lastReceivedMessage,
+          ];
         }
-
-        return [...previousMessages, lastReceivedMessage];
-      });
+      );
 
       setTimeout(() => {
         scrollToBottom();
       }, 50);
 
-      /*
-       * Immediately mark as read.
-       */
-
       api
-        .patch(`/messages/${senderId}/read`)
+        .patch(
+          `/messages/${senderId}/read`
+        )
         .then((response) => {
-          const updatedCount = Number(response.data.updatedCount) || 0;
+          const updatedCount =
+            Number(
+              response.data.updatedCount
+            ) || 0;
 
           if (updatedCount > 0) {
-            setUnreadMessageCount((previousCount) =>
-              Math.max(0, previousCount - updatedCount),
+            setUnreadMessageCount(
+              (previousCount) =>
+                Math.max(
+                  0,
+                  previousCount -
+                    updatedCount
+                )
             );
           }
         })
         .catch((error) => {
-          console.error("Mark incoming message as read error:", error);
+          console.error(
+            "Mark incoming message as read error:",
+            error
+          );
         });
     }
 
-    /*
-     * UPDATE SIDEBAR
-     */
+    setConversations(
+      (previousConversations) => {
+        const conversationExists =
+          previousConversations.some(
+            (conversation) =>
+              getUserId(
+                conversation.user
+              ) === senderId
+          );
 
-    setConversations((previousConversations) => {
-      const conversationExists = previousConversations.some(
-        (conversation) => getUserId(conversation.user) === senderId,
-      );
-
-      if (!conversationExists) {
-        return previousConversations;
-      }
-
-      const updatedConversations = previousConversations.map((conversation) => {
-        const conversationUserId = getUserId(conversation.user);
-
-        if (conversationUserId !== senderId) {
-          return conversation;
+        if (!conversationExists) {
+          return previousConversations;
         }
 
-        return {
-          ...conversation,
-          latestMessage: lastReceivedMessage,
-          unreadCount: isCurrentConversation ? 0 : conversation.unreadCount + 1,
-        };
-      });
+        const updatedConversations =
+          previousConversations.map(
+            (conversation) => {
+              const conversationUserId =
+                getUserId(
+                  conversation.user
+                );
 
-      const latestConversation = updatedConversations.find(
-        (conversation) => getUserId(conversation.user) === senderId,
-      );
+              if (
+                conversationUserId !==
+                senderId
+              ) {
+                return conversation;
+              }
 
-      const otherConversations = updatedConversations.filter(
-        (conversation) => getUserId(conversation.user) !== senderId,
-      );
+              return {
+                ...conversation,
+                latestMessage:
+                  lastReceivedMessage,
+                unreadCount:
+                  isCurrentConversation
+                    ? 0
+                    : conversation.unreadCount +
+                      1,
+              };
+            }
+          );
 
-      return [latestConversation, ...otherConversations];
-    });
-  }, [lastReceivedMessage, selectedUser, setUnreadMessageCount]);
+        const latestConversation =
+          updatedConversations.find(
+            (conversation) =>
+              getUserId(
+                conversation.user
+              ) === senderId
+          );
+
+        const otherConversations =
+          updatedConversations.filter(
+            (conversation) =>
+              getUserId(
+                conversation.user
+              ) !== senderId
+          );
+
+        return [
+          latestConversation,
+          ...otherConversations,
+        ];
+      }
+    );
+  }, [
+    lastReceivedMessage,
+    selectedUser,
+    setUnreadMessageCount,
+  ]);
 
   /*
    * ------------------------------------------
@@ -642,41 +864,61 @@ const Chat = () => {
    */
 
   useEffect(() => {
-    if (!deliveredMessageIds || deliveredMessageIds.length === 0) {
+    if (
+      !deliveredMessageIds ||
+      deliveredMessageIds.length === 0
+    ) {
       return;
     }
 
-    setMessages((previousMessages) =>
-      previousMessages.map((message) => {
-        if (deliveredMessageIds.includes(message._id)) {
-          return {
-            ...message,
-            delivered: true,
-          };
-        }
+    setMessages(
+      (previousMessages) =>
+        previousMessages.map(
+          (message) => {
+            if (
+              deliveredMessageIds.includes(
+                message._id
+              )
+            ) {
+              return {
+                ...message,
+                delivered: true,
+              };
+            }
 
-        return message;
-      }),
+            return message;
+          }
+        )
     );
 
-    setConversations((previousConversations) =>
-      previousConversations.map((conversation) => {
-        if (!conversation.latestMessage) {
-          return conversation;
-        }
+    setConversations(
+      (previousConversations) =>
+        previousConversations.map(
+          (conversation) => {
+            if (
+              !conversation.latestMessage
+            ) {
+              return conversation;
+            }
 
-        if (deliveredMessageIds.includes(conversation.latestMessage._id)) {
-          return {
-            ...conversation,
-            latestMessage: {
-              ...conversation.latestMessage,
-              delivered: true,
-            },
-          };
-        }
+            if (
+              deliveredMessageIds.includes(
+                conversation
+                  .latestMessage._id
+              )
+            ) {
+              return {
+                ...conversation,
+                latestMessage: {
+                  ...conversation.latestMessage,
+                  delivered: true,
+                },
+              };
+            }
 
-        return conversation;
-      }),
+            return conversation;
+          }
+        )
     );
   }, [deliveredMessageIds]);
 
@@ -687,41 +929,61 @@ const Chat = () => {
    */
 
   useEffect(() => {
-    if (!seenMessageIds || seenMessageIds.length === 0) {
+    if (
+      !seenMessageIds ||
+      seenMessageIds.length === 0
+    ) {
       return;
     }
 
-    setMessages((previousMessages) =>
-      previousMessages.map((message) => {
-        if (seenMessageIds.includes(message._id)) {
-          return {
-            ...message,
-            read: true,
-          };
-        }
+    setMessages(
+      (previousMessages) =>
+        previousMessages.map(
+          (message) => {
+            if (
+              seenMessageIds.includes(
+                message._id
+              )
+            ) {
+              return {
+                ...message,
+                read: true,
+              };
+            }
 
-        return message;
-      }),
+            return message;
+          }
+        )
     );
 
-    setConversations((previousConversations) =>
-      previousConversations.map((conversation) => {
-        if (!conversation.latestMessage) {
-          return conversation;
-        }
+    setConversations(
+      (previousConversations) =>
+        previousConversations.map(
+          (conversation) => {
+            if (
+              !conversation.latestMessage
+            ) {
+              return conversation;
+            }
 
-        if (seenMessageIds.includes(conversation.latestMessage._id)) {
-          return {
-            ...conversation,
-            latestMessage: {
-              ...conversation.latestMessage,
-              read: true,
-            },
-          };
-        }
+            if (
+              seenMessageIds.includes(
+                conversation
+                  .latestMessage._id
+              )
+            ) {
+              return {
+                ...conversation,
+                latestMessage: {
+                  ...conversation.latestMessage,
+                  read: true,
+                },
+              };
+            }
 
-        return conversation;
-      }),
+            return conversation;
+          }
+        )
     );
   }, [seenMessageIds]);
 
@@ -731,7 +993,9 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const fetchMessages = async (userId) => {
+  const fetchMessages = async (
+    userId
+  ) => {
     try {
       setMessagesLoading(true);
 
@@ -739,11 +1003,17 @@ const Chat = () => {
 
       setError("");
 
-      const response = await api.get(`/messages/${userId}`);
+      const response =
+        await api.get(
+          `/messages/${userId}`
+        );
 
-      const fetchedMessages = response.data.messages || [];
+      const fetchedMessages =
+        response.data.messages || [];
 
-      setMessages(fetchedMessages);
+      setMessages(
+        fetchedMessages
+      );
 
       setTimeout(() => {
         scrollToBottom("auto");
@@ -751,9 +1021,15 @@ const Chat = () => {
 
       return response.data;
     } catch (error) {
-      console.error("Fetch messages error:", error);
+      console.error(
+        "Fetch messages error:",
+        error
+      );
 
-      setError(error.response?.data?.message || "Unable to load messages.");
+      setError(
+        error.response?.data?.message ||
+          "Unable to load messages."
+      );
 
       return null;
     } finally {
@@ -767,109 +1043,147 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const handleSelectConversation = async (conversation) => {
-    clearTypingState();
+  const handleSelectConversation =
+    async (conversation) => {
+      clearTypingState();
 
-    const conversationUser = conversation.user;
+      const conversationUser =
+        conversation.user;
 
-    const otherUserId = getUserId(conversationUser);
-
-    setSelectedUser(conversationUser);
-
-    setMessageText("");
-
-    setError("");
-
-    setMessages([]);
-
-    if (!otherUserId) {
-      return;
-    }
-
-    const unreadCountBeforeRead = Number(conversation.unreadCount) || 0;
-
-    /*
-     * Clear sidebar badge.
-     */
-
-    if (unreadCountBeforeRead > 0) {
-      setConversations((previousConversations) =>
-        previousConversations.map((item) => {
-          if (getUserId(item.user) === otherUserId) {
-            return {
-              ...item,
-              unreadCount: 0,
-            };
-          }
-
-          return item;
-        }),
-      );
-    }
-
-    /*
-     * Fetch conversation.
-     */
-
-    const messageData = await fetchMessages(otherUserId);
-
-    const backendUnreadCount = Number(messageData?.unreadCount) || 0;
-
-    /*
-     * Mark messages as read.
-     */
-
-    if (backendUnreadCount > 0 || unreadCountBeforeRead > 0) {
-      try {
-        const response = await api.patch(`/messages/${otherUserId}/read`);
-
-        const updatedCount = Number(response.data.updatedCount) || 0;
-
-        setConversations((previousConversations) =>
-          previousConversations.map((item) => {
-            if (getUserId(item.user) === otherUserId) {
-              return {
-                ...item,
-                unreadCount: 0,
-              };
-            }
-
-            return item;
-          }),
+      const otherUserId =
+        getUserId(
+          conversationUser
         );
 
-        if (updatedCount > 0) {
-          setUnreadMessageCount((previousCount) =>
-            Math.max(0, previousCount - updatedCount),
+      setSelectedUser(
+        conversationUser
+      );
+
+      setMessageText("");
+
+      setError("");
+
+      setMessages([]);
+
+      if (!otherUserId) {
+        return;
+      }
+
+      const unreadCountBeforeRead =
+        Number(
+          conversation.unreadCount
+        ) || 0;
+
+      if (
+        unreadCountBeforeRead > 0
+      ) {
+        setConversations(
+          (previousConversations) =>
+            previousConversations.map(
+              (item) => {
+                if (
+                  getUserId(
+                    item.user
+                  ) === otherUserId
+                ) {
+                  return {
+                    ...item,
+                    unreadCount: 0,
+                  };
+                }
+
+                return item;
+              }
+            )
+        );
+      }
+
+      const messageData =
+        await fetchMessages(
+          otherUserId
+        );
+
+      const backendUnreadCount =
+        Number(
+          messageData?.unreadCount
+        ) || 0;
+
+      if (
+        backendUnreadCount > 0 ||
+        unreadCountBeforeRead > 0
+      ) {
+        try {
+          const response =
+            await api.patch(
+              `/messages/${otherUserId}/read`
+            );
+
+          const updatedCount =
+            Number(
+              response.data.updatedCount
+            ) || 0;
+
+          setConversations(
+            (previousConversations) =>
+              previousConversations.map(
+                (item) => {
+                  if (
+                    getUserId(
+                      item.user
+                    ) === otherUserId
+                  ) {
+                    return {
+                      ...item,
+                      unreadCount: 0,
+                    };
+                  }
+
+                  return item;
+                }
+              )
+          );
+
+          if (updatedCount > 0) {
+            setUnreadMessageCount(
+              (previousCount) =>
+                Math.max(
+                  0,
+                  previousCount -
+                    updatedCount
+                )
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Mark messages as read error:",
+            error
           );
         }
-      } catch (error) {
-        console.error("Mark messages as read error:", error);
       }
-    }
 
-    setTimeout(() => {
-      scrollToBottom("auto");
-    }, 100);
-  };
+      setTimeout(() => {
+        scrollToBottom("auto");
+      }, 100);
+    };
 
   /*
    * ------------------------------------------
-   * MOBILE BACK TO CONVERSATIONS
+   * MOBILE BACK
    * ------------------------------------------
    */
 
-  const handleBackToConversations = () => {
-    clearTypingState();
+  const handleBackToConversations =
+    () => {
+      clearTypingState();
 
-    setSelectedUser(null);
+      setSelectedUser(null);
 
-    setMessages([]);
+      setMessages([]);
 
-    setMessageText("");
+      setMessageText("");
 
-    setError("");
-  };
+      setError("");
+    };
 
   /*
    * ------------------------------------------
@@ -877,117 +1191,159 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const handleSendMessage = async () => {
-    const trimmedMessage = messageText.trim();
+  const handleSendMessage =
+    async () => {
+      const trimmedMessage =
+        messageText.trim();
 
-    if (!trimmedMessage) {
-      return;
-    }
-
-    if (!selectedUser) {
-      return;
-    }
-
-    const receiverId = getUserId(selectedUser);
-
-    if (!receiverId) {
-      setError("Unable to identify the receiver.");
-
-      return;
-    }
-
-    /*
-     * Stop typing.
-     */
-
-    stopTyping(receiverId);
-
-    isTypingRef.current = false;
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-
-      typingTimeoutRef.current = null;
-    }
-
-    try {
-      setSendingMessage(true);
-
-      setError("");
-
-      const response = await api.post("/messages", {
-        receiverId,
-        message: trimmedMessage,
-      });
-
-      const newMessage = response.data.newMessage;
-
-      if (newMessage) {
-        const isAlreadyDelivered = deliveredMessageIds?.includes(
-          newMessage._id,
-        );
-
-        const messageToAdd = {
-          ...newMessage,
-          delivered: newMessage.delivered || isAlreadyDelivered,
-        };
-
-        setMessages((previousMessages) => {
-          const alreadyExists = previousMessages.some(
-            (message) => message._id === messageToAdd._id,
-          );
-
-          if (alreadyExists) {
-            return previousMessages;
-          }
-
-          return [...previousMessages, messageToAdd];
-        });
-
-        setTimeout(() => {
-          scrollToBottom();
-        }, 50);
-
-        /*
-         * Update sidebar.
-         */
-
-        setConversations((previousConversations) => {
-          const updated = previousConversations.map((conversation) => {
-            if (getUserId(conversation.user) !== receiverId) {
-              return conversation;
-            }
-
-            return {
-              ...conversation,
-              latestMessage: messageToAdd,
-              unreadCount: 0,
-            };
-          });
-
-          const selectedConversation = updated.find(
-            (conversation) => getUserId(conversation.user) === receiverId,
-          );
-
-          const otherConversations = updated.filter(
-            (conversation) => getUserId(conversation.user) !== receiverId,
-          );
-
-          return selectedConversation
-            ? [selectedConversation, ...otherConversations]
-            : updated;
-        });
+      if (!trimmedMessage) {
+        return;
       }
 
-      setMessageText("");
-    } catch (error) {
-      console.error("Send message error:", error);
+      if (!selectedUser) {
+        return;
+      }
 
-      setError(error.response?.data?.message || "Unable to send message.");
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+      const receiverId =
+        getUserId(selectedUser);
+
+      if (!receiverId) {
+        setError(
+          "Unable to identify the receiver."
+        );
+
+        return;
+      }
+
+      stopTyping(receiverId);
+
+      isTypingRef.current = false;
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+
+        typingTimeoutRef.current = null;
+      }
+
+      try {
+        setSendingMessage(true);
+
+        setError("");
+
+        const response =
+          await api.post(
+            "/messages",
+            {
+              receiverId,
+              message: trimmedMessage,
+            }
+          );
+
+        const newMessage =
+          response.data.newMessage;
+
+        if (newMessage) {
+          const isAlreadyDelivered =
+            deliveredMessageIds?.includes(
+              newMessage._id
+            );
+
+          const messageToAdd = {
+            ...newMessage,
+            delivered:
+              newMessage.delivered ||
+              isAlreadyDelivered,
+          };
+
+          setMessages(
+            (previousMessages) => {
+              const alreadyExists =
+                previousMessages.some(
+                  (message) =>
+                    message._id ===
+                    messageToAdd._id
+                );
+
+              if (alreadyExists) {
+                return previousMessages;
+              }
+
+              return [
+                ...previousMessages,
+                messageToAdd,
+              ];
+            }
+          );
+
+          setTimeout(() => {
+            scrollToBottom();
+          }, 50);
+
+          setConversations(
+            (previousConversations) => {
+              const updated =
+                previousConversations.map(
+                  (conversation) => {
+                    if (
+                      getUserId(
+                        conversation.user
+                      ) !== receiverId
+                    ) {
+                      return conversation;
+                    }
+
+                    return {
+                      ...conversation,
+                      latestMessage:
+                        messageToAdd,
+                      unreadCount: 0,
+                    };
+                  }
+                );
+
+              const selectedConversation =
+                updated.find(
+                  (conversation) =>
+                    getUserId(
+                      conversation.user
+                    ) === receiverId
+                );
+
+              const otherConversations =
+                updated.filter(
+                  (conversation) =>
+                    getUserId(
+                      conversation.user
+                    ) !== receiverId
+                );
+
+              return selectedConversation
+                ? [
+                    selectedConversation,
+                    ...otherConversations,
+                  ]
+                : updated;
+            }
+          );
+        }
+
+        setMessageText("");
+      } catch (error) {
+        console.error(
+          "Send message error:",
+          error
+        );
+
+        setError(
+          error.response?.data?.message ||
+            "Unable to send message."
+        );
+      } finally {
+        setSendingMessage(false);
+      }
+    };
 
   /*
    * ------------------------------------------
@@ -995,13 +1351,17 @@ const Chat = () => {
    * ------------------------------------------
    */
 
-  const handleMessageKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
+  const handleMessageKeyDown =
+    (event) => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey
+      ) {
+        event.preventDefault();
 
-      handleSendMessage();
-    }
-  };
+        handleSendMessage();
+      }
+    };
 
   /*
    * ------------------------------------------
@@ -1012,7 +1372,9 @@ const Chat = () => {
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+        clearTimeout(
+          typingTimeoutRef.current
+        );
       }
     };
   }, []);
@@ -1026,7 +1388,9 @@ const Chat = () => {
   if (loading) {
     return (
       <main className="chat-page">
-        <div className="chat-loading">Loading your conversations...</div>
+        <div className="chat-loading">
+          Loading your conversations...
+        </div>
       </main>
     );
   }
@@ -1040,19 +1404,25 @@ const Chat = () => {
   return (
     <main className="chat-page">
       <div className="chat-container">
+
         {/* ================================== */}
         {/* PAGE HEADER */}
         {/* ================================== */}
 
         <div className="chat-page-header">
           <div>
-            <p className="chat-page-tag">CONNECT • LEARN • EXCHANGE</p>
+            <p className="chat-page-tag">
+              CONNECT • LEARN • EXCHANGE
+            </p>
 
             <h1>
               Skill<span>Chat</span>
             </h1>
 
-            <p>Continue your skill exchange conversations.</p>
+            <p>
+              Continue your skill exchange
+              conversations.
+            </p>
           </div>
         </div>
 
@@ -1060,42 +1430,57 @@ const Chat = () => {
         {/* ERROR */}
         {/* ================================== */}
 
-        {error && <div className="chat-error">{error}</div>}
+        {error && (
+          <div className="chat-error">
+            {error}
+          </div>
+        )}
 
         {/* ================================== */}
         {/* CHAT WORKSPACE */}
         {/* ================================== */}
 
         <div
-          className={`chat-workspace ${selectedUser ? "mobile-chat-open" : ""}`}
+          className={`chat-workspace ${
+            selectedUser
+              ? "mobile-chat-open"
+              : ""
+          }`}
         >
-          {/* ================================= */}
-          {/* CONVERSATIONS PANEL */}
-          {/* ================================= */}
-
           <ConversationList
-            conversations={conversations}
-            selectedUser={selectedUser}
-            getUserId={getUserId}
-            onlineUserIds={onlineUserIds}
-            formatMessageTime={formatMessageTime}
-            onSelectConversation={handleSelectConversation}
+            conversations={
+              conversations
+            }
+            selectedUser={
+              selectedUser
+            }
+            getUserId={
+              getUserId
+            }
+            onlineUserIds={
+              onlineUserIds
+            }
+            formatMessageTime={
+              formatMessageTime
+            }
+            onSelectConversation={
+              handleSelectConversation
+            }
           />
-
-          {/* ================================== */}
-          {/* CHAT AREA */}
-          {/* ================================== */}
 
           <section className="chat-area">
             {!selectedUser ? (
               <div className="chat-welcome">
                 <FaComments />
 
-                <h2>Start a Skill Exchange</h2>
+                <h2>
+                  Start a Skill Exchange
+                </h2>
 
                 <p>
-                  Select a conversation to start chatting with your skill
-                  partner.
+                  Select a conversation
+                  to start chatting with
+                  your skill partner.
                 </p>
               </div>
             ) : (
@@ -1105,13 +1490,27 @@ const Chat = () => {
                 {/* ============================ */}
 
                 <ChatHeader
-                  selectedUser={selectedUser}
-                  onlineUserIds={onlineUserIds}
-                  getUserId={getUserId}
-                  onBack={handleBackToConversations}
-                  onSchedule={handleOpenScheduleModal}
-                  onAudioCall={handleAudioCall}
-                  onVideoCall={handleVideoCall}
+                  selectedUser={
+                    selectedUser
+                  }
+                  onlineUserIds={
+                    onlineUserIds
+                  }
+                  getUserId={
+                    getUserId
+                  }
+                  onBack={
+                    handleBackToConversations
+                  }
+                  onSchedule={
+                    handleOpenScheduleModal
+                  }
+                  onAudioCall={
+                    handleAudioCall
+                  }
+                  onVideoCall={
+                    handleVideoCall
+                  }
                 />
 
                 {/* ============================ */}
@@ -1121,26 +1520,51 @@ const Chat = () => {
                 <div className="messages-area">
                   {messagesLoading ? (
                     <div className="messages-placeholder">
-                      <p>Loading conversation...</p>
+                      <p>
+                        Loading
+                        conversation...
+                      </p>
                     </div>
-                  ) : messages.length === 0 ? (
+                  ) : messages.length ===
+                    0 ? (
                     <div className="messages-placeholder">
                       <p>
-                        Your conversation with{" "}
-                        <strong>{selectedUser.name}</strong> will appear here.
+                        Your conversation
+                        with{" "}
+                        <strong>
+                          {
+                            selectedUser.name
+                          }
+                        </strong>{" "}
+                        will appear here.
                       </p>
 
-                      <span>Start by saying hello 👋</span>
+                      <span>
+                        Start by saying
+                        hello 👋
+                      </span>
                     </div>
                   ) : (
                     <MessageList
-                      messages={messages}
+                      messages={
+                        messages
+                      }
                       user={user}
-                      getUserId={getUserId}
-                      isSameDay={isSameDay}
-                      formatDateSeparator={formatDateSeparator}
-                      formatMessageTime={formatMessageTime}
-                      messagesEndRef={messagesEndRef}
+                      getUserId={
+                        getUserId
+                      }
+                      isSameDay={
+                        isSameDay
+                      }
+                      formatDateSeparator={
+                        formatDateSeparator
+                      }
+                      formatMessageTime={
+                        formatMessageTime
+                      }
+                      messagesEndRef={
+                        messagesEndRef
+                      }
                     />
                   )}
                 </div>
@@ -1151,16 +1575,19 @@ const Chat = () => {
 
                 {typingUserId &&
                   typingUserId.toString() ===
-                    getUserId(selectedUser)?.toString() && (
+                    getUserId(
+                      selectedUser
+                    )?.toString() && (
                     <div className="typing-indicator">
                       <span className="typing-dot"></span>
-
                       <span className="typing-dot"></span>
-
                       <span className="typing-dot"></span>
 
                       <span className="typing-text">
-                        {selectedUser.name} is typing...
+                        {
+                          selectedUser.name
+                        }{" "}
+                        is typing...
                       </span>
                     </div>
                   )}
@@ -1170,12 +1597,24 @@ const Chat = () => {
                 {/* ============================ */}
 
                 <MessageInput
-                  messageText={messageText}
-                  selectedUser={selectedUser}
-                  onMessageChange={handleMessageChange}
-                  onKeyDown={handleMessageKeyDown}
-                  onSend={handleSendMessage}
-                  sendingMessage={sendingMessage}
+                  messageText={
+                    messageText
+                  }
+                  selectedUser={
+                    selectedUser
+                  }
+                  onMessageChange={
+                    handleMessageChange
+                  }
+                  onKeyDown={
+                    handleMessageKeyDown
+                  }
+                  onSend={
+                    handleSendMessage
+                  }
+                  sendingMessage={
+                    sendingMessage
+                  }
                 />
               </>
             )}
@@ -1188,40 +1627,42 @@ const Chat = () => {
 
         {showScheduleModal && (
           <ScheduleSessionModal
-            selectedUser={selectedUser}
-            onClose={handleCloseScheduleModal}
-          />
-        )}
-
-        {activeCall && (
-          <JitsiCall
-            roomName={activeCall.roomName}
-            displayName={user?.name}
-            onClose={() => {
-              setActiveCall(null);
-            }}
+            selectedUser={
+              selectedUser
+            }
+            onClose={
+              handleCloseScheduleModal
+            }
           />
         )}
       </div>
 
+      {/* ================================== */}
+      {/* INCOMING CALL */}
+      {/* ================================== */}
+
       {incomingCall && (
         <IncomingCall
-          caller={incomingCaller}
-          callType={incomingCall.callType}
+          caller={
+            incomingCaller
+          }
+          callType={
+            incomingCall.callType
+          }
           onAccept={() => {
-             console.log("INCOMING CALL DATA:", incomingCall);
-             
-            setActiveCall({
-              roomName: incomingCall.roomName,
-              callType: incomingCall.callType,
-            });
+            openJitsiRoom(
+              incomingCall.roomName
+            );
 
             setIncomingCall(null);
             setIncomingCaller(null);
           }}
-
           onReject={() => {
-            console.log("Call rejected:", incomingCall);
+            console.log(
+              "Call rejected:",
+              incomingCall
+            );
+
             setIncomingCall(null);
             setIncomingCaller(null);
           }}
