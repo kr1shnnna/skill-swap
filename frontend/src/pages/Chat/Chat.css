@@ -1473,6 +1473,49 @@
 }
 
 
+
+.call-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.audio-call-btn {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.audio-call-btn:hover {
+  background: #bbf7d0;
+  transform: translateY(-1px);
+}
+
+.video-call-btn {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.video-call-btn:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+
+.chat-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
 /* ================================
    MOBILE
 ================================ */

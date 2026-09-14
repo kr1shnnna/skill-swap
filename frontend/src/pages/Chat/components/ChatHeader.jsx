@@ -1,4 +1,10 @@
-import { FaUserCircle, FaArrowLeft, FaCalendarAlt } from "react-icons/fa";
+import {
+  FaUserCircle,
+  FaArrowLeft,
+  FaCalendarAlt,
+  FaPhone,
+  FaVideo,
+} from "react-icons/fa";
 
 const ChatHeader = ({
   selectedUser,
@@ -6,6 +12,8 @@ const ChatHeader = ({
   getUserId,
   onBack,
   onSchedule,
+  onAudioCall,
+  onVideoCall,
 }) => {
   if (!selectedUser) {
     return null;
@@ -39,16 +47,38 @@ const ChatHeader = ({
           {isOnline ? "Online" : "Offline"}
         </p>
       </div>
-      
-      <button
-        type="button"
-        className="schedule-session-btn"
-        onClick={onSchedule}
-        aria-label="Schedule a session"
-        title="Schedule a session"
-      >
-        <FaCalendarAlt />
-      </button>
+
+      <div className="chat-header-actions">
+        <button
+          type="button"
+          className="call-btn audio-call-btn"
+          onClick={onAudioCall}
+          aria-label="Start audio call"
+          title="Audio call"
+        >
+          <FaPhone />
+        </button>
+
+        <button
+          type="button"
+          className="call-btn video-call-btn"
+          onClick={onVideoCall}
+          aria-label="Start video call"
+          title="Video call"
+        >
+          <FaVideo />
+        </button>
+
+        <button
+          type="button"
+          className="schedule-session-btn"
+          onClick={onSchedule}
+          aria-label="Schedule a session"
+          title="Schedule a session"
+        >
+          <FaCalendarAlt />
+        </button>
+      </div>
     </div>
   );
 };
