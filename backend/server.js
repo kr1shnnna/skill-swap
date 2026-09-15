@@ -1,26 +1,15 @@
 const express = require("express");
-
 const cors = require("cors");
-
 const http = require("http");
-
 const { Server } = require("socket.io");
 
 const authRoutes = require("./routes/authRoutes");
-
 const userRoutes = require("./routes/userRoutes");
-
 const matchRoutes = require("./routes/matchRoutes");
-
 const swapRoutes = require("./routes/swapRoutes");
-
 const messageRoutes = require("./routes/messageRoutes");
-
 const sessionRoutes = require("./routes/sessionRoutes");
-
 const jaasRoutes = require("./routes/jaasRoutes");
-
-
 
 const {
   addUser,
@@ -36,7 +25,6 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 
 const app = express();
-
 const server = http.createServer(app);
 
 // ------------------------------------------
@@ -58,7 +46,6 @@ app.set("io", io);
 // ------------------------------------------
 
 app.use(cors());
-
 app.use(express.json());
 
 // ------------------------------------------
@@ -66,20 +53,12 @@ app.use(express.json());
 // ------------------------------------------
 
 app.use("/api/auth", authRoutes);
-
 app.use("/api/users", userRoutes);
-
 app.use("/api/matches", matchRoutes);
-
 app.use("/api/swaps", swapRoutes);
-
 app.use("/api/messages", messageRoutes);
-
 app.use("/api/sessions", sessionRoutes);
-
 app.use("/api/jaas", jaasRoutes);
-
-
 
 // ------------------------------------------
 // TEST ROUTE
@@ -96,138 +75,101 @@ app.get("/", (req, res) => {
 // ------------------------------------------
 
 io.on("connection", (socket) => {
-  console.log(
-    "A user connected:",
-    socket.id
-  );
+  console.log("A user connected:", socket.id);
 
   // ----------------------------------------
   // REGISTER LOGGED-IN USER
   // ----------------------------------------
 
-  socket.on(
-    "registerUser",
-    async (userId) => {
-      socket.userId = userId;
+  socket.on("registerUser", async (userId) => {
+    socket.userId = userId;
 
-      try {
-        // ------------------------------------
-        // REGISTER USER SOCKET
-        // ------------------------------------
+    try {
+      // ------------------------------------
+      // REGISTER USER SOCKET
+      // ------------------------------------
 
-        addUser(
-          userId,
-          socket.id
-        );
+      addUser(userId, socket.id);
 
-        // Send current online users to the newly connected user
-socket.emit(
-  "onlineUsers",
-  getConnectedUsers()
-);
+      // Send current online users
+      // to the newly connected user
+      socket.emit(
+        "onlineUsers",
+        getConnectedUsers()
+      );
 
-// Notify everyone that this user is online
-io.emit("userOnline", {
-  userId: userId.toString(),
-});
+      // Notify everyone that this user is online
+      io.emit("userOnline", {
+        userId: userId.toString(),
+      });
 
+      console.log(
+        `User ${userId} connected with socket ${socket.id}`
+      );
 
-        console.log(
-          `User ${userId} connected with socket ${socket.id}`
-        );
+      // ------------------------------------
+      // OFFLINE DELIVERY SYNC
+      // ------------------------------------
 
-        // ------------------------------------
-        // ONLINE STATUS
-        // ------------------------------------
-
-        /*
-         * Tell every connected client that
-         * this user is now online.
-         */
-
-        io.emit("userOnline", {
-          userId: userId.toString(),
+      // Find messages that were sent to
+      // this user while they were offline
+      const undeliveredMessages =
+        await Message.find({
+          receiver: userId,
+          delivered: false,
         });
 
-        // ------------------------------------
-        // OFFLINE DELIVERY SYNC
-        // ------------------------------------
+      // Mark each pending message as delivered
+      for (const message of undeliveredMessages) {
+        message.delivered = true;
 
-        /*
-         * Find messages that were sent to
-         * this user while they were offline.
-         */
+        await message.save();
 
-        const undeliveredMessages =
-          await Message.find({
-            receiver: userId,
-            delivered: false,
-          });
-
-        /*
-         * Mark each pending message
-         * as delivered.
-         */
-
-        for (const message of undeliveredMessages) {
-          message.delivered = true;
-
-          await message.save();
-
-          /*
-           * Notify the original sender that
-           * their message has now been delivered.
-           */
-
-          const senderSocketId =
-            getUserSocket(
-              message.sender.toString()
-            );
-
-          if (senderSocketId) {
-            io.to(senderSocketId).emit(
-              "messageDelivered",
-              {
-                messageId:
-                  message._id.toString(),
-              }
-            );
-          }
-        }
-      } catch (error) {
-        console.error(
-          "Offline delivery sync error:",
-          error
+        // Notify the original sender that
+        // their message has now been delivered
+        const senderSocketId = getUserSocket(
+          message.sender.toString()
         );
+
+        if (senderSocketId) {
+          io.to(senderSocketId).emit(
+            "messageDelivered",
+            {
+              messageId:
+                message._id.toString(),
+            }
+          );
+        }
       }
+    } catch (error) {
+      console.error(
+        "Offline delivery sync error:",
+        error
+      );
     }
-  );
+  });
 
   // ------------------------------------------
   // TYPING INDICATOR
   // ------------------------------------------
 
-  socket.on(
-    "typing",
-    ({ receiverId }) => {
-      if (!receiverId) {
-        return;
-      }
-
-      const receiverSocketId =
-        getUserSocket(receiverId);
-
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit(
-          "userTyping",
-          {
-            senderId:
-              socket.userId,
-          }
-        );
-      }
+  socket.on("typing", ({ receiverId }) => {
+    if (!receiverId) {
+      return;
     }
-  );
+
+    const receiverSocketId =
+      getUserSocket(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit(
+        "userTyping",
+        {
+          senderId: socket.userId,
+        }
+      );
+    }
+  });
 
   // ------------------------------------------
   // STOP TYPING
@@ -247,48 +189,131 @@ io.emit("userOnline", {
         io.to(receiverSocketId).emit(
           "userStoppedTyping",
           {
-            senderId:
-              socket.userId,
+            senderId: socket.userId,
           }
         );
       }
     }
   );
 
+  // ------------------------------------------
+  // CALL SIGNALING
+  // ------------------------------------------
+
+  socket.on(
+    "callUser",
+    ({ receiverId, callType, roomName }) => {
+      if (
+        !receiverId ||
+        !callType ||
+        !roomName
+      ) {
+        return;
+      }
+
+      const receiverSocketId =
+        getUserSocket(receiverId);
+
+      if (!receiverSocketId) {
+        socket.emit("callFailed", {
+          message:
+            "User is currently offline.",
+        });
+
+        return;
+      }
+
+      io.to(receiverSocketId).emit(
+        "incomingCall",
+        {
+          callerId:
+            socket.userId.toString(),
+          callType,
+          roomName,
+        }
+      );
+    }
+  );
 
   // ------------------------------------------
-// CALL SIGNALING
-// ------------------------------------------
+  // ACCEPT CALL
+  // ------------------------------------------
 
-socket.on(
-  "callUser",
-  ({ receiverId, callType, roomName }) => {
-    if (!receiverId || !callType || !roomName) {
-      return;
-    }
-
-    const receiverSocketId =
-      getUserSocket(receiverId);
-
-    if (!receiverSocketId) {
-      socket.emit("callFailed", {
-        message: "User is currently offline.",
-      });
-
-      return;
-    }
-
-    io.to(receiverSocketId).emit(
-      "incomingCall",
-      {
-        callerId: socket.userId.toString(),
-        callType,
-        roomName,
+  socket.on(
+    "acceptCall",
+    ({ callerId, callType, roomName }) => {
+      if (
+        !callerId ||
+        !callType ||
+        !roomName
+      ) {
+        return;
       }
-    );
-  }
-);
 
+      const callerSocketId =
+        getUserSocket(callerId);
+
+      if (!callerSocketId) {
+        return;
+      }
+
+      io.to(callerSocketId).emit(
+        "callAccepted",
+        {
+          callType,
+          roomName,
+        }
+      );
+    }
+  );
+
+  // ------------------------------------------
+  // REJECT CALL
+  // ------------------------------------------
+
+  socket.on(
+    "rejectCall",
+    ({ callerId }) => {
+      if (!callerId) {
+        return;
+      }
+
+      const callerSocketId =
+        getUserSocket(callerId);
+
+      if (!callerSocketId) {
+        return;
+      }
+
+      io.to(callerSocketId).emit(
+        "callRejected"
+      );
+    }
+  );
+
+  // ------------------------------------------
+  // CANCEL CALL
+  // ------------------------------------------
+
+  socket.on(
+    "cancelCall",
+    ({ receiverId }) => {
+      if (!receiverId) {
+        return;
+      }
+
+      const receiverSocketId =
+        getUserSocket(receiverId);
+
+      if (!receiverSocketId) {
+        return;
+      }
+
+      io.to(receiverSocketId).emit(
+        "callCancelled"
+      );
+    }
+  );
 
   // ------------------------------------------
   // HANDLE DISCONNECT
@@ -300,11 +325,8 @@ socket.on(
       socket.id
     );
 
-    /*
-     * Save the user ID before removing
-     * the socket from the manager.
-     */
-
+    // Save the user ID before removing
+    // the socket from the manager
     const disconnectedUserId =
       socket.userId;
 

@@ -98,15 +98,59 @@ export const AuthProvider = ({ children }) => {
     setOnlineUserIds,
   ] = useState([]);
 
+  // ------------------------------------------
+  // INCOMING CALL
+  // ------------------------------------------
+
+  const [
+    incomingCall,
+    setIncomingCall,
+  ] = useState(null);
 
   // ------------------------------------------
-// INCOMING CALL
-// ------------------------------------------
+  // OUTGOING CALL / CALLING STATE
+  // ------------------------------------------
 
-const [
-  incomingCall,
-  setIncomingCall,
-] = useState(null);
+  const [
+    outgoingCall,
+    setOutgoingCall,
+  ] = useState(null);
+
+  // ------------------------------------------
+  // CALL ACCEPTED
+  // ------------------------------------------
+
+  const [
+    callAccepted,
+    setCallAccepted,
+  ] = useState(null);
+
+  // ------------------------------------------
+  // CALL REJECTED
+  // ------------------------------------------
+
+  const [
+    callRejected,
+    setCallRejected,
+  ] = useState(false);
+
+  // ------------------------------------------
+  // CALL CANCELLED
+  // ------------------------------------------
+
+  const [
+    callCancelled,
+    setCallCancelled,
+  ] = useState(false);
+
+  // ------------------------------------------
+  // CALL FAILED
+  // ------------------------------------------
+
+  const [
+    callFailed,
+    setCallFailed,
+  ] = useState(null);
 
   // ------------------------------------------
   // SOCKET.IO
@@ -162,6 +206,14 @@ const [
     setSeenMessageIds([]);
     setTypingUserId(null);
     setOnlineUserIds([]);
+
+    // Reset call state
+    setIncomingCall(null);
+    setOutgoingCall(null);
+    setCallAccepted(null);
+    setCallRejected(false);
+    setCallCancelled(false);
+    setCallFailed(null);
   };
 
   // ------------------------------------------
@@ -187,6 +239,14 @@ const [
     setSeenMessageIds([]);
     setTypingUserId(null);
     setOnlineUserIds([]);
+
+    // Reset call state
+    setIncomingCall(null);
+    setOutgoingCall(null);
+    setCallAccepted(null);
+    setCallRejected(false);
+    setCallCancelled(false);
+    setCallFailed(null);
   };
 
   // ------------------------------------------
@@ -507,26 +567,108 @@ const [
       }
     );
 
+    // ----------------------------------------
+    // INCOMING CALL
+    // ----------------------------------------
+
+    socket.on(
+      "incomingCall",
+      ({
+        callerId,
+        callType,
+        roomName,
+      }) => {
+        if (
+          !callerId ||
+          !callType ||
+          !roomName
+        ) {
+          return;
+        }
+
+        // Clear any previous call status
+        setCallRejected(false);
+        setCallCancelled(false);
+        setCallFailed(null);
+
+        setIncomingCall({
+          callerId:
+            callerId.toString(),
+          callType,
+          roomName,
+        });
+      }
+    );
 
     // ----------------------------------------
-// INCOMING CALL
-// ----------------------------------------
+    // CALL ACCEPTED
+    // ----------------------------------------
 
-socket.on(
-  "incomingCall",
-  ({ callerId, callType , roomName }) => {
-    if (!callerId || !callType || !roomName) {
-      return;
-    }
+    socket.on(
+      "callAccepted",
+      ({
+        callType,
+        roomName,
+      }) => {
+        if (!callType || !roomName) {
+          return;
+        }
 
-    setIncomingCall({
-      callerId: callerId.toString(),
-      callType,
-      roomName,
-    });
-  }
-);
+        setCallAccepted({
+          callType,
+          roomName,
+        });
 
+        // Stop calling state
+        setOutgoingCall(null);
+      }
+    );
+
+    // ----------------------------------------
+    // CALL REJECTED
+    // ----------------------------------------
+
+    socket.on(
+      "callRejected",
+      () => {
+        setCallRejected(true);
+
+        // Stop calling state
+        setOutgoingCall(null);
+      }
+    );
+
+    // ----------------------------------------
+    // CALL CANCELLED
+    // ----------------------------------------
+
+    socket.on(
+      "callCancelled",
+      () => {
+        setCallCancelled(true);
+
+        // Clear incoming call
+        setIncomingCall(null);
+      }
+    );
+
+    // ----------------------------------------
+    // CALL FAILED
+    // ----------------------------------------
+
+    socket.on(
+      "callFailed",
+      ({ message }) => {
+        setCallFailed({
+          message:
+            message ||
+            "Unable to start the call.",
+        });
+
+        // Stop calling state
+        setOutgoingCall(null);
+      }
+    );
 
     // ----------------------------------------
     // SOCKET ERROR
@@ -552,6 +694,13 @@ socket.on(
 
       setTypingUserId(null);
       setOnlineUserIds([]);
+
+      setIncomingCall(null);
+      setOutgoingCall(null);
+      setCallAccepted(null);
+      setCallRejected(false);
+      setCallCancelled(false);
+      setCallFailed(null);
     };
   }, [user, token]);
 
@@ -604,31 +753,179 @@ socket.on(
   };
 
   // ------------------------------------------
-// START CALL
-// ------------------------------------------
+  // START CALL
+  // ------------------------------------------
 
-const startCall = (
-  receiverId,
-  callType,
-  roomName
-) => {
-  if (!socketRef.current) {
-    console.error("Socket is not connected.");
-    return;
-  }
-
-  if (!receiverId || !callType || !roomName) {
-    return;
-  }
-
-  socketRef.current.emit("callUser", {
-    receiverId: receiverId.toString(),
+  const startCall = (
+    receiverId,
     callType,
-    roomName,
-  });
-};
+    roomName
+  ) => {
+    if (!socketRef.current) {
+      console.error(
+        "Socket is not connected."
+      );
 
+      return false;
+    }
 
+    if (
+      !receiverId ||
+      !callType ||
+      !roomName
+    ) {
+      return false;
+    }
+
+    // Reset previous call states
+    setCallAccepted(null);
+    setCallRejected(false);
+    setCallCancelled(false);
+    setCallFailed(null);
+
+    // Store outgoing call
+    setOutgoingCall({
+      receiverId:
+        receiverId.toString(),
+      callType,
+      roomName,
+    });
+
+    socketRef.current.emit(
+      "callUser",
+      {
+        receiverId:
+          receiverId.toString(),
+        callType,
+        roomName,
+      }
+    );
+
+    return true;
+  };
+
+  // ------------------------------------------
+  // ACCEPT CALL
+  // ------------------------------------------
+
+  const acceptCall = (
+    callerId,
+    callType,
+    roomName
+  ) => {
+    if (!socketRef.current) {
+      console.error(
+        "Socket is not connected."
+      );
+
+      return false;
+    }
+
+    if (
+      !callerId ||
+      !callType ||
+      !roomName
+    ) {
+      return false;
+    }
+
+    socketRef.current.emit(
+      "acceptCall",
+      {
+        callerId:
+          callerId.toString(),
+        callType,
+        roomName,
+      }
+    );
+
+    // Clear incoming call
+    setIncomingCall(null);
+
+    // Reset old call states
+    setCallRejected(false);
+    setCallCancelled(false);
+    setCallFailed(null);
+
+    return true;
+  };
+
+  // ------------------------------------------
+  // REJECT CALL
+  // ------------------------------------------
+
+  const rejectCall = (
+    callerId
+  ) => {
+    if (!socketRef.current) {
+      console.error(
+        "Socket is not connected."
+      );
+
+      return false;
+    }
+
+    if (!callerId) {
+      return false;
+    }
+
+    socketRef.current.emit(
+      "rejectCall",
+      {
+        callerId:
+          callerId.toString(),
+      }
+    );
+
+    // Clear incoming call
+    setIncomingCall(null);
+
+    return true;
+  };
+
+  // ------------------------------------------
+  // CANCEL CALL
+  // ------------------------------------------
+
+  const cancelCall = (
+    receiverId
+  ) => {
+    if (!socketRef.current) {
+      console.error(
+        "Socket is not connected."
+      );
+
+      return false;
+    }
+
+    if (!receiverId) {
+      return false;
+    }
+
+    socketRef.current.emit(
+      "cancelCall",
+      {
+        receiverId:
+          receiverId.toString(),
+      }
+    );
+
+    // Clear outgoing call
+    setOutgoingCall(null);
+
+    return true;
+  };
+
+  // ------------------------------------------
+  // CLEAR CALL STATUS
+  // ------------------------------------------
+
+  const clearCallStatus = () => {
+    setCallAccepted(null);
+    setCallRejected(false);
+    setCallCancelled(false);
+    setCallFailed(null);
+  };
 
   // ------------------------------------------
   // FETCH INITIAL SWAP COUNT
@@ -680,11 +977,37 @@ const startCall = (
     startTyping,
     stopTyping,
 
-    //calls
+    // ----------------------------------------
+    // CALLS
+    // ----------------------------------------
+
     startCall,
+
     incomingCall,
     setIncomingCall,
-  
+
+    outgoingCall,
+    setOutgoingCall,
+
+    acceptCall,
+
+    callAccepted,
+    setCallAccepted,
+
+    rejectCall,
+
+    callRejected,
+    setCallRejected,
+
+    cancelCall,
+
+    callCancelled,
+    setCallCancelled,
+
+    callFailed,
+    setCallFailed,
+
+    clearCallStatus,
 
     // Online users
     onlineUserIds,
@@ -698,4 +1021,3 @@ const startCall = (
 };
 
 export default AuthContext;
-
