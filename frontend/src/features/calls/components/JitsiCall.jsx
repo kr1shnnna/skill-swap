@@ -12,14 +12,22 @@ const JitsiCall = ({
   callType = "video",
   onClose,
   onLocalEnd,
+
+  // Optional scheduled-session information
+  sessionTopic = "",
+  partnerName = "",
+  sessionDate = "",
+  sessionTime = "",
 }) => {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ------------------------------------------
-  // FETCH JaaS TOKEN
-  // ------------------------------------------
+  /*
+   * ==========================================
+   * FETCH JaaS TOKEN
+   * ==========================================
+   */
 
   useEffect(() => {
     let mounted = true;
@@ -29,9 +37,12 @@ const JitsiCall = ({
         setLoading(true);
         setError("");
 
-        const response = await api.post("/jaas/token", {
-          roomName,
-        });
+        const response = await api.post(
+          "/jaas/token",
+          {
+            roomName,
+          }
+        );
 
         if (!mounted) {
           return;
@@ -71,9 +82,11 @@ const JitsiCall = ({
     };
   }, [roomName]);
 
-  // ------------------------------------------
-  // LOADING
-  // ------------------------------------------
+  /*
+   * ==========================================
+   * LOADING
+   * ==========================================
+   */
 
   if (loading) {
     return (
@@ -85,15 +98,19 @@ const JitsiCall = ({
     );
   }
 
-  // ------------------------------------------
-  // ERROR
-  // ------------------------------------------
+  /*
+   * ==========================================
+   * ERROR
+   * ==========================================
+   */
 
   if (error) {
     return (
       <div className="jaas-call-overlay">
         <div className="jaas-call-error">
-          <h3>Unable to start meeting</h3>
+          <h3>
+            Unable to start meeting
+          </h3>
 
           <p>{error}</p>
 
@@ -108,33 +125,125 @@ const JitsiCall = ({
     );
   }
 
-  // ------------------------------------------
-  // NO TOKEN
-  // ------------------------------------------
+  /*
+   * ==========================================
+   * NO TOKEN
+   * ==========================================
+   */
 
   if (!token) {
     return null;
   }
 
-  const isAudioCall = callType === "audio";
+  const isAudioCall =
+    callType === "audio";
 
-  // ------------------------------------------
-  // JaaS MEETING
-  // ------------------------------------------
+  const isScheduledSession =
+    Boolean(
+      sessionTopic ||
+        partnerName ||
+        sessionDate ||
+        sessionTime
+    );
+
+  /*
+   * ==========================================
+   * FORMAT SESSION DATE
+   * ==========================================
+   */
+
+  const formattedSessionDate =
+    sessionDate
+      ? new Date(
+          sessionDate
+        ).toLocaleDateString([], {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+
+  /*
+   * ==========================================
+   * JaaS MEETING
+   * ==========================================
+   */
 
   return (
     <div className="jaas-call-overlay">
-      <div className="jaas-call-container">
+
+      {/* ========================================
+          OPTIONAL SESSION INFORMATION
+          ======================================== */}
+
+      {isScheduledSession && (
+        <div className="scheduled-meeting-header">
+
+          <div className="scheduled-meeting-info">
+
+            <span className="scheduled-meeting-label">
+              SKILLSWAP SESSION
+            </span>
+
+            {sessionTopic && (
+              <h2>
+                {sessionTopic}
+              </h2>
+            )}
+
+            <div className="scheduled-meeting-details">
+
+              {partnerName && (
+                <span>
+                  With{" "}
+                  <strong>
+                    {partnerName}
+                  </strong>
+                </span>
+              )}
+
+              {formattedSessionDate &&
+                sessionTime && (
+                  <span>
+                    {formattedSessionDate}
+                    {" • "}
+                    {sessionTime}
+                  </span>
+                )}
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================
+          JITSI CONTAINER
+          ======================================== */}
+
+      <div
+        className={`jaas-call-container ${
+          isScheduledSession
+            ? "jaas-call-container-session"
+            : ""
+        }`}
+      >
+
         <JitsiMeeting
           domain="8x8.vc"
           roomName={`${JAAS_APP_ID}/${roomName}`}
           jwt={token}
+
           configOverwrite={{
             startWithAudioMuted: false,
-            startWithVideoMuted: isAudioCall,
+            startWithVideoMuted:
+              isAudioCall,
             disableAP: false,
             disableAPIPrewarm: true,
           }}
+
           interfaceConfigOverwrite={{
             TOOLBAR_BUTTONS: [
               "microphone",
@@ -146,29 +255,39 @@ const JitsiCall = ({
               "hangup",
             ],
           }}
+
           userInfo={{
-            displayName: "SkillSwap Student",
+            displayName:
+              "SkillSwap Student",
           }}
+
           onReadyToClose={() => {
-            // --------------------------------
-            // LOCAL USER ENDED THE CALL
-            // --------------------------------
+            /*
+             * =================================
+             * LOCAL USER ENDED THE CALL
+             * =================================
+             */
 
             if (onLocalEnd) {
               onLocalEnd();
               return;
             }
 
-            // Fallback
+            /*
+             * Fallback
+             */
+
             if (onClose) {
               onClose();
             }
           }}
+
           getIFrameRef={(iframeRef) => {
             iframeRef.style.height = "100%";
             iframeRef.style.width = "100%";
           }}
         />
+
       </div>
     </div>
   );
