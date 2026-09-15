@@ -572,11 +572,15 @@ export const AuthProvider = ({ children }) => {
     });
 
     socketRef.current.emit("callUser", {
-      receiverId: receiverId.toString(),
-      callType,
-      roomName,
-    });
-
+  receiverId: receiverId.toString(),
+  callerName:
+    user?.name ||
+    user?.username ||
+    user?.fullName ||
+    "SkillSwap Student",
+  callType,
+  roomName,
+});
     return true;
   };
 
@@ -694,7 +698,7 @@ export const AuthProvider = ({ children }) => {
     setCallCancelled(false);
     setCallFailed(null);
     setCallEnded(false);
-    
+
   };
 
   // ------------------------------------------

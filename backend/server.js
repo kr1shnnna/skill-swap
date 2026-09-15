@@ -93,19 +93,14 @@ io.on("connection", (socket) => {
 
       // Send current online users
       // to the newly connected user
-      socket.emit(
-        "onlineUsers",
-        getConnectedUsers()
-      );
+      socket.emit("onlineUsers", getConnectedUsers());
 
       // Notify everyone that this user is online
       io.emit("userOnline", {
         userId: userId.toString(),
       });
 
-      console.log(
-        `User ${userId} connected with socket ${socket.id}`
-      );
+      console.log(`User ${userId} connected with socket ${socket.id}`);
 
       // ------------------------------------
       // OFFLINE DELIVERY SYNC
@@ -113,11 +108,10 @@ io.on("connection", (socket) => {
 
       // Find messages that were sent to
       // this user while they were offline
-      const undeliveredMessages =
-        await Message.find({
-          receiver: userId,
-          delivered: false,
-        });
+      const undeliveredMessages = await Message.find({
+        receiver: userId,
+        delivered: false,
+      });
 
       // Mark each pending message as delivered
       for (const message of undeliveredMessages) {
@@ -127,25 +121,16 @@ io.on("connection", (socket) => {
 
         // Notify the original sender that
         // their message has now been delivered
-        const senderSocketId = getUserSocket(
-          message.sender.toString()
-        );
+        const senderSocketId = getUserSocket(message.sender.toString());
 
         if (senderSocketId) {
-          io.to(senderSocketId).emit(
-            "messageDelivered",
-            {
-              messageId:
-                message._id.toString(),
-            }
-          );
+          io.to(senderSocketId).emit("messageDelivered", {
+            messageId: message._id.toString(),
+          });
         }
       }
     } catch (error) {
-      console.error(
-        "Offline delivery sync error:",
-        error
-      );
+      console.error("Offline delivery sync error:", error);
     }
   });
 
@@ -158,16 +143,12 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const receiverSocketId =
-      getUserSocket(receiverId);
+    const receiverSocketId = getUserSocket(receiverId);
 
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit(
-        "userTyping",
-        {
-          senderId: socket.userId,
-        }
-      );
+      io.to(receiverSocketId).emit("userTyping", {
+        senderId: socket.userId,
+      });
     }
   });
 
@@ -175,186 +156,132 @@ io.on("connection", (socket) => {
   // STOP TYPING
   // ------------------------------------------
 
-  socket.on(
-    "stopTyping",
-    ({ receiverId }) => {
-      if (!receiverId) {
-        return;
-      }
-
-      const receiverSocketId =
-        getUserSocket(receiverId);
-
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit(
-          "userStoppedTyping",
-          {
-            senderId: socket.userId,
-          }
-        );
-      }
+  socket.on("stopTyping", ({ receiverId }) => {
+    if (!receiverId) {
+      return;
     }
-  );
+
+    const receiverSocketId = getUserSocket(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("userStoppedTyping", {
+        senderId: socket.userId,
+      });
+    }
+  });
 
   // ------------------------------------------
   // CALL SIGNALING
   // ------------------------------------------
 
-  socket.on(
-    "callUser",
-    ({ receiverId, callType, roomName }) => {
-      if (
-        !receiverId ||
-        !callType ||
-        !roomName
-      ) {
-        return;
-      }
-
-      const receiverSocketId =
-        getUserSocket(receiverId);
-
-      if (!receiverSocketId) {
-        socket.emit("callFailed", {
-          message:
-            "User is currently offline.",
-        });
-
-        return;
-      }
-
-      io.to(receiverSocketId).emit(
-        "incomingCall",
-        {
-          callerId:
-            socket.userId.toString(),
-          callType,
-          roomName,
-        }
-      );
+  socket.on("callUser", ({ receiverId, callerName, callType, roomName }) => {
+    if (!receiverId || !callType || !roomName) {
+      return;
     }
-  );
+
+    const receiverSocketId = getUserSocket(receiverId);
+
+    if (!receiverSocketId) {
+      socket.emit("callFailed", {
+        message: "User is currently offline.",
+      });
+
+      return;
+    }
+
+    io.to(receiverSocketId).emit("incomingCall", {
+      callerId: socket.userId.toString(),
+      callerName: callerName || "SkillSwap Student",
+      callType,
+      roomName,
+    });
+  });
 
   // ------------------------------------------
   // ACCEPT CALL
   // ------------------------------------------
 
-  socket.on(
-    "acceptCall",
-    ({ callerId, callType, roomName }) => {
-      if (
-        !callerId ||
-        !callType ||
-        !roomName
-      ) {
-        return;
-      }
-
-      const callerSocketId =
-        getUserSocket(callerId);
-
-      if (!callerSocketId) {
-        return;
-      }
-
-      io.to(callerSocketId).emit(
-        "callAccepted",
-        {
-          callType,
-          roomName,
-        }
-      );
+  socket.on("acceptCall", ({ callerId, callType, roomName }) => {
+    if (!callerId || !callType || !roomName) {
+      return;
     }
-  );
+
+    const callerSocketId = getUserSocket(callerId);
+
+    if (!callerSocketId) {
+      return;
+    }
+
+    io.to(callerSocketId).emit("callAccepted", {
+      callType,
+      roomName,
+    });
+  });
 
   // ------------------------------------------
   // REJECT CALL
   // ------------------------------------------
 
-  socket.on(
-    "rejectCall",
-    ({ callerId }) => {
-      if (!callerId) {
-        return;
-      }
-
-      const callerSocketId =
-        getUserSocket(callerId);
-
-      if (!callerSocketId) {
-        return;
-      }
-
-      io.to(callerSocketId).emit(
-        "callRejected"
-      );
+  socket.on("rejectCall", ({ callerId }) => {
+    if (!callerId) {
+      return;
     }
-  );
+
+    const callerSocketId = getUserSocket(callerId);
+
+    if (!callerSocketId) {
+      return;
+    }
+
+    io.to(callerSocketId).emit("callRejected");
+  });
 
   // ------------------------------------------
   // CANCEL CALL
   // ------------------------------------------
 
-  socket.on(
-    "cancelCall",
-    ({ receiverId }) => {
-      if (!receiverId) {
-        return;
-      }
-
-      const receiverSocketId =
-        getUserSocket(receiverId);
-
-      if (!receiverSocketId) {
-        return;
-      }
-
-      io.to(receiverSocketId).emit(
-        "callCancelled"
-      );
-    }
-  );
-
-
-  // ------------------------------------------
-// END ACTIVE CALL
-// ------------------------------------------
-
-socket.on(
-  "endCall",
-  ({ receiverId }) => {
+  socket.on("cancelCall", ({ receiverId }) => {
     if (!receiverId) {
       return;
     }
 
-    const receiverSocketId =
-      getUserSocket(receiverId);
+    const receiverSocketId = getUserSocket(receiverId);
 
     if (!receiverSocketId) {
       return;
     }
 
-    io.to(receiverSocketId).emit(
-      "callEnded"
-    );
-  }
-);
+    io.to(receiverSocketId).emit("callCancelled");
+  });
 
+  // ------------------------------------------
+  // END ACTIVE CALL
+  // ------------------------------------------
+
+  socket.on("endCall", ({ receiverId }) => {
+    if (!receiverId) {
+      return;
+    }
+
+    const receiverSocketId = getUserSocket(receiverId);
+
+    if (!receiverSocketId) {
+      return;
+    }
+
+    io.to(receiverSocketId).emit("callEnded");
+  });
 
   // ------------------------------------------
   // HANDLE DISCONNECT
   // ------------------------------------------
 
   socket.on("disconnect", () => {
-    console.log(
-      "A user disconnected:",
-      socket.id
-    );
+    console.log("A user disconnected:", socket.id);
 
     // Save the user ID before removing
     // the socket from the manager
-    const disconnectedUserId =
-      socket.userId;
+    const disconnectedUserId = socket.userId;
 
     removeUser(socket.id);
 
@@ -364,8 +291,7 @@ socket.on(
 
     if (disconnectedUserId) {
       io.emit("userOffline", {
-        userId:
-          disconnectedUserId.toString(),
+        userId: disconnectedUserId.toString(),
       });
     }
   });
@@ -375,13 +301,10 @@ socket.on(
 // SERVER
 // ------------------------------------------
 
-const PORT =
-  process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 connectDB();
 
 server.listen(PORT, () => {
-  console.log(
-    `Server running on port ${PORT}`
-  );
+  console.log(`Server running on port ${PORT}`);
 });

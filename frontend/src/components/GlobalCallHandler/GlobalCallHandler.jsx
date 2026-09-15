@@ -12,20 +12,19 @@ const GlobalCallHandler = () => {
     setIncomingCall,
     acceptCall,
     rejectCall,
+    endCall,
+    callEnded,
+    setCallEnded,
   } = useContext(AuthContext);
 
   const [caller, setCaller] = useState(null);
-  const [activeCall, setActiveCall] =
-    useState(null);
+
+  const [activeCall, setActiveCall] = useState(null);
 
   /*
    * ==========================================
    * LOAD CALLER INFORMATION
    * ==========================================
-   *
-   * For now we use the caller ID directly.
-   * We can improve this later to show the
-   * caller's actual name.
    */
 
   useEffect(() => {
@@ -37,7 +36,10 @@ const GlobalCallHandler = () => {
     setCaller({
       _id: incomingCall.callerId,
       id: incomingCall.callerId,
-      name: "SkillSwap Student",
+
+      name:
+        incomingCall.callerName ||
+        "SkillSwap Student",
     });
   }, [incomingCall]);
 
@@ -56,6 +58,7 @@ const GlobalCallHandler = () => {
       callerId,
       callType,
       roomName,
+      callerName,
     } = incomingCall;
 
     const accepted = acceptCall(
@@ -69,15 +72,16 @@ const GlobalCallHandler = () => {
     }
 
     /*
-     * Open Jitsi immediately.
-     *
-     * This works regardless of which page
-     * the user is currently viewing.
+     * IMPORTANT:
+     * Store remote user's ID so we can notify
+     * them immediately when this user hangs up.
      */
 
     setActiveCall({
       roomName,
       callType,
+      remoteUserId: callerId,
+      partnerName: callerName || "SkillSwap Student",
     });
 
     setIncomingCall(null);
@@ -94,9 +98,7 @@ const GlobalCallHandler = () => {
       return;
     }
 
-    rejectCall(
-      incomingCall.callerId
-    );
+    rejectCall(incomingCall.callerId);
 
     setIncomingCall(null);
     setCaller(null);
@@ -104,42 +106,81 @@ const GlobalCallHandler = () => {
 
   /*
    * ==========================================
-   * CLOSE JITSI
+   * END ACTIVE CALL
    * ==========================================
    */
 
-  const handleCloseCall = () => {
+  const handleEndCall = () => {
+    if (!activeCall) {
+      return;
+    }
+
+    /*
+     * Tell the other participant immediately.
+     */
+
+    if (activeCall.remoteUserId) {
+      endCall(activeCall.remoteUserId);
+    }
+
+    /*
+     * Close our Jitsi window.
+     */
+
     setActiveCall(null);
   };
 
+  /*
+   * ==========================================
+   * OTHER USER ENDED CALL
+   * ==========================================
+   */
+
+  useEffect(() => {
+    if (!callEnded) {
+      return;
+    }
+
+    /*
+     * Close Jitsi immediately when the remote
+     * participant ends the call.
+     */
+
+    setActiveCall(null);
+
+    /*
+     * Reset the global flag.
+     */
+
+    setCallEnded(false);
+  }, [callEnded, setCallEnded]);
+
   return (
     <>
+      {/* =====================================
+          INCOMING CALL
+          ===================================== */}
+
       {incomingCall && caller && (
         <IncomingCall
           caller={caller}
-          callType={
-            incomingCall.callType
-          }
-          onAccept={
-            handleAcceptCall
-          }
-          onReject={
-            handleRejectCall
-          }
+          callType={incomingCall.callType}
+          onAccept={handleAcceptCall}
+          onReject={handleRejectCall}
         />
       )}
 
+      {/* =====================================
+          ACTIVE CALL
+          ===================================== */}
+
       {activeCall && (
         <JitsiCall
-          roomName={
-            activeCall.roomName
-          }
-          callType={
-            activeCall.callType
-          }
-          onClose={
-            handleCloseCall
-          }
+          roomName={activeCall.roomName}
+          callType={activeCall.callType}
+          partnerName={activeCall.partnerName}
+          onClose={handleEndCall}
+          onLocalEnd={handleEndCall}
         />
       )}
     </>
@@ -147,3 +188,4 @@ const GlobalCallHandler = () => {
 };
 
 export default GlobalCallHandler;
+
