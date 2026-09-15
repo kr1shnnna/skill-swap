@@ -63,6 +63,11 @@ const Chat = () => {
     callCancelled,
     setCallCancelled,
 
+    endCall,
+
+    callEnded,
+    setCallEnded,
+
     callFailed,
     setCallFailed,
 
@@ -168,10 +173,22 @@ const Chat = () => {
   // OPEN JITSI ROOM
   // ------------------------------------------
 
-  const openJitsiRoom = (roomName, callType) => {
+  const openJitsiRoom = (
+    roomName,
+    callType,
+    remoteUserId,
+  ) => {
     if (!roomName) {
       console.error(
         "Unable to open Jitsi: room name is missing.",
+      );
+
+      return;
+    }
+
+    if (!remoteUserId) {
+      console.error(
+        "Unable to open Jitsi: remote user ID is missing.",
       );
 
       return;
@@ -182,6 +199,7 @@ const Chat = () => {
     setActiveCall({
       roomName,
       callType,
+      remoteUserId: remoteUserId.toString(),
     });
   };
 
@@ -301,13 +319,11 @@ const Chat = () => {
   // CALL ACCEPTED
   // ------------------------------------------
   //
-  // This runs on the CALLER side.
+  // Caller side:
   //
-  // Receiver accepts the call
+  // Receiver accepts
   //       ↓
-  // backend emits callAccepted
-  //       ↓
-  // AuthContext updates callAccepted
+  // callAccepted
   //       ↓
   // Caller opens JaaS
   //
@@ -318,13 +334,29 @@ const Chat = () => {
       return;
     }
 
+    const remoteUserId = getUserId(selectedUser);
+
+    if (!remoteUserId) {
+      console.error(
+        "Unable to identify call partner.",
+      );
+
+      setCallAccepted(null);
+      return;
+    }
+
     openJitsiRoom(
       callAccepted.roomName,
       callAccepted.callType,
+      remoteUserId,
     );
 
     setCallAccepted(null);
-  }, [callAccepted, setCallAccepted]);
+  }, [
+    callAccepted,
+    selectedUser,
+    setCallAccepted,
+  ]);
 
   // ------------------------------------------
   // CALL REJECTED
@@ -374,6 +406,36 @@ const Chat = () => {
   }, [callFailed, setCallFailed]);
 
   // ------------------------------------------
+  // REMOTE CALL ENDED
+  // ------------------------------------------
+  //
+  // This runs when the OTHER user hangs up.
+  //
+  // IMPORTANT:
+  // We only close our local JaaS call.
+  // We DO NOT call endCall() here.
+  //
+  // This prevents:
+  //
+  // A → B → A → B → A
+  //
+  // loop.
+  //
+  // ------------------------------------------
+
+  useEffect(() => {
+    if (!callEnded) {
+      return;
+    }
+
+    setActiveCall(null);
+
+    setCallEnded(false);
+
+    setCallStatusMessage("");
+  }, [callEnded, setCallEnded]);
+
+  // ------------------------------------------
   // CANCEL OUTGOING CALL
   // ------------------------------------------
 
@@ -416,11 +478,13 @@ const Chat = () => {
       return;
     }
 
-    // Receiver enters the SAME room
-    // after accepting.
+    // Receiver enters the SAME room.
+    //
+    // callerId is the remote participant.
     openJitsiRoom(
       roomName,
       callType,
+      callerId,
     );
 
     setIncomingCaller(null);
@@ -440,6 +504,38 @@ const Chat = () => {
     );
 
     setIncomingCaller(null);
+  };
+
+  // ------------------------------------------
+  // LOCAL CALL END
+  // ------------------------------------------
+  //
+  // This runs ONLY when the local user
+  // presses the JaaS hang-up button.
+  //
+  // ------------------------------------------
+
+  const handleLocalCallEnd = () => {
+    if (!activeCall) {
+      return;
+    }
+
+    const remoteUserId =
+      activeCall.remoteUserId;
+
+    // Tell the other participant
+    // that we ended the call.
+    if (remoteUserId) {
+      endCall(remoteUserId);
+    }
+
+    // Immediately close our own JaaS UI.
+    setActiveCall(null);
+
+    // Clear any stale call-ended state.
+    setCallEnded(false);
+
+    setCallStatusMessage("");
   };
 
   // ------------------------------------------
@@ -1924,6 +2020,9 @@ const Chat = () => {
           }
           callType={
             activeCall.callType
+          }
+          onLocalEnd={
+            handleLocalCallEnd
           }
           onClose={() => {
             setActiveCall(null);

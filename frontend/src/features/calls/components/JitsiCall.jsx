@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { JitsiMeeting } from "@jitsi/react-sdk";
 
 import api from "../../../services/api";
@@ -10,10 +11,15 @@ const JitsiCall = ({
   roomName,
   callType = "video",
   onClose,
+  onLocalEnd,
 }) => {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // ------------------------------------------
+  // FETCH JaaS TOKEN
+  // ------------------------------------------
 
   useEffect(() => {
     let mounted = true;
@@ -23,12 +29,9 @@ const JitsiCall = ({
         setLoading(true);
         setError("");
 
-        const response = await api.post(
-          "/jaas/token",
-          {
-            roomName,
-          }
-        );
+        const response = await api.post("/jaas/token", {
+          roomName,
+        });
 
         if (!mounted) {
           return;
@@ -68,6 +71,10 @@ const JitsiCall = ({
     };
   }, [roomName]);
 
+  // ------------------------------------------
+  // LOADING
+  // ------------------------------------------
+
   if (loading) {
     return (
       <div className="jaas-call-overlay">
@@ -77,6 +84,10 @@ const JitsiCall = ({
       </div>
     );
   }
+
+  // ------------------------------------------
+  // ERROR
+  // ------------------------------------------
 
   if (error) {
     return (
@@ -97,12 +108,19 @@ const JitsiCall = ({
     );
   }
 
+  // ------------------------------------------
+  // NO TOKEN
+  // ------------------------------------------
+
   if (!token) {
     return null;
   }
 
-  const isAudioCall =
-    callType === "audio";
+  const isAudioCall = callType === "audio";
+
+  // ------------------------------------------
+  // JaaS MEETING
+  // ------------------------------------------
 
   return (
     <div className="jaas-call-overlay">
@@ -132,7 +150,19 @@ const JitsiCall = ({
             displayName: "SkillSwap Student",
           }}
           onReadyToClose={() => {
-            onClose();
+            // --------------------------------
+            // LOCAL USER ENDED THE CALL
+            // --------------------------------
+
+            if (onLocalEnd) {
+              onLocalEnd();
+              return;
+            }
+
+            // Fallback
+            if (onClose) {
+              onClose();
+            }
           }}
           getIFrameRef={(iframeRef) => {
             iframeRef.style.height = "100%";
