@@ -199,7 +199,7 @@ const GlobalCallHandler = () => {
             </h2>
 
             <p className="outgoing-call-message">
-              Calling...
+              Ringing...
             </p>
 
             <div className="outgoing-call-ringing">
