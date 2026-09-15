@@ -2,16 +2,15 @@ import { useContext, useEffect, useState } from "react";
 
 import { io } from "socket.io-client";
 
-import {
-  FaCalendarAlt,
-  FaClock,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaClock } from "react-icons/fa";
 
 import api from "../../services/api";
 
 import { AuthContext } from "../../context/AuthContext";
 
 import SessionCard from "./components/SessionCard";
+
+import JitsiCall from "../../features/calls/components/JitsiCall";
 
 import "./Sessions.css";
 
@@ -22,11 +21,9 @@ const Sessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /*
-   * ------------------------------------------
-   * GET USER ID
-   * ------------------------------------------
-   */
+  // Currently opened scheduled meeting
+  const [activeSession, setActiveSession] = useState(null);
+
   const getUserId = (userObject) => {
     if (!userObject) {
       return null;
@@ -43,11 +40,6 @@ const Sessions = () => {
     );
   };
 
-  /*
-   * ------------------------------------------
-   * FETCH SESSIONS
-   * ------------------------------------------
-   */
   useEffect(() => {
     if (!user) {
       return;
@@ -56,89 +48,59 @@ const Sessions = () => {
     fetchSessions();
   }, [user]);
 
-  /*
-   * ------------------------------------------
-   * SESSION SOCKET EVENTS
-   * ------------------------------------------
-   */
   useEffect(() => {
-    const socket = io(
-      "http://localhost:5000"
-    );
+    const socket = io("http://localhost:5000");
 
-    /*
-     * New session created
-     */
-    socket.on(
-      "sessionCreated",
-      (data) => {
-        const newSession = data.session;
+    socket.on("sessionCreated", (data) => {
+      const newSession = data.session;
 
-        if (!newSession) {
-          return;
+      if (!newSession) {
+        return;
+      }
+
+      setSessions((currentSessions) => {
+        const alreadyExists = currentSessions.some(
+          (session) =>
+            session._id === newSession._id
+        );
+
+        if (alreadyExists) {
+          return currentSessions;
         }
 
-        setSessions(
-          (currentSessions) => {
-            const alreadyExists =
-              currentSessions.some(
-                (session) =>
-                  session._id ===
-                  newSession._id
-              );
+        return [
+          ...currentSessions,
+          newSession,
+        ];
+      });
+    });
 
-            if (alreadyExists) {
-              return currentSessions;
-            }
-
-            return [
-              ...currentSessions,
-              newSession,
-            ];
-          }
-        );
+    socket.on("sessionUpdated", (updatedSession) => {
+      if (!updatedSession) {
+        return;
       }
-    );
 
-    /*
-     * Session status updated
-     */
-    socket.on(
-      "sessionUpdated",
-      (updatedSession) => {
-        if (!updatedSession) {
-          return;
-        }
-
-        setSessions(
-          (currentSessions) =>
-            currentSessions.map(
-              (session) =>
-                session._id ===
-                updatedSession.sessionId
-                  ? {
-                      ...session,
-                      status:
-                        updatedSession.status,
-                      statusUpdatedBy:
-                        updatedSession.statusUpdatedBy,
-                    }
-                  : session
-            )
-        );
-      }
-    );
+      setSessions((currentSessions) =>
+        currentSessions.map((session) =>
+          session._id ===
+          updatedSession.sessionId
+            ? {
+                ...session,
+                status:
+                  updatedSession.status,
+                statusUpdatedBy:
+                  updatedSession.statusUpdatedBy,
+              }
+            : session
+        )
+      );
+    });
 
     return () => {
       socket.disconnect();
     };
   }, []);
 
-  /*
-   * ------------------------------------------
-   * FETCH SESSIONS
-   * ------------------------------------------
-   */
   const fetchSessions = async () => {
     try {
       setLoading(true);
@@ -166,31 +128,38 @@ const Sessions = () => {
   };
 
   /*
-   * ------------------------------------------
-   * JOIN MEETING
-   * ------------------------------------------
-   *
-   * JaaS will be connected here in the
-   * next step.
+   * ==========================================
+   * JOIN SCHEDULED MEETING
+   * ==========================================
    */
+
   const handleJoinMeeting = (session) => {
     if (!session?._id) {
+      console.error(
+        "Unable to join meeting: session ID is missing."
+      );
+
       return;
     }
 
-    console.log(
-      "Join meeting clicked:",
-      session._id
-    );
+    if (session.status !== "accepted") {
+      return;
+    }
+
+    setActiveSession(session);
   };
 
   /*
-   * ------------------------------------------
-   * FILTER SESSIONS
-   * ------------------------------------------
+   * ==========================================
+   * CLOSE SCHEDULED MEETING
+   * ==========================================
    */
-  const currentUserId =
-    getUserId(user);
+
+  const handleCloseMeeting = () => {
+    setActiveSession(null);
+  };
+
+  const currentUserId = getUserId(user);
 
   const upcomingSessions =
     sessions.filter(
@@ -213,16 +182,22 @@ const Sessions = () => {
     );
 
   /*
-   * ------------------------------------------
-   * UI
-   * ------------------------------------------
+   * Deterministic room name.
+   *
+   * Both students use the same session ID,
+   * therefore both enter the same JaaS room.
    */
+  const meetingRoomName = activeSession
+    ? `SkillSwap-Session-${activeSession._id}`
+    : null;
+
   return (
     <main className="sessions-page">
       <div className="sessions-container">
-        {/* ==================================
+
+        {/* ==========================================
             PAGE HEADER
-            ================================== */}
+            ========================================== */}
 
         <div className="sessions-page-header">
           <div>
@@ -243,16 +218,14 @@ const Sessions = () => {
           <FaCalendarAlt className="sessions-header-icon" />
         </div>
 
-        {/* ==================================
+        {/* ==========================================
             UPCOMING SESSIONS
-            ================================== */}
+            ========================================== */}
 
         <section className="sessions-section">
           <div className="sessions-section-header">
             <div>
-              <h2>
-                Upcoming Sessions
-              </h2>
+              <h2>Upcoming Sessions</h2>
 
               <p>
                 Your scheduled learning
@@ -260,8 +233,6 @@ const Sessions = () => {
               </p>
             </div>
           </div>
-
-          {/* LOADING */}
 
           {loading ? (
             <div className="sessions-empty-state">
@@ -277,8 +248,6 @@ const Sessions = () => {
               </p>
             </div>
           ) : error ? (
-            /* ERROR */
-
             <div className="sessions-empty-state">
               <FaCalendarAlt />
 
@@ -290,8 +259,6 @@ const Sessions = () => {
             </div>
           ) : upcomingSessions.length ===
             0 ? (
-            /* EMPTY */
-
             <div className="sessions-empty-state">
               <FaCalendarAlt />
 
@@ -305,8 +272,6 @@ const Sessions = () => {
               </p>
             </div>
           ) : (
-            /* SESSION CARDS */
-
             <div className="sessions-list">
               {upcomingSessions.map(
                 (session) => (
@@ -326,9 +291,9 @@ const Sessions = () => {
           )}
         </section>
 
-        {/* ==================================
+        {/* ==========================================
             PENDING REQUESTS
-            ================================== */}
+            ========================================== */}
 
         <section className="sessions-section">
           <div className="sessions-section-header">
@@ -346,8 +311,6 @@ const Sessions = () => {
 
           {pendingSessions.length ===
           0 ? (
-            /* NO PENDING REQUESTS */
-
             <div className="sessions-empty-state compact">
               <FaClock />
 
@@ -356,13 +319,11 @@ const Sessions = () => {
               </h3>
 
               <p>
-                New session requests
-                will appear here.
+                New session requests will
+                appear here.
               </p>
             </div>
           ) : (
-            /* PENDING SESSION CARDS */
-
             <div className="sessions-list">
               {pendingSessions.map(
                 (session) => (
@@ -379,9 +340,9 @@ const Sessions = () => {
           )}
         </section>
 
-        {/* ==================================
+        {/* ==========================================
             SESSION HISTORY
-            ================================== */}
+            ========================================== */}
 
         <section className="sessions-section">
           <div className="sessions-section-header">
@@ -429,6 +390,21 @@ const Sessions = () => {
           )}
         </section>
       </div>
+
+      {/* ==========================================
+          JITSI / JAAS SCHEDULED MEETING
+          ========================================== */}
+
+      {activeSession &&
+        meetingRoomName && (
+          <JitsiCall
+            roomName={meetingRoomName}
+            callType="video"
+            onClose={
+              handleCloseMeeting
+            }
+          />
+        )}
     </main>
   );
 };
