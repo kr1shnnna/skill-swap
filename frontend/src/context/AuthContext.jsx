@@ -549,7 +549,7 @@ export const AuthProvider = ({ children }) => {
   // START CALL
   // ------------------------------------------
 
-  const startCall = (receiverId, callType, roomName) => {
+  const startCall = (receiverId, callType, roomName , receiverName) => {
     if (!socketRef.current) {
       console.error("Socket is not connected.");
 
@@ -569,6 +569,7 @@ export const AuthProvider = ({ children }) => {
     // Store outgoing call
     setOutgoingCall({
       receiverId: receiverId.toString(),
+      receiverName: receiverName || "SkillSwap Student",
       callType,
       roomName,
     });

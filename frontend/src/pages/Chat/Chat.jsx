@@ -243,6 +243,7 @@ const Chat = () => {
       receiverId,
       "audio",
       roomName,
+      selectedUser.name
     );
 
     if (!started) {
@@ -299,6 +300,7 @@ const Chat = () => {
       receiverId,
       "video",
       roomName,
+      selectedUser.name
     );
 
     if (!started) {
@@ -1905,60 +1907,9 @@ const Chat = () => {
         )}
       </div>
 
-      {/* ================================== */}
-      {/* CALLING / OUTGOING CALL */}
-      {/* ================================== */}
+   
 
-      {outgoingCall && (
-        <div className="outgoing-call-overlay">
-          <div className="outgoing-call-card">
-            <div className="outgoing-call-avatar">
-              {outgoingCall.callType ===
-              "video" ? (
-                <FaVideo />
-              ) : (
-                <FaPhone />
-              )}
-            </div>
-
-            <p className="outgoing-call-label">
-              {outgoingCall.callType ===
-              "video"
-                ? "VIDEO CALL"
-                : "AUDIO CALL"}
-            </p>
-
-            <h2>
-              {selectedUser?.name ||
-                "SkillSwap Student"}
-            </h2>
-
-            <p className="outgoing-call-message">
-              Calling...
-            </p>
-
-            <div className="outgoing-call-ringing">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-
-            <button
-              type="button"
-              className="outgoing-call-cancel"
-              onClick={
-                handleCancelCall
-              }
-            >
-              <FaPhoneSlash />
-              <span>
-                Cancel
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
-
+     
       {/* ================================== */}
       {/* CALL STATUS */}
       {/* ================================== */}
