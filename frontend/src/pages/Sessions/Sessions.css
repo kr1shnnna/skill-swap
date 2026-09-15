@@ -509,6 +509,99 @@
   cursor: not-allowed;
 }
 
+/* ==========================================
+   JOIN MEETING
+   ========================================== */
+
+.session-join-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.session-join-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.session-join-btn:active {
+  transform: translateY(1px);
+}
+
+.session-join-btn-disabled {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.session-join-btn-disabled:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.session-join-btn-disabled:active {
+  transform: none;
+}
+
+.session-join-info {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.session-join-info-active {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+/* ==========================================
+   JOIN BUTTON MOBILE
+   ========================================== */
+
+@media (max-width: 600px) {
+  .session-actions {
+    flex-wrap: wrap;
+  }
+
+  .session-join-btn,
+  .session-complete-btn,
+  .session-cancel-btn {
+    flex: 1;
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 400px) {
+  .session-join-btn,
+  .session-complete-btn,
+  .session-cancel-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
 
 /* ================================
    MOBILE

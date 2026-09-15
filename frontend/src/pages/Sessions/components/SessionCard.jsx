@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   FaUserCircle,
@@ -6,16 +6,25 @@ import {
   FaClock,
   FaBookOpen,
   FaStickyNote,
+  FaVideo,
+  FaLock,
 } from "react-icons/fa";
 
 import api from "../../../services/api";
 
+const JOIN_EARLY_MINUTES = 10;
+const JOIN_AFTER_MINUTES = 60;
+
 const SessionCard = ({
   session,
   currentUserId,
+  onJoinMeeting,
 }) => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [currentTime, setCurrentTime] = useState(
+    new Date()
+  );
 
   const isRequester =
     session.requester?._id?.toString() ===
@@ -25,15 +34,125 @@ const SessionCard = ({
     session.partner?._id?.toString() ===
     currentUserId?.toString();
 
-    const statusChangedByCurrentUser =
+  const statusChangedByCurrentUser =
     session.statusUpdatedBy?.toString() ===
     currentUserId?.toString();
-
 
   const partner = isRequester
     ? session.partner
     : session.requester;
 
+  /*
+   * ------------------------------------------
+   * KEEP CURRENT TIME UPDATED
+   * ------------------------------------------
+   *
+   * This allows the Join Meeting button to
+   * automatically unlock when the 10-minute
+   * window begins.
+   */
+  useEffect(() => {
+    if (session.status !== "accepted") {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [session.status]);
+
+  /*
+   * ------------------------------------------
+   * SESSION START TIME
+   * ------------------------------------------
+   */
+  const getSessionStartTime = () => {
+    if (!session.date || !session.time) {
+      return null;
+    }
+
+    const sessionDate = new Date(session.date);
+
+    if (Number.isNaN(sessionDate.getTime())) {
+      return null;
+    }
+
+    const [hours, minutes] =
+      session.time.split(":").map(Number);
+
+    if (
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes)
+    ) {
+      return null;
+    }
+
+    /*
+     * The date stored by the backend represents
+     * the selected calendar day.
+     *
+     * Use the local date components so the
+     * displayed session time and Join window
+     * remain consistent with the user's local
+     * selection.
+     */
+    sessionDate.setHours(
+      hours,
+      minutes,
+      0,
+      0
+    );
+
+    return sessionDate;
+  };
+
+  const sessionStartTime =
+    getSessionStartTime();
+
+  /*
+   * ------------------------------------------
+   * JOIN WINDOW
+   * ------------------------------------------
+   */
+  let joinState = "unavailable";
+
+  if (
+    session.status === "accepted" &&
+    sessionStartTime
+  ) {
+    const joinStartTime =
+      new Date(
+        sessionStartTime.getTime() -
+          JOIN_EARLY_MINUTES * 60 * 1000
+      );
+
+    const joinEndTime =
+      new Date(
+        sessionStartTime.getTime() +
+          JOIN_AFTER_MINUTES * 60 * 1000
+      );
+
+    if (currentTime < joinStartTime) {
+      joinState = "tooEarly";
+    } else if (
+      currentTime >= joinStartTime &&
+      currentTime <= joinEndTime
+    ) {
+      joinState = "available";
+    } else {
+      joinState = "expired";
+    }
+  }
+
+  /*
+   * ------------------------------------------
+   * STATUS UPDATE
+   * ------------------------------------------
+   */
   const handleStatusUpdate = async (status) => {
     try {
       setUpdating(true);
@@ -58,9 +177,29 @@ const SessionCard = ({
     }
   };
 
+  /*
+   * ------------------------------------------
+   * JOIN MEETING
+   * ------------------------------------------
+   */
+  const handleJoinMeeting = () => {
+    if (joinState !== "available") {
+      return;
+    }
+
+    if (!onJoinMeeting) {
+      console.warn(
+        "Join Meeting handler is not connected yet."
+      );
+
+      return;
+    }
+
+    onJoinMeeting(session);
+  };
+
   return (
     <article className="session-card">
-
       {/* ================= HEADER ================= */}
 
       <div className="session-card-header">
@@ -73,7 +212,8 @@ const SessionCard = ({
             </span>
 
             <h3>
-              {partner?.name || "SkillSwap Student"}
+              {partner?.name ||
+                "SkillSwap Student"}
             </h3>
           </div>
         </div>
@@ -82,21 +222,20 @@ const SessionCard = ({
           className={`session-status ${session.status}`}
         >
           {session.status === "cancelled"
-    ? statusChangedByCurrentUser
-      ? "Cancelled by you"
-      : "Cancelled by requester"
-    : session.status === "rejected"
-    ? statusChangedByCurrentUser
-      ? "Rejected by you"
-      : "Rejected by partner"
-    : session.status}
+            ? statusChangedByCurrentUser
+              ? "Cancelled by you"
+              : "Cancelled by requester"
+            : session.status === "rejected"
+            ? statusChangedByCurrentUser
+              ? "Rejected by you"
+              : "Rejected by partner"
+            : session.status}
         </span>
       </div>
 
       {/* ================= DETAILS ================= */}
 
       <div className="session-card-details">
-
         <div className="session-detail">
           <FaCalendarAlt />
 
@@ -139,7 +278,6 @@ const SessionCard = ({
             </strong>
           </div>
         </div>
-
       </div>
 
       {/* ================= NOTE ================= */}
@@ -148,95 +286,166 @@ const SessionCard = ({
         <div className="session-note">
           <FaStickyNote />
 
-          <p>
-            {session.note}
-          </p>
+          <p>{session.note}</p>
         </div>
       )}
 
+      {/* ================= ACTIONS ================= */}
 
-       
-       {/* ================= ACTIONS ================= */}
+      {/* Pending request actions */}
 
-{/* Pending request actions */}
-{session.status === "pending" && (
-  <div className="session-actions">
+      {session.status === "pending" && (
+        <div className="session-actions">
+          {isPartner && (
+            <>
+              <button
+                type="button"
+                className="session-reject-btn"
+                onClick={() =>
+                  handleStatusUpdate(
+                    "rejected"
+                  )
+                }
+                disabled={updating}
+              >
+                {updating
+                  ? "Updating..."
+                  : "Reject"}
+              </button>
 
-    {isPartner && (
-      <>
-        <button
-          type="button"
-          className="session-reject-btn"
-          onClick={() =>
-            handleStatusUpdate("rejected")
-          }
-          disabled={updating}
-        >
-          {updating ? "Updating..." : "Reject"}
-        </button>
+              <button
+                type="button"
+                className="session-accept-btn"
+                onClick={() =>
+                  handleStatusUpdate(
+                    "accepted"
+                  )
+                }
+                disabled={updating}
+              >
+                {updating
+                  ? "Updating..."
+                  : "Accept"}
+              </button>
+            </>
+          )}
 
-        <button
-          type="button"
-          className="session-accept-btn"
-          onClick={() =>
-            handleStatusUpdate("accepted")
-          }
-          disabled={updating}
-        >
-          {updating ? "Updating..." : "Accept"}
-        </button>
-      </>
-    )}
+          {isRequester && (
+            <button
+              type="button"
+              className="session-cancel-btn"
+              onClick={() =>
+                handleStatusUpdate(
+                  "cancelled"
+                )
+              }
+              disabled={updating}
+            >
+              {updating
+                ? "Updating..."
+                : "Cancel Request"}
+            </button>
+          )}
+        </div>
+      )}
 
-    {isRequester && (
-      <button
-        type="button"
-        className="session-cancel-btn"
-        onClick={() =>
-          handleStatusUpdate("cancelled")
-        }
-        disabled={updating}
-      >
-        {updating ? "Updating..." : "Cancel Request"}
-      </button>
-    )}
+      {/* Accepted session actions */}
 
-  </div>
-)}
+      {session.status === "accepted" && (
+        <>
+          <div className="session-actions">
+            {/* ================= JOIN MEETING ================= */}
 
-{/* Accepted session actions */}
-{session.status === "accepted" && (
-  <div className="session-actions">
+            {joinState === "available" && (
+              <button
+                type="button"
+                className="session-join-btn"
+                onClick={handleJoinMeeting}
+              >
+                <FaVideo />
+                Join Meeting
+              </button>
+            )}
 
-    <button
-      type="button"
-      className="session-complete-btn"
-      onClick={() =>
-        handleStatusUpdate("completed")
-      }
-      disabled={updating}
-    >
-      {updating
-        ? "Updating..."
-        : "Mark as Completed"}
-    </button>
+            {joinState === "tooEarly" && (
+              <button
+                type="button"
+                className="session-join-btn session-join-btn-disabled"
+                disabled
+              >
+                <FaLock />
+                Join available 10 min before
+              </button>
+            )}
 
-    {isRequester && (
-      <button
-        type="button"
-        className="session-cancel-btn"
-        onClick={() =>
-          handleStatusUpdate("cancelled")
-        }
-        disabled={updating}
-      >
-        {updating ? "Updating..." : "Cancel Session"}
-      </button>
-    )}
+            {joinState === "expired" && (
+              <button
+                type="button"
+                className="session-join-btn session-join-btn-disabled"
+                disabled
+              >
+                <FaClock />
+                Session window ended
+              </button>
+            )}
 
-  </div>
-)}
+            {/* ================= COMPLETE ================= */}
 
+            <button
+              type="button"
+              className="session-complete-btn"
+              onClick={() =>
+                handleStatusUpdate(
+                  "completed"
+                )
+              }
+              disabled={updating}
+            >
+              {updating
+                ? "Updating..."
+                : "Mark as Completed"}
+            </button>
+
+            {/* ================= CANCEL ================= */}
+
+            {isRequester && (
+              <button
+                type="button"
+                className="session-cancel-btn"
+                onClick={() =>
+                  handleStatusUpdate(
+                    "cancelled"
+                  )
+                }
+                disabled={updating}
+              >
+                {updating
+                  ? "Updating..."
+                  : "Cancel Session"}
+              </button>
+            )}
+          </div>
+
+          {/* Join information */}
+
+          {joinState === "tooEarly" &&
+            sessionStartTime && (
+              <div className="session-join-info">
+                Meeting will be available 10
+                minutes before the scheduled
+                time.
+              </div>
+            )}
+
+          {joinState === "available" && (
+            <div className="session-join-info session-join-info-active">
+              Meeting is available now. You
+              can join until 60 minutes after
+              the scheduled time.
+            </div>
+          )}
+        </>
+      )}
 
       {/* ================= ERROR ================= */}
 
@@ -245,9 +454,9 @@ const SessionCard = ({
           {error}
         </div>
       )}
-
     </article>
   );
 };
 
 export default SessionCard;
+
