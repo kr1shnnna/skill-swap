@@ -13,6 +13,8 @@ import Chat from "./pages/Chat/Chat";
 
 import Sessions from "./pages/Sessions/Sessions";
 
+import GlobalCallHandler from "./components/GlobalCallHandler/GlobalCallHandler";
+
 
 
 
@@ -26,6 +28,7 @@ const App = () => {
   return (
      <>
      <Navbar />
+     <GlobalCallHandler />
      <Routes>
       <Route path='/' element={<Home />} />
       <Route path='/login' element={<Login />} />
