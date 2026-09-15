@@ -602,6 +602,99 @@
 }
 
 
+/* ==========================================
+   SESSION LIVE STATUS
+   ========================================== */
+
+.session-live-status {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.session-live-status-content {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.session-live-status-content > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.session-live-status-content strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.session-live-status-content span:last-child {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.session-live-dot {
+  width: 9px;
+  height: 9px;
+  min-width: 9px;
+  border-radius: 50%;
+  display: block;
+}
+
+.upcoming-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px #fef3c7;
+}
+
+.live-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px #dcfce7;
+}
+
+.ended-dot {
+  background: #94a3b8;
+  box-shadow: 0 0 0 4px #f1f5f9;
+}
+
+.session-live-status-upcoming {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.session-live-status-live {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.session-live-status-ended {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.session-live-status-upcoming
+  .session-live-status-content
+  strong {
+  color: #b45309;
+}
+
+.session-live-status-live
+  .session-live-status-content
+  strong {
+  color: #15803d;
+}
+
+.session-live-status-ended
+  .session-live-status-content
+  strong {
+  color: #64748b;
+}
+
+
+
+
 
 /* ================================
    MOBILE

@@ -43,14 +43,11 @@ const SessionCard = ({
     : session.requester;
 
   /*
-   * ------------------------------------------
-   * KEEP CURRENT TIME UPDATED
-   * ------------------------------------------
-   *
-   * This allows the Join Meeting button to
-   * automatically unlock when the 10-minute
-   * window begins.
+   * ==========================================
+   * UPDATE CURRENT TIME
+   * ==========================================
    */
+
   useEffect(() => {
     if (session.status !== "accepted") {
       return;
@@ -58,7 +55,7 @@ const SessionCard = ({
 
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 30000);
+    }, 1000);
 
     return () => {
       clearInterval(interval);
@@ -66,18 +63,25 @@ const SessionCard = ({
   }, [session.status]);
 
   /*
-   * ------------------------------------------
-   * SESSION START TIME
-   * ------------------------------------------
+   * ==========================================
+   * GET SESSION START TIME
+   * ==========================================
    */
+
   const getSessionStartTime = () => {
     if (!session.date || !session.time) {
       return null;
     }
 
-    const sessionDate = new Date(session.date);
+    const sessionDate = new Date(
+      session.date
+    );
 
-    if (Number.isNaN(sessionDate.getTime())) {
+    if (
+      Number.isNaN(
+        sessionDate.getTime()
+      )
+    ) {
       return null;
     }
 
@@ -91,15 +95,6 @@ const SessionCard = ({
       return null;
     }
 
-    /*
-     * The date stored by the backend represents
-     * the selected calendar day.
-     *
-     * Use the local date components so the
-     * displayed session time and Join window
-     * remain consistent with the user's local
-     * selection.
-     */
     sessionDate.setHours(
       hours,
       minutes,
@@ -114,11 +109,15 @@ const SessionCard = ({
     getSessionStartTime();
 
   /*
-   * ------------------------------------------
-   * JOIN WINDOW
-   * ------------------------------------------
+   * ==========================================
+   * SESSION TIMING
+   * ==========================================
    */
+
+  let sessionState = "unavailable";
   let joinState = "unavailable";
+
+  let countdownText = "";
 
   if (
     session.status === "accepted" &&
@@ -127,33 +126,179 @@ const SessionCard = ({
     const joinStartTime =
       new Date(
         sessionStartTime.getTime() -
-          JOIN_EARLY_MINUTES * 60 * 1000
+          JOIN_EARLY_MINUTES *
+            60 *
+            1000
       );
 
-    const joinEndTime =
+    const sessionEndTime =
       new Date(
         sessionStartTime.getTime() +
-          JOIN_AFTER_MINUTES * 60 * 1000
+          JOIN_AFTER_MINUTES *
+            60 *
+            1000
       );
 
+    /*
+     * Before the 10-minute join window
+     */
     if (currentTime < joinStartTime) {
+      sessionState = "upcoming";
       joinState = "tooEarly";
-    } else if (
-      currentTime >= joinStartTime &&
-      currentTime <= joinEndTime
+
+      const difference =
+        sessionStartTime.getTime() -
+        currentTime.getTime();
+
+      const totalSeconds = Math.max(
+        0,
+        Math.floor(
+          difference / 1000
+        )
+      );
+
+      const days = Math.floor(
+        totalSeconds /
+          (24 * 60 * 60)
+      );
+
+      const hours = Math.floor(
+        (totalSeconds %
+          (24 * 60 * 60)) /
+          (60 * 60)
+      );
+
+      const minutes = Math.floor(
+        (totalSeconds %
+          (60 * 60)) /
+          60
+      );
+
+      const seconds =
+        totalSeconds % 60;
+
+      if (days > 0) {
+        countdownText = `${days}d ${hours}h ${minutes}m`;
+      } else if (hours > 0) {
+        countdownText = `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        countdownText = `${minutes}m ${seconds}s`;
+      }
+    }
+
+    /*
+     * Session is currently live
+     */
+    else if (
+      currentTime >= sessionStartTime &&
+      currentTime <= sessionEndTime
     ) {
+      sessionState = "live";
       joinState = "available";
-    } else {
+
+      const difference =
+        sessionEndTime.getTime() -
+        currentTime.getTime();
+
+      const totalSeconds = Math.max(
+        0,
+        Math.floor(
+          difference / 1000
+        )
+      );
+
+      const hours = Math.floor(
+        totalSeconds /
+          (60 * 60)
+      );
+
+      const minutes = Math.floor(
+        (totalSeconds %
+          (60 * 60)) /
+          60
+      );
+
+      const seconds =
+        totalSeconds % 60;
+
+      if (hours > 0) {
+        countdownText = `${hours}h ${minutes}m ${seconds}s remaining`;
+      } else {
+        countdownText = `${minutes}m ${seconds}s remaining`;
+      }
+    }
+
+    /*
+     * Session window has ended
+     */
+    else {
+      sessionState = "ended";
       joinState = "expired";
+      countdownText = "Session window ended";
     }
   }
 
   /*
-   * ------------------------------------------
-   * STATUS UPDATE
-   * ------------------------------------------
+   * ==========================================
+   * SESSION STATUS LABEL
+   * ==========================================
    */
-  const handleStatusUpdate = async (status) => {
+
+  const getSessionStatusLabel = () => {
+    if (session.status !== "accepted") {
+      return session.status;
+    }
+
+    if (sessionState === "upcoming") {
+      return "Upcoming";
+    }
+
+    if (sessionState === "live") {
+      return "Live Now";
+    }
+
+    if (sessionState === "ended") {
+      return "Session Ended";
+    }
+
+    return "Accepted";
+  };
+
+  /*
+   * ==========================================
+   * SESSION STATUS CLASS
+   * ==========================================
+   */
+
+  const getSessionStatusClass = () => {
+    if (session.status !== "accepted") {
+      return session.status;
+    }
+
+    if (sessionState === "upcoming") {
+      return "upcoming";
+    }
+
+    if (sessionState === "live") {
+      return "live";
+    }
+
+    if (sessionState === "ended") {
+      return "ended";
+    }
+
+    return "accepted";
+  };
+
+  /*
+   * ==========================================
+   * UPDATE SESSION STATUS
+   * ==========================================
+   */
+
+  const handleStatusUpdate = async (
+    status
+  ) => {
     try {
       setUpdating(true);
       setError("");
@@ -178,10 +323,11 @@ const SessionCard = ({
   };
 
   /*
-   * ------------------------------------------
+   * ==========================================
    * JOIN MEETING
-   * ------------------------------------------
+   * ==========================================
    */
+
   const handleJoinMeeting = () => {
     if (joinState !== "available") {
       return;
@@ -198,9 +344,18 @@ const SessionCard = ({
     onJoinMeeting(session);
   };
 
+  /*
+   * ==========================================
+   * RENDER
+   * ==========================================
+   */
+
   return (
     <article className="session-card">
-      {/* ================= HEADER ================= */}
+
+      {/* ==========================================
+          CARD HEADER
+          ========================================== */}
 
       <div className="session-card-header">
         <div className="session-partner">
@@ -219,23 +374,18 @@ const SessionCard = ({
         </div>
 
         <span
-          className={`session-status ${session.status}`}
+          className={`session-status ${getSessionStatusClass()}`}
         >
-          {session.status === "cancelled"
-            ? statusChangedByCurrentUser
-              ? "Cancelled by you"
-              : "Cancelled by requester"
-            : session.status === "rejected"
-            ? statusChangedByCurrentUser
-              ? "Rejected by you"
-              : "Rejected by partner"
-            : session.status}
+          {getSessionStatusLabel()}
         </span>
       </div>
 
-      {/* ================= DETAILS ================= */}
+      {/* ==========================================
+          SESSION DETAILS
+          ========================================== */}
 
       <div className="session-card-details">
+
         <div className="session-detail">
           <FaCalendarAlt />
 
@@ -278,9 +428,12 @@ const SessionCard = ({
             </strong>
           </div>
         </div>
+
       </div>
 
-      {/* ================= NOTE ================= */}
+      {/* ==========================================
+          NOTE
+          ========================================== */}
 
       {session.note && (
         <div className="session-note">
@@ -290,12 +443,13 @@ const SessionCard = ({
         </div>
       )}
 
-      {/* ================= ACTIONS ================= */}
-
-      {/* Pending request actions */}
+      {/* ==========================================
+          PENDING REQUEST
+          ========================================== */}
 
       {session.status === "pending" && (
         <div className="session-actions">
+
           {isPartner && (
             <>
               <button
@@ -346,23 +500,103 @@ const SessionCard = ({
                 : "Cancel Request"}
             </button>
           )}
+
         </div>
       )}
 
-      {/* Accepted session actions */}
+      {/* ==========================================
+          ACCEPTED SESSION
+          ========================================== */}
 
       {session.status === "accepted" && (
         <>
+
+          {/* ========================================
+              SESSION TIMING MESSAGE
+              ======================================== */}
+
+          {sessionState === "upcoming" && (
+            <div className="session-live-status session-live-status-upcoming">
+
+              <div className="session-live-status-content">
+                <span className="session-live-dot upcoming-dot" />
+
+                <div>
+                  <strong>
+                    Upcoming Session
+                  </strong>
+
+                  <span>
+                    Starts in{" "}
+                    {countdownText}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {sessionState === "live" && (
+            <div className="session-live-status session-live-status-live">
+
+              <div className="session-live-status-content">
+                <span className="session-live-dot live-dot" />
+
+                <div>
+                  <strong>
+                    Live Now
+                  </strong>
+
+                  <span>
+                    Session is currently
+                    live •{" "}
+                    {countdownText}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {sessionState === "ended" && (
+            <div className="session-live-status session-live-status-ended">
+
+              <div className="session-live-status-content">
+                <span className="session-live-dot ended-dot" />
+
+                <div>
+                  <strong>
+                    Session Ended
+                  </strong>
+
+                  <span>
+                    The 60-minute meeting
+                    window has ended.
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ========================================
+              ACTIONS
+              ======================================== */}
+
           <div className="session-actions">
-            {/* ================= JOIN MEETING ================= */}
+
+            {/* JOIN BUTTON */}
 
             {joinState === "available" && (
               <button
                 type="button"
                 className="session-join-btn"
-                onClick={handleJoinMeeting}
+                onClick={
+                  handleJoinMeeting
+                }
               >
                 <FaVideo />
+
                 Join Meeting
               </button>
             )}
@@ -374,7 +608,9 @@ const SessionCard = ({
                 disabled
               >
                 <FaLock />
-                Join available 10 min before
+
+                Join available 10 min
+                before
               </button>
             )}
 
@@ -385,11 +621,12 @@ const SessionCard = ({
                 disabled
               >
                 <FaClock />
+
                 Session window ended
               </button>
             )}
 
-            {/* ================= COMPLETE ================= */}
+            {/* MARK COMPLETED */}
 
             <button
               type="button"
@@ -406,7 +643,7 @@ const SessionCard = ({
                 : "Mark as Completed"}
             </button>
 
-            {/* ================= CANCEL ================= */}
+            {/* CANCEL SESSION */}
 
             {isRequester && (
               <button
@@ -424,39 +661,46 @@ const SessionCard = ({
                   : "Cancel Session"}
               </button>
             )}
+
           </div>
 
-          {/* Join information */}
+          {/* ========================================
+              JOIN INFORMATION
+              ======================================== */}
 
           {joinState === "tooEarly" &&
             sessionStartTime && (
               <div className="session-join-info">
-                Meeting will be available 10
-                minutes before the scheduled
-                time.
+                Meeting will be available
+                10 minutes before the
+                scheduled time.
               </div>
             )}
 
           {joinState === "available" && (
             <div className="session-join-info session-join-info-active">
-              Meeting is available now. You
-              can join until 60 minutes after
-              the scheduled time.
+              Meeting is available now.
+              You can join until 60
+              minutes after the
+              scheduled time.
             </div>
           )}
+
         </>
       )}
 
-      {/* ================= ERROR ================= */}
+      {/* ==========================================
+          ERROR
+          ========================================== */}
 
       {error && (
         <div className="session-action-error">
           {error}
         </div>
       )}
+
     </article>
   );
 };
 
 export default SessionCard;
-
