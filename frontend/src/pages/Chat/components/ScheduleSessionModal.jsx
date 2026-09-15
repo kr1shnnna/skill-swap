@@ -1,4 +1,5 @@
-import{ useState } from "react";
+import { useState } from "react";
+
 import api from "../../../services/api";
 
 const ScheduleSessionModal = ({
@@ -9,7 +10,6 @@ const ScheduleSessionModal = ({
   const [time, setTime] = useState("");
   const [topic, setTopic] = useState("");
   const [note, setNote] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -21,8 +21,39 @@ const ScheduleSessionModal = ({
   const partnerId =
     selectedUser._id || selectedUser.id;
 
+  // Get today's date in YYYY-MM-DD format.
+  // Using local date parts avoids UTC timezone issues.
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(
+    now.getMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    now.getDate()
+  ).padStart(2, "0");
+
+  const today = `${year}-${month}-${day}`;
+
+  const handleDateChange = (event) => {
+    const selectedDate = event.target.value;
+
+    setDate(selectedDate);
+    setError("");
+
+    // If the user changes the date to today,
+    // we'll validate the time during submission.
+    //
+    // If they change to another date, keeping the
+    // selected time is fine because the full
+    // date + time is validated before submission.
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    setError("");
+    setSuccess("");
 
     if (!date || !time || !topic.trim()) {
       setError(
@@ -31,13 +62,44 @@ const ScheduleSessionModal = ({
       return;
     }
 
+    // Prevent selecting a date in the past.
+    if (date < today) {
+      setError(
+        "Please choose a future date."
+      );
+      return;
+    }
+
+    // Combine the selected date and time.
+    const selectedDateTime = new Date(
+      `${date}T${time}`
+    );
+
+    // Make sure the selected date/time is valid.
+    if (
+      Number.isNaN(
+        selectedDateTime.getTime()
+      )
+    ) {
+      setError(
+        "Please choose a valid date and time."
+      );
+      return;
+    }
+
+    // Prevent scheduling for a time that has
+    // already passed today.
+    if (selectedDateTime <= new Date()) {
+      setError(
+        "Please choose a future date and time."
+      );
+      return;
+    }
+
     try {
       setSubmitting(true);
-      setError("");
-      setSuccess("");
 
-     await api.post("/sessions", {
-        
+      await api.post("/sessions", {
         partnerId,
         date,
         time,
@@ -138,9 +200,8 @@ const ScheduleSessionModal = ({
                 id="session-date"
                 type="date"
                 value={date}
-                onChange={(event) =>
-                  setDate(event.target.value)
-                }
+                min={today}
+                onChange={handleDateChange}
                 disabled={submitting}
                 required
               />
@@ -155,9 +216,10 @@ const ScheduleSessionModal = ({
                 id="session-time"
                 type="time"
                 value={time}
-                onChange={(event) =>
-                  setTime(event.target.value)
-                }
+                onChange={(event) => {
+                  setTime(event.target.value);
+                  setError("");
+                }}
                 disabled={submitting}
                 required
               />
@@ -174,9 +236,10 @@ const ScheduleSessionModal = ({
               type="text"
               placeholder="e.g. React basics"
               value={topic}
-              onChange={(event) =>
-                setTopic(event.target.value)
-              }
+              onChange={(event) => {
+                setTopic(event.target.value);
+                setError("");
+              }}
               maxLength={100}
               disabled={submitting}
               required
