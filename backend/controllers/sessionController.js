@@ -9,11 +9,50 @@ const Swap = require("../models/Swap");
 
 const createSession = async (req, res) => {
   try {
-    const { partnerId, date, time, topic, note } = req.body;
+    const {
+      partnerId,
+      date,
+      time,
+      topic,
+      note,
+    } = req.body;
 
     if (!partnerId || !date || !time || !topic) {
       return res.status(400).json({
-        message: "Partner, date, time, and topic are required.",
+        message:
+          "Partner, date, time, and topic are required.",
+      });
+    }
+
+    /*
+     * ------------------------------------------
+     * VALIDATE SESSION DATE & TIME
+     * ------------------------------------------
+     */
+
+    const scheduledDateTime = new Date(
+      `${date}T${time}`
+    );
+
+    if (
+      Number.isNaN(
+        scheduledDateTime.getTime()
+      )
+    ) {
+      return res.status(400).json({
+        message:
+          "Please provide a valid session date and time.",
+      });
+    }
+
+    /*
+     * Sessions must always be scheduled
+     * in the future.
+     */
+    if (scheduledDateTime <= new Date()) {
+      return res.status(400).json({
+        message:
+          "Session date and time must be in the future.",
       });
     }
 
@@ -23,7 +62,6 @@ const createSession = async (req, res) => {
      * Make sure an accepted skill swap exists
      * between the two users.
      */
-
     const acceptedSwap = await Swap.findOne({
       status: "accepted",
       $or: [
@@ -48,7 +86,6 @@ const createSession = async (req, res) => {
     /*
      * Create session.
      */
-
     const session = await Session.create({
       requester: requesterId,
       partner: partnerId,
@@ -59,9 +96,16 @@ const createSession = async (req, res) => {
       status: "pending",
     });
 
-    const populatedSession = await Session.findById(session._id)
-      .populate("requester", "name email")
-      .populate("partner", "name email");
+    const populatedSession =
+      await Session.findById(session._id)
+        .populate(
+          "requester",
+          "name email"
+        )
+        .populate(
+          "partner",
+          "name email"
+        );
 
     const io = req.app.get("io");
 
@@ -72,18 +116,21 @@ const createSession = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Session scheduled successfully.",
+      message:
+        "Session scheduled successfully.",
       session: populatedSession,
     });
   } catch (error) {
-    console.error("Create session error:", error.message);
+    console.error(
+      "Create session error:",
+      error.message
+    );
 
     res.status(500).json({
       message: "Server error.",
     });
   }
 };
-
 /*
  * ------------------------------------------
  * GET MY SESSIONS
