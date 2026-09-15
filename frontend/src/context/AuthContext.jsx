@@ -400,7 +400,8 @@ export const AuthProvider = ({ children }) => {
     // INCOMING CALL
     // ----------------------------------------
 
-    socket.on("incomingCall", ({ callerId, callType, roomName }) => {
+    socket.on("incomingCall", ({ callerId, callerName,callType, roomName }) => {
+     
       if (!callerId || !callType || !roomName) {
         return;
       }
@@ -412,6 +413,7 @@ export const AuthProvider = ({ children }) => {
 
       setIncomingCall({
         callerId: callerId.toString(),
+        callerName: callerName || "SkillSwap Student",
         callType,
         roomName,
       });
@@ -570,17 +572,18 @@ export const AuthProvider = ({ children }) => {
       callType,
       roomName,
     });
+ 
+    //debug 
+    console.log("CALLER USER OBJECT:", user);
+    console.log("CALLER NAME:", user?.name);
 
     socketRef.current.emit("callUser", {
-  receiverId: receiverId.toString(),
-  callerName:
-    user?.name ||
-    user?.username ||
-    user?.fullName ||
-    "SkillSwap Student",
-  callType,
-  roomName,
-});
+      receiverId: receiverId.toString(),
+      callerName:
+        user?.name || user?.username || user?.fullName || "SkillSwap Student",
+      callType,
+      roomName,
+    });
     return true;
   };
 
@@ -698,7 +701,6 @@ export const AuthProvider = ({ children }) => {
     setCallCancelled(false);
     setCallFailed(null);
     setCallEnded(false);
-
   };
 
   // ------------------------------------------
