@@ -118,6 +118,54 @@
 }
 
 
+.jaas-call-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jaas-call-container {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.jaas-call-loading,
+.jaas-call-error {
+  width: min(90%, 420px);
+  padding: 32px;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+}
+
+.jaas-call-loading p {
+  margin: 0;
+  font-size: 18px;
+}
+
+.jaas-call-error h3 {
+  margin: 0 0 12px;
+}
+
+.jaas-call-error p {
+  margin: 0 0 20px;
+}
+
+.jaas-call-error button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+
+
 
 
 
