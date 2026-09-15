@@ -315,6 +315,32 @@ io.on("connection", (socket) => {
     }
   );
 
+
+  // ------------------------------------------
+// END ACTIVE CALL
+// ------------------------------------------
+
+socket.on(
+  "endCall",
+  ({ receiverId }) => {
+    if (!receiverId) {
+      return;
+    }
+
+    const receiverSocketId =
+      getUserSocket(receiverId);
+
+    if (!receiverSocketId) {
+      return;
+    }
+
+    io.to(receiverSocketId).emit(
+      "callEnded"
+    );
+  }
+);
+
+
   // ------------------------------------------
   // HANDLE DISCONNECT
   // ------------------------------------------
