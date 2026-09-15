@@ -18,6 +18,9 @@ const messageRoutes = require("./routes/messageRoutes");
 
 const sessionRoutes = require("./routes/sessionRoutes");
 
+const jaasRoutes = require("./routes/jaasRoutes");
+
+
 
 const {
   addUser,
@@ -73,6 +76,9 @@ app.use("/api/swaps", swapRoutes);
 app.use("/api/messages", messageRoutes);
 
 app.use("/api/sessions", sessionRoutes);
+
+app.use("/api/jaas", jaasRoutes);
+
 
 
 // ------------------------------------------
