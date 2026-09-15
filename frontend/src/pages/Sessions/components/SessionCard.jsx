@@ -15,32 +15,23 @@ import api from "../../../services/api";
 const JOIN_EARLY_MINUTES = 10;
 const JOIN_AFTER_MINUTES = 60;
 
-const SessionCard = ({
-  session,
-  currentUserId,
-  onJoinMeeting,
-}) => {
+const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
-  const [currentTime, setCurrentTime] = useState(
-    new Date()
-  );
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   const isRequester =
-    session.requester?._id?.toString() ===
-    currentUserId?.toString();
+    session.requester?._id?.toString() === currentUserId?.toString();
 
   const isPartner =
-    session.partner?._id?.toString() ===
-    currentUserId?.toString();
+    session.partner?._id?.toString() === currentUserId?.toString();
 
   const statusChangedByCurrentUser =
-    session.statusUpdatedBy?.toString() ===
-    currentUserId?.toString();
+    session.statusUpdatedBy?.toString() === currentUserId?.toString();
 
-  const partner = isRequester
-    ? session.partner
-    : session.requester;
+  const partner = isRequester ? session.partner : session.requester;
 
   /*
    * ==========================================
@@ -73,40 +64,24 @@ const SessionCard = ({
       return null;
     }
 
-    const sessionDate = new Date(
-      session.date
-    );
+    const sessionDate = new Date(session.date);
 
-    if (
-      Number.isNaN(
-        sessionDate.getTime()
-      )
-    ) {
+    if (Number.isNaN(sessionDate.getTime())) {
       return null;
     }
 
-    const [hours, minutes] =
-      session.time.split(":").map(Number);
+    const [hours, minutes] = session.time.split(":").map(Number);
 
-    if (
-      Number.isNaN(hours) ||
-      Number.isNaN(minutes)
-    ) {
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
       return null;
     }
 
-    sessionDate.setHours(
-      hours,
-      minutes,
-      0,
-      0
-    );
+    sessionDate.setHours(hours, minutes, 0, 0);
 
     return sessionDate;
   };
 
-  const sessionStartTime =
-    getSessionStartTime();
+  const sessionStartTime = getSessionStartTime();
 
   /*
    * ==========================================
@@ -119,25 +94,14 @@ const SessionCard = ({
 
   let countdownText = "";
 
-  if (
-    session.status === "accepted" &&
-    sessionStartTime
-  ) {
-    const joinStartTime =
-      new Date(
-        sessionStartTime.getTime() -
-          JOIN_EARLY_MINUTES *
-            60 *
-            1000
-      );
+  if (session.status === "accepted" && sessionStartTime) {
+    const joinStartTime = new Date(
+      sessionStartTime.getTime() - JOIN_EARLY_MINUTES * 60 * 1000,
+    );
 
-    const sessionEndTime =
-      new Date(
-        sessionStartTime.getTime() +
-          JOIN_AFTER_MINUTES *
-            60 *
-            1000
-      );
+    const sessionEndTime = new Date(
+      sessionStartTime.getTime() + JOIN_AFTER_MINUTES * 60 * 1000,
+    );
 
     /*
      * Before the 10-minute join window
@@ -146,36 +110,17 @@ const SessionCard = ({
       sessionState = "upcoming";
       joinState = "tooEarly";
 
-      const difference =
-        sessionStartTime.getTime() -
-        currentTime.getTime();
+      const difference = sessionStartTime.getTime() - currentTime.getTime();
 
-      const totalSeconds = Math.max(
-        0,
-        Math.floor(
-          difference / 1000
-        )
-      );
+      const totalSeconds = Math.max(0, Math.floor(difference / 1000));
 
-      const days = Math.floor(
-        totalSeconds /
-          (24 * 60 * 60)
-      );
+      const days = Math.floor(totalSeconds / (24 * 60 * 60));
 
-      const hours = Math.floor(
-        (totalSeconds %
-          (24 * 60 * 60)) /
-          (60 * 60)
-      );
+      const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
 
-      const minutes = Math.floor(
-        (totalSeconds %
-          (60 * 60)) /
-          60
-      );
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
 
-      const seconds =
-        totalSeconds % 60;
+      const seconds = totalSeconds % 60;
 
       if (days > 0) {
         countdownText = `${days}d ${hours}h ${minutes}m`;
@@ -184,54 +129,35 @@ const SessionCard = ({
       } else {
         countdownText = `${minutes}m ${seconds}s`;
       }
-    }
-
-    /*
-     * Session is currently live
-     */
-    else if (
+    } else if (
+      /*
+       * Session is currently live
+       */
       currentTime >= sessionStartTime &&
       currentTime <= sessionEndTime
     ) {
       sessionState = "live";
       joinState = "available";
 
-      const difference =
-        sessionEndTime.getTime() -
-        currentTime.getTime();
+      const difference = sessionEndTime.getTime() - currentTime.getTime();
 
-      const totalSeconds = Math.max(
-        0,
-        Math.floor(
-          difference / 1000
-        )
-      );
+      const totalSeconds = Math.max(0, Math.floor(difference / 1000));
 
-      const hours = Math.floor(
-        totalSeconds /
-          (60 * 60)
-      );
+      const hours = Math.floor(totalSeconds / (60 * 60));
 
-      const minutes = Math.floor(
-        (totalSeconds %
-          (60 * 60)) /
-          60
-      );
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
 
-      const seconds =
-        totalSeconds % 60;
+      const seconds = totalSeconds % 60;
 
       if (hours > 0) {
         countdownText = `${hours}h ${minutes}m ${seconds}s remaining`;
       } else {
         countdownText = `${minutes}m ${seconds}s remaining`;
       }
-    }
-
-    /*
-     * Session window has ended
-     */
-    else {
+    } else {
+      /*
+       * Session window has ended
+       */
       sessionState = "ended";
       joinState = "expired";
       countdownText = "Session window ended";
@@ -296,27 +222,16 @@ const SessionCard = ({
    * ==========================================
    */
 
-  const handleStatusUpdate = async (
-    status
-  ) => {
+  const handleStatusUpdate = async (status) => {
     try {
       setUpdating(true);
       setError("");
 
-      await api.patch(
-        `/sessions/${session._id}/status`,
-        { status }
-      );
+      await api.patch(`/sessions/${session._id}/status`, { status });
     } catch (error) {
-      console.error(
-        "Session status update error:",
-        error
-      );
+      console.error("Session status update error:", error);
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to update session."
-      );
+      setError(error.response?.data?.message || "Unable to update session.");
     } finally {
       setUpdating(false);
     }
@@ -334,9 +249,7 @@ const SessionCard = ({
     }
 
     if (!onJoinMeeting) {
-      console.warn(
-        "Join Meeting handler is not connected yet."
-      );
+      console.warn("Join Meeting handler is not connected yet.");
 
       return;
     }
@@ -352,7 +265,6 @@ const SessionCard = ({
 
   return (
     <article className="session-card">
-
       {/* ==========================================
           CARD HEADER
           ========================================== */}
@@ -362,20 +274,13 @@ const SessionCard = ({
           <FaUserCircle />
 
           <div>
-            <span className="session-label">
-              SESSION WITH
-            </span>
+            <span className="session-label">SESSION WITH</span>
 
-            <h3>
-              {partner?.name ||
-                "SkillSwap Student"}
-            </h3>
+            <h3>{partner?.name || "SkillSwap Student"}</h3>
           </div>
         </div>
 
-        <span
-          className={`session-status ${getSessionStatusClass()}`}
-        >
+        <span className={`session-status ${getSessionStatusClass()}`}>
           {getSessionStatusLabel()}
         </span>
       </div>
@@ -385,7 +290,6 @@ const SessionCard = ({
           ========================================== */}
 
       <div className="session-card-details">
-
         <div className="session-detail">
           <FaCalendarAlt />
 
@@ -393,9 +297,7 @@ const SessionCard = ({
             <span>Date</span>
 
             <strong>
-              {new Date(
-                session.date
-              ).toLocaleDateString([], {
+              {new Date(session.date).toLocaleDateString([], {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
@@ -411,9 +313,7 @@ const SessionCard = ({
           <div>
             <span>Time</span>
 
-            <strong>
-              {session.time}
-            </strong>
+            <strong>{session.time}</strong>
           </div>
         </div>
 
@@ -423,12 +323,9 @@ const SessionCard = ({
           <div>
             <span>Topic</span>
 
-            <strong>
-              {session.topic}
-            </strong>
+            <strong>{session.topic}</strong>
           </div>
         </div>
-
       </div>
 
       {/* ==========================================
@@ -449,37 +346,24 @@ const SessionCard = ({
 
       {session.status === "pending" && (
         <div className="session-actions">
-
           {isPartner && (
             <>
               <button
                 type="button"
                 className="session-reject-btn"
-                onClick={() =>
-                  handleStatusUpdate(
-                    "rejected"
-                  )
-                }
+                onClick={() => handleStatusUpdate("rejected")}
                 disabled={updating}
               >
-                {updating
-                  ? "Updating..."
-                  : "Reject"}
+                {updating ? "Updating..." : "Reject"}
               </button>
 
               <button
                 type="button"
                 className="session-accept-btn"
-                onClick={() =>
-                  handleStatusUpdate(
-                    "accepted"
-                  )
-                }
+                onClick={() => handleStatusUpdate("accepted")}
                 disabled={updating}
               >
-                {updating
-                  ? "Updating..."
-                  : "Accept"}
+                {updating ? "Updating..." : "Accept"}
               </button>
             </>
           )}
@@ -488,19 +372,12 @@ const SessionCard = ({
             <button
               type="button"
               className="session-cancel-btn"
-              onClick={() =>
-                handleStatusUpdate(
-                  "cancelled"
-                )
-              }
+              onClick={() => handleStatusUpdate("cancelled")}
               disabled={updating}
             >
-              {updating
-                ? "Updating..."
-                : "Cancel Request"}
+              {updating ? "Updating..." : "Cancel Request"}
             </button>
           )}
-
         </div>
       )}
 
@@ -510,72 +387,49 @@ const SessionCard = ({
 
       {session.status === "accepted" && (
         <>
-
           {/* ========================================
               SESSION TIMING MESSAGE
               ======================================== */}
 
           {sessionState === "upcoming" && (
             <div className="session-live-status session-live-status-upcoming">
-
               <div className="session-live-status-content">
                 <span className="session-live-dot upcoming-dot" />
 
                 <div>
-                  <strong>
-                    Upcoming Session
-                  </strong>
+                  <strong>Upcoming Session</strong>
 
-                  <span>
-                    Starts in{" "}
-                    {countdownText}
-                  </span>
+                  <span>Starts in {countdownText}</span>
                 </div>
               </div>
-
             </div>
           )}
 
           {sessionState === "live" && (
             <div className="session-live-status session-live-status-live">
-
               <div className="session-live-status-content">
                 <span className="session-live-dot live-dot" />
 
                 <div>
-                  <strong>
-                    Live Now
-                  </strong>
+                  <strong>Live Now</strong>
 
-                  <span>
-                    Session is currently
-                    live •{" "}
-                    {countdownText}
-                  </span>
+                  <span>Session is currently live • {countdownText}</span>
                 </div>
               </div>
-
             </div>
           )}
 
           {sessionState === "ended" && (
             <div className="session-live-status session-live-status-ended">
-
               <div className="session-live-status-content">
                 <span className="session-live-dot ended-dot" />
 
                 <div>
-                  <strong>
-                    Session Ended
-                  </strong>
+                  <strong>Session Ended</strong>
 
-                  <span>
-                    The 60-minute meeting
-                    window has ended.
-                  </span>
+                  <span>The 60-minute meeting window has ended.</span>
                 </div>
               </div>
-
             </div>
           )}
 
@@ -584,19 +438,15 @@ const SessionCard = ({
               ======================================== */}
 
           <div className="session-actions">
-
             {/* JOIN BUTTON */}
 
             {joinState === "available" && (
               <button
                 type="button"
                 className="session-join-btn"
-                onClick={
-                  handleJoinMeeting
-                }
+                onClick={handleJoinMeeting}
               >
                 <FaVideo />
-
                 Join Meeting
               </button>
             )}
@@ -608,9 +458,7 @@ const SessionCard = ({
                 disabled
               >
                 <FaLock />
-
-                Join available 10 min
-                before
+                Join available 10 min before
               </button>
             )}
 
@@ -621,7 +469,6 @@ const SessionCard = ({
                 disabled
               >
                 <FaClock />
-
                 Session window ended
               </button>
             )}
@@ -631,16 +478,10 @@ const SessionCard = ({
             <button
               type="button"
               className="session-complete-btn"
-              onClick={() =>
-                handleStatusUpdate(
-                  "completed"
-                )
-              }
+              onClick={() => setShowCompleteConfirm(true)}
               disabled={updating}
             >
-              {updating
-                ? "Updating..."
-                : "Mark as Completed"}
+              Mark as Completed
             </button>
 
             {/* CANCEL SESSION */}
@@ -649,56 +490,72 @@ const SessionCard = ({
               <button
                 type="button"
                 className="session-cancel-btn"
-                onClick={() =>
-                  handleStatusUpdate(
-                    "cancelled"
-                  )
-                }
+                onClick={() => handleStatusUpdate("cancelled")}
                 disabled={updating}
               >
-                {updating
-                  ? "Updating..."
-                  : "Cancel Session"}
+                {updating ? "Updating..." : "Cancel Session"}
               </button>
             )}
-
           </div>
 
           {/* ========================================
               JOIN INFORMATION
               ======================================== */}
 
-          {joinState === "tooEarly" &&
-            sessionStartTime && (
-              <div className="session-join-info">
-                Meeting will be available
-                10 minutes before the
-                scheduled time.
-              </div>
-            )}
-
-          {joinState === "available" && (
-            <div className="session-join-info session-join-info-active">
-              Meeting is available now.
-              You can join until 60
-              minutes after the
-              scheduled time.
+          {joinState === "tooEarly" && sessionStartTime && (
+            <div className="session-join-info">
+              Meeting will be available 10 minutes before the scheduled time.
             </div>
           )}
 
+          {joinState === "available" && (
+            <div className="session-join-info session-join-info-active">
+              Meeting is available now. You can join until 60 minutes after the
+              scheduled time.
+            </div>
+          )}
         </>
+      )}
+
+      {showCompleteConfirm && (
+        <div className="session-confirm-box">
+          <div className="session-confirm-content">
+            <strong>Mark this session as completed?</strong>
+
+            <p>This will move the session to your session history.</p>
+
+            <div className="session-confirm-actions">
+              <button
+                type="button"
+                className="session-confirm-cancel"
+                onClick={() => setShowCompleteConfirm(false)}
+                disabled={updating}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="session-confirm-complete"
+                onClick={async () => {
+                  await handleStatusUpdate("completed");
+
+                  setShowCompleteConfirm(false);
+                }}
+                disabled={updating}
+              >
+                {updating ? "Completing..." : "Yes, Complete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ==========================================
           ERROR
           ========================================== */}
 
-      {error && (
-        <div className="session-action-error">
-          {error}
-        </div>
-      )}
-
+      {error && <div className="session-action-error">{error}</div>}
     </article>
   );
 };

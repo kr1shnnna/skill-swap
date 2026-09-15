@@ -694,6 +694,91 @@
 
 
 
+/* ==========================================
+   COMPLETE SESSION CONFIRMATION
+   ========================================== */
+
+.session-confirm-box {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.session-confirm-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-confirm-content strong {
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.session-confirm-content p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.session-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.session-confirm-cancel,
+.session-confirm-complete {
+  padding: 8px 13px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-confirm-cancel {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+.session-confirm-complete {
+  border: 1px solid #16a34a;
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.session-confirm-cancel:hover {
+  background: #f1f5f9;
+}
+
+.session-confirm-complete:hover {
+  background: #15803d;
+}
+
+.session-confirm-cancel:disabled,
+.session-confirm-complete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 500px) {
+  .session-confirm-actions {
+    flex-direction: column;
+  }
+
+  .session-confirm-cancel,
+  .session-confirm-complete {
+    width: 100%;
+  }
+}
+
+
 
 
 /* ================================
