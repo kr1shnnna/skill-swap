@@ -3,6 +3,7 @@ const express = require("express");
 const {
   createRating,
   getUserRatings,
+  getMySessionRating,
 } = require("../controllers/ratingController");
 
 const protect = require("../middlewares/authMiddleware");

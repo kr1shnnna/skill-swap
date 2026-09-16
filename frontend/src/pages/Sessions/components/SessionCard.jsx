@@ -8,7 +8,7 @@ import {
   FaStickyNote,
   FaVideo,
   FaLock,
-  FaStar
+  FaStar,
 } from "react-icons/fa";
 
 import api from "../../../services/api";
@@ -22,6 +22,8 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+
+  // Rating state
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -35,9 +37,6 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
 
   const isPartner =
     session.partner?._id?.toString() === currentUserId?.toString();
-
-  const statusChangedByCurrentUser =
-    session.statusUpdatedBy?.toString() === currentUserId?.toString();
 
   const partner = isRequester ? session.partner : session.requester;
 
@@ -61,30 +60,32 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
     };
   }, [session.status]);
 
-
-
+  /*
+   * ==========================================
+   * CHECK WHETHER USER ALREADY RATED
+   * ==========================================
+   */
 
   useEffect(() => {
-  const checkRating = async () => {
-    if (session.status !== "completed" || !session._id) {
-      return;
-    }
+    const checkRating = async () => {
+      if (session.status !== "completed" || !session._id) {
+        return;
+      }
 
-    try {
-      const response = await api.get(
-        `/ratings/session/${session._id}`,
-      );
+      try {
+        const response = await api.get(
+          `/ratings/session/${session._id}`,
+        );
 
-      setHasRated(response.data.hasRated);
-      setMyRating(response.data.rating);
-    } catch (error) {
-      console.error("Check rating error:", error);
-    }
-  };
+        setHasRated(response.data.hasRated);
+        setMyRating(response.data.rating);
+      } catch (error) {
+        console.error("Check rating error:", error);
+      }
+    };
 
-  checkRating();
-}, [session.status, session._id]);
-
+    checkRating();
+  }, [session.status, session._id]);
 
   /*
    * ==========================================
@@ -129,29 +130,44 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
 
   if (session.status === "accepted" && sessionStartTime) {
     const joinStartTime = new Date(
-      sessionStartTime.getTime() - JOIN_EARLY_MINUTES * 60 * 1000,
+      sessionStartTime.getTime() -
+        JOIN_EARLY_MINUTES * 60 * 1000,
     );
 
     const sessionEndTime = new Date(
-      sessionStartTime.getTime() + JOIN_AFTER_MINUTES * 60 * 1000,
+      sessionStartTime.getTime() +
+        JOIN_AFTER_MINUTES * 60 * 1000,
     );
 
     /*
      * Before the 10-minute join window
      */
+
     if (currentTime < joinStartTime) {
       sessionState = "upcoming";
       joinState = "tooEarly";
 
-      const difference = sessionStartTime.getTime() - currentTime.getTime();
+      const difference =
+        sessionStartTime.getTime() -
+        currentTime.getTime();
 
-      const totalSeconds = Math.max(0, Math.floor(difference / 1000));
+      const totalSeconds = Math.max(
+        0,
+        Math.floor(difference / 1000),
+      );
 
-      const days = Math.floor(totalSeconds / (24 * 60 * 60));
+      const days = Math.floor(
+        totalSeconds / (24 * 60 * 60),
+      );
 
-      const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+      const hours = Math.floor(
+        (totalSeconds % (24 * 60 * 60)) /
+          (60 * 60),
+      );
 
-      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+      const minutes = Math.floor(
+        (totalSeconds % (60 * 60)) / 60,
+      );
 
       const seconds = totalSeconds % 60;
 
@@ -163,22 +179,32 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
         countdownText = `${minutes}m ${seconds}s`;
       }
     } else if (
-      /*
-       * Session is currently live
-       */
       currentTime >= sessionStartTime &&
       currentTime <= sessionEndTime
     ) {
+      /*
+       * Session is currently live
+       */
+
       sessionState = "live";
       joinState = "available";
 
-      const difference = sessionEndTime.getTime() - currentTime.getTime();
+      const difference =
+        sessionEndTime.getTime() -
+        currentTime.getTime();
 
-      const totalSeconds = Math.max(0, Math.floor(difference / 1000));
+      const totalSeconds = Math.max(
+        0,
+        Math.floor(difference / 1000),
+      );
 
-      const hours = Math.floor(totalSeconds / (60 * 60));
+      const hours = Math.floor(
+        totalSeconds / (60 * 60),
+      );
 
-      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+      const minutes = Math.floor(
+        (totalSeconds % (60 * 60)) / 60,
+      );
 
       const seconds = totalSeconds % 60;
 
@@ -191,6 +217,7 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
       /*
        * Session window has ended
        */
+
       sessionState = "ended";
       joinState = "expired";
       countdownText = "Session window ended";
@@ -249,44 +276,6 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
     return "accepted";
   };
 
-
-
-  const handleSubmitRating = async () => {
-  if (selectedRating === 0) {
-    setRatingError("Please select a rating.");
-    return;
-  }
-
-  try {
-    setRatingLoading(true);
-    setRatingError("");
-
-    const response = await api.post("/ratings", {
-      sessionId: session._id,
-      rating: selectedRating,
-      review: reviewText.trim(),
-    });
-
-    setHasRated(true);
-    setMyRating(response.data.rating);
-
-    setShowRatingModal(false);
-    setSelectedRating(0);
-    setReviewText("");
-  } catch (error) {
-    console.error("Submit rating error:", error);
-
-    setRatingError(
-      error.response?.data?.message ||
-        "Unable to submit rating.",
-    );
-  } finally {
-    setRatingLoading(false);
-  }
-};
-
-
-
   /*
    * ==========================================
    * UPDATE SESSION STATUS
@@ -298,11 +287,20 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
       setUpdating(true);
       setError("");
 
-      await api.patch(`/sessions/${session._id}/status`, { status });
+      await api.patch(
+        `/sessions/${session._id}/status`,
+        { status },
+      );
     } catch (error) {
-      console.error("Session status update error:", error);
+      console.error(
+        "Session status update error:",
+        error,
+      );
 
-      setError(error.response?.data?.message || "Unable to update session.");
+      setError(
+        error.response?.data?.message ||
+          "Unable to update session.",
+      );
     } finally {
       setUpdating(false);
     }
@@ -320,12 +318,85 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
     }
 
     if (!onJoinMeeting) {
-      console.warn("Join Meeting handler is not connected yet.");
+      console.warn(
+        "Join Meeting handler is not connected yet.",
+      );
 
       return;
     }
 
     onJoinMeeting(session);
+  };
+
+  /*
+   * ==========================================
+   * OPEN RATING MODAL
+   * ==========================================
+   */
+
+  const handleOpenRating = () => {
+    setRatingError("");
+    setSelectedRating(0);
+    setReviewText("");
+    setShowRatingModal(true);
+  };
+
+  /*
+   * ==========================================
+   * CLOSE RATING MODAL
+   * ==========================================
+   */
+
+  const handleCloseRating = () => {
+    if (ratingLoading) {
+      return;
+    }
+
+    setShowRatingModal(false);
+    setRatingError("");
+  };
+
+  /*
+   * ==========================================
+   * SUBMIT RATING
+   * ==========================================
+   */
+
+  const handleSubmitRating = async () => {
+    if (selectedRating === 0) {
+      setRatingError("Please select a rating.");
+      return;
+    }
+
+    try {
+      setRatingLoading(true);
+      setRatingError("");
+
+      const response = await api.post("/ratings", {
+        sessionId: session._id,
+        rating: selectedRating,
+        review: reviewText.trim(),
+      });
+
+      setHasRated(true);
+      setMyRating(response.data.rating);
+
+      setShowRatingModal(false);
+      setSelectedRating(0);
+      setReviewText("");
+    } catch (error) {
+      console.error(
+        "Submit rating error:",
+        error,
+      );
+
+      setRatingError(
+        error.response?.data?.message ||
+          "Unable to submit rating.",
+      );
+    } finally {
+      setRatingLoading(false);
+    }
   };
 
   /*
@@ -345,13 +416,20 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
           <FaUserCircle />
 
           <div>
-            <span className="session-label">SESSION WITH</span>
+            <span className="session-label">
+              SESSION WITH
+            </span>
 
-            <h3>{partner?.name || "SkillSwap Student"}</h3>
+            <h3>
+              {partner?.name ||
+                "SkillSwap Student"}
+            </h3>
           </div>
         </div>
 
-        <span className={`session-status ${getSessionStatusClass()}`}>
+        <span
+          className={`session-status ${getSessionStatusClass()}`}
+        >
           {getSessionStatusLabel()}
         </span>
       </div>
@@ -368,7 +446,9 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
             <span>Date</span>
 
             <strong>
-              {new Date(session.date).toLocaleDateString([], {
+              {new Date(
+                session.date,
+              ).toLocaleDateString([], {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
@@ -422,19 +502,27 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
               <button
                 type="button"
                 className="session-reject-btn"
-                onClick={() => handleStatusUpdate("rejected")}
+                onClick={() =>
+                  handleStatusUpdate("rejected")
+                }
                 disabled={updating}
               >
-                {updating ? "Updating..." : "Reject"}
+                {updating
+                  ? "Updating..."
+                  : "Reject"}
               </button>
 
               <button
                 type="button"
                 className="session-accept-btn"
-                onClick={() => handleStatusUpdate("accepted")}
+                onClick={() =>
+                  handleStatusUpdate("accepted")
+                }
                 disabled={updating}
               >
-                {updating ? "Updating..." : "Accept"}
+                {updating
+                  ? "Updating..."
+                  : "Accept"}
               </button>
             </>
           )}
@@ -443,10 +531,14 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
             <button
               type="button"
               className="session-cancel-btn"
-              onClick={() => handleStatusUpdate("cancelled")}
+              onClick={() =>
+                handleStatusUpdate("cancelled")
+              }
               disabled={updating}
             >
-              {updating ? "Updating..." : "Cancel Request"}
+              {updating
+                ? "Updating..."
+                : "Cancel Request"}
             </button>
           )}
         </div>
@@ -458,9 +550,7 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
 
       {session.status === "accepted" && (
         <>
-          {/* ========================================
-              SESSION TIMING MESSAGE
-              ======================================== */}
+          {/* SESSION TIMING */}
 
           {sessionState === "upcoming" && (
             <div className="session-live-status session-live-status-upcoming">
@@ -468,9 +558,13 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
                 <span className="session-live-dot upcoming-dot" />
 
                 <div>
-                  <strong>Upcoming Session</strong>
+                  <strong>
+                    Upcoming Session
+                  </strong>
 
-                  <span>Starts in {countdownText}</span>
+                  <span>
+                    Starts in {countdownText}
+                  </span>
                 </div>
               </div>
             </div>
@@ -484,7 +578,10 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
                 <div>
                   <strong>Live Now</strong>
 
-                  <span>Session is currently live • {countdownText}</span>
+                  <span>
+                    Session is currently live •{" "}
+                    {countdownText}
+                  </span>
                 </div>
               </div>
             </div>
@@ -496,21 +593,22 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
                 <span className="session-live-dot ended-dot" />
 
                 <div>
-                  <strong>Session Ended</strong>
+                  <strong>
+                    Session Ended
+                  </strong>
 
-                  <span>The 60-minute meeting window has ended.</span>
+                  <span>
+                    The 60-minute meeting window
+                    has ended.
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ========================================
-              ACTIONS
-              ======================================== */}
+          {/* ACTIONS */}
 
           <div className="session-actions">
-            {/* JOIN BUTTON */}
-
             {joinState === "available" && (
               <button
                 type="button"
@@ -544,62 +642,145 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
               </button>
             )}
 
-            {/* MARK COMPLETED */}
-
             <button
               type="button"
               className="session-complete-btn"
-              onClick={() => setShowCompleteConfirm(true)}
+              onClick={() =>
+                setShowCompleteConfirm(true)
+              }
               disabled={updating}
             >
               Mark as Completed
             </button>
 
-            {/* CANCEL SESSION */}
-
             {isRequester && (
               <button
                 type="button"
                 className="session-cancel-btn"
-                onClick={() => handleStatusUpdate("cancelled")}
+                onClick={() =>
+                  handleStatusUpdate("cancelled")
+                }
                 disabled={updating}
               >
-                {updating ? "Updating..." : "Cancel Session"}
+                {updating
+                  ? "Updating..."
+                  : "Cancel Session"}
               </button>
             )}
           </div>
 
-          {/* ========================================
-              JOIN INFORMATION
-              ======================================== */}
+          {/* JOIN INFORMATION */}
 
-          {joinState === "tooEarly" && sessionStartTime && (
-            <div className="session-join-info">
-              Meeting will be available 10 minutes before the scheduled time.
-            </div>
-          )}
+          {joinState === "tooEarly" &&
+            sessionStartTime && (
+              <div className="session-join-info">
+                Meeting will be available 10
+                minutes before the scheduled time.
+              </div>
+            )}
 
           {joinState === "available" && (
             <div className="session-join-info session-join-info-active">
-              Meeting is available now. You can join until 60 minutes after the
+              Meeting is available now. You can
+              join until 60 minutes after the
               scheduled time.
             </div>
           )}
         </>
       )}
 
+      {/* ==========================================
+          COMPLETED SESSION — RATING
+          ========================================== */}
+
+      {session.status === "completed" && (
+        <div className="session-rating-section">
+          {hasRated ? (
+            <div className="session-rated-state">
+              <div className="session-rated-header">
+                <span className="session-rated-check">
+                  ✓
+                </span>
+
+                <div>
+                  <strong>
+                    You rated this session
+                  </strong>
+
+                  <div className="session-rated-stars">
+                    {[1, 2, 3, 4, 5].map(
+                      (star) => (
+                        <FaStar
+                          key={star}
+                          className={
+                            star <=
+                            (myRating?.rating || 0)
+                              ? "session-star filled"
+                              : "session-star"
+                          }
+                        />
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {myRating?.review && (
+                <p className="session-my-review">
+                  "{myRating.review}"
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="session-rate-prompt">
+              <div className="session-rate-content">
+                <strong>
+                  How was your skill exchange?
+                </strong>
+
+                <span>
+                  Share your experience with{" "}
+                  {partner?.name ||
+                    "your partner"}.
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="session-rate-btn"
+                onClick={handleOpenRating}
+              >
+                <FaStar />
+                Rate Partner
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ==========================================
+          COMPLETE CONFIRMATION
+          ========================================== */}
+
       {showCompleteConfirm && (
         <div className="session-confirm-box">
           <div className="session-confirm-content">
-            <strong>Mark this session as completed?</strong>
+            <strong>
+              Mark this session as completed?
+            </strong>
 
-            <p>This will move the session to your session history.</p>
+            <p>
+              This will move the session to your
+              session history.
+            </p>
 
             <div className="session-confirm-actions">
               <button
                 type="button"
                 className="session-confirm-cancel"
-                onClick={() => setShowCompleteConfirm(false)}
+                onClick={() =>
+                  setShowCompleteConfirm(false)
+                }
                 disabled={updating}
               >
                 Cancel
@@ -609,13 +790,169 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
                 type="button"
                 className="session-confirm-complete"
                 onClick={async () => {
-                  await handleStatusUpdate("completed");
+                  await handleStatusUpdate(
+                    "completed",
+                  );
 
                   setShowCompleteConfirm(false);
                 }}
                 disabled={updating}
               >
-                {updating ? "Completing..." : "Yes, Complete"}
+                {updating
+                  ? "Completing..."
+                  : "Yes, Complete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          RATING MODAL
+          ========================================== */}
+
+      {showRatingModal && (
+        <div
+          className="rating-modal-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              handleCloseRating();
+            }
+          }}
+        >
+          <div
+            className="rating-modal"
+            onMouseDown={(event) =>
+              event.stopPropagation()
+            }
+          >
+            {/* HEADER */}
+
+            <div className="rating-modal-header">
+              <div>
+                <span className="rating-modal-label">
+                  SESSION COMPLETED
+                </span>
+
+                <h3>
+                  Rate{" "}
+                  {partner?.name ||
+                    "your partner"}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                className="rating-modal-close"
+                onClick={handleCloseRating}
+                disabled={ratingLoading}
+                aria-label="Close rating modal"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* STARS */}
+
+            <div className="rating-stars-container">
+              <p>
+                How was your skill exchange?
+              </p>
+
+              <div className="rating-stars">
+                {[1, 2, 3, 4, 5].map(
+                  (star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className="rating-star-button"
+                      onClick={() =>
+                        setSelectedRating(star)
+                      }
+                      disabled={ratingLoading}
+                      aria-label={`Rate ${star} out of 5`}
+                    >
+                      <FaStar
+                        className={
+                          star <= selectedRating
+                            ? "rating-star active"
+                            : "rating-star"
+                        }
+                      />
+                    </button>
+                  ),
+                )}
+              </div>
+
+              {selectedRating > 0 && (
+                <span className="rating-selected-text">
+                  {selectedRating === 1 &&
+                    "Poor"}
+                  {selectedRating === 2 &&
+                    "Needs improvement"}
+                  {selectedRating === 3 &&
+                    "Good"}
+                  {selectedRating === 4 &&
+                    "Very good"}
+                  {selectedRating === 5 &&
+                    "Excellent"}
+                </span>
+              )}
+            </div>
+
+            {/* REVIEW */}
+
+            <textarea
+              className="rating-review-input"
+              value={reviewText}
+              onChange={(event) =>
+                setReviewText(
+                  event.target.value,
+                )
+              }
+              placeholder="Write a review (optional)"
+              maxLength={500}
+              disabled={ratingLoading}
+            />
+
+            <div className="rating-review-count">
+              {reviewText.length}/500
+            </div>
+
+            {/* ERROR */}
+
+            {ratingError && (
+              <div className="rating-error">
+                {ratingError}
+              </div>
+            )}
+
+            {/* ACTIONS */}
+
+            <div className="rating-modal-actions">
+              <button
+                type="button"
+                className="rating-cancel-btn"
+                onClick={handleCloseRating}
+                disabled={ratingLoading}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="rating-submit-btn"
+                onClick={handleSubmitRating}
+                disabled={
+                  ratingLoading ||
+                  selectedRating === 0
+                }
+              >
+                {ratingLoading
+                  ? "Submitting..."
+                  : "Submit Rating"}
               </button>
             </div>
           </div>
@@ -626,7 +963,11 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
           ERROR
           ========================================== */}
 
-      {error && <div className="session-action-error">{error}</div>}
+      {error && (
+        <div className="session-action-error">
+          {error}
+        </div>
+      )}
     </article>
   );
 };
