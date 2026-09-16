@@ -117,8 +117,8 @@ const getMyConnections = async (req, res) => {
       )
       .sort({ createdAt: -1 });
 
-    const formattedConnections = connections.map(
-      (connection) => {
+    const formattedConnections = await Promise.all(
+      connections.map(async (connection) => {
         const currentUserId = userId.toString();
 
         const otherUser =
@@ -126,12 +126,28 @@ const getMyConnections = async (req, res) => {
             ? connection.user2
             : connection.user1;
 
+        // Count completed SkillSwaps between these two students
+        const skillSwapCount = await Session.countDocuments({
+          status: "completed",
+          $or: [
+            {
+              requester: userId,
+              partner: otherUser._id,
+            },
+            {
+              requester: otherUser._id,
+              partner: userId,
+            },
+          ],
+        });
+
         return {
           connectionId: connection._id,
           connectedSince: connection.createdAt,
+          skillSwapCount,
           user: otherUser,
         };
-      }
+      })
     );
 
     res.status(200).json({

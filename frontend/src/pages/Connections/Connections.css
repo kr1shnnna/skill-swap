@@ -223,6 +223,15 @@
   font-weight: 600;
 }
 
+
+
+.connection-swap-count {
+  margin-top: 6px;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
 @media (max-width: 800px) {
   .connections-grid {
     grid-template-columns: 1fr;

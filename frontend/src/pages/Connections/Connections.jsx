@@ -23,8 +23,7 @@ const Connections = () => {
         console.error("Connections error:", error);
 
         setError(
-          error.response?.data?.message ||
-            "Unable to load your connections."
+          error.response?.data?.message || "Unable to load your connections.",
         );
       } finally {
         setLoading(false);
@@ -39,9 +38,7 @@ const Connections = () => {
       <div className="connections-page">
         <div className="connections-container">
           <h1>My Connections</h1>
-          <p className="connections-status">
-            Loading your connections...
-          </p>
+          <p className="connections-status">Loading your connections...</p>
         </div>
       </div>
     );
@@ -53,9 +50,7 @@ const Connections = () => {
         <div className="connections-container">
           <h1>My Connections</h1>
 
-          <div className="connections-error">
-            {error}
-          </div>
+          <div className="connections-error">{error}</div>
         </div>
       </div>
     );
@@ -64,36 +59,28 @@ const Connections = () => {
   return (
     <div className="connections-page">
       <div className="connections-container">
-
         <div className="connections-header">
           <div>
             <h1>My Connections</h1>
-            <p>
-              Students you have completed SkillSwaps with.
-            </p>
+            <p>Students you have completed SkillSwaps with.</p>
           </div>
 
           <div className="connections-count">
             {connections.length}
             <span>
-              {connections.length === 1
-                ? " Connection"
-                : " Connections"}
+              {connections.length === 1 ? " Connection" : " Connections"}
             </span>
           </div>
         </div>
 
         {connections.length === 0 ? (
           <div className="connections-empty">
-            <div className="connections-empty-icon">
-              🔗
-            </div>
+            <div className="connections-empty-icon">🔗</div>
 
             <h2>No connections yet</h2>
 
             <p>
-              Complete a SkillSwap with another student to
-              create a connection.
+              Complete a SkillSwap with another student to create a connection.
             </p>
 
             <button
@@ -109,10 +96,7 @@ const Connections = () => {
               const user = connection.user;
 
               return (
-                <div
-                  className="connection-card"
-                  key={connection.connectionId}
-                >
+                <div className="connection-card" key={connection.connectionId}>
                   <div className="connection-card-top">
                     <div className="connection-avatar">
                       {user?.name?.charAt(0)?.toUpperCase() || "?"}
@@ -122,16 +106,12 @@ const Connections = () => {
                       <h2>{user?.name || "Student"}</h2>
 
                       <div className="connection-rating">
-                        <span className="connection-star">
-                          ★
-                        </span>
+                        <span className="connection-star">★</span>
 
                         {user?.rating?.count > 0 ? (
                           <>
                             <span>
-                              {Number(
-                                user.rating.average
-                              ).toFixed(1)}
+                              {Number(user.rating.average).toFixed(1)}
                             </span>
 
                             <span className="connection-rating-count">
@@ -139,22 +119,22 @@ const Connections = () => {
                             </span>
                           </>
                         ) : (
-                          <span className="connection-new-rating">
-                            New
-                          </span>
+                          <span className="connection-new-rating">New</span>
                         )}
+                      </div>
+
+                      <div className="connection-swap-count">
+                        🔄 {connection.skillSwapCount || 0}{" "}
+                        {connection.skillSwapCount === 1
+                          ? "SkillSwap together"
+                          : "SkillSwaps together"}
                       </div>
                     </div>
                   </div>
 
-                  {user?.bio && (
-                    <p className="connection-bio">
-                      {user.bio}
-                    </p>
-                  )}
+                  {user?.bio && <p className="connection-bio">{user.bio}</p>}
 
                   <div className="connection-skills">
-
                     {user?.skillsToTeach?.length > 0 && (
                       <div className="connection-skill-section">
                         <h3>Can teach</h3>
@@ -163,10 +143,7 @@ const Connections = () => {
                           {user.skillsToTeach
                             .slice(0, 4)
                             .map((skill, index) => (
-                              <span
-                                className="connection-tag"
-                                key={index}
-                              >
+                              <span className="connection-tag" key={index}>
                                 {skill}
                               </span>
                             ))}
@@ -192,45 +169,31 @@ const Connections = () => {
                         </div>
                       </div>
                     )}
-
                   </div>
 
                   <div className="connection-actions">
-
                     <button
                       className="connection-profile-button"
-                      onClick={() =>
-                        navigate(
-                          `/profile/${user._id}`
-                        )
-                      }
+                      onClick={() => navigate(`/profile/${user._id}`)}
                     >
                       View Profile
                     </button>
 
                     <button
                       className="connection-chat-button"
-                      onClick={() =>
-                        navigate(
-                          `/chat?userId=${user._id}`
-                        )
-                      }
+                      onClick={() => navigate(`/chat?userId=${user._id}`)}
                     >
                       Chat
                     </button>
-
                   </div>
-
                 </div>
               );
             })}
           </div>
         )}
-
       </div>
     </div>
   );
 };
 
 export default Connections;
-
