@@ -45,6 +45,7 @@ ratingSchema.index(
   { unique: true }
 );
 
+
 const Rating = mongoose.model("Rating", ratingSchema);
 
 module.exports = Rating;
