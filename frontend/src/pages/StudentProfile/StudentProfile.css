@@ -354,6 +354,30 @@
   }
 }
 
+.profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-stat {
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .profile-stats {
+    gap: 10px;
+  }
+
+  .profile-stat {
+    font-size: 0.85rem;
+  }
+}
+
 
 /* Mobile */
 
