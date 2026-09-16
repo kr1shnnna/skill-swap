@@ -97,7 +97,61 @@ const getUserConnectionStats = async (req, res) => {
   }
 };
 
+const getMyConnections = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const connections = await Connection.find({
+      $or: [
+        { user1: userId },
+        { user2: userId },
+      ],
+    })
+      .populate(
+        "user1",
+        "name bio gender skillsToTeach skillsToLearn rating"
+      )
+      .populate(
+        "user2",
+        "name bio gender skillsToTeach skillsToLearn rating"
+      )
+      .sort({ createdAt: -1 });
+
+    const formattedConnections = connections.map(
+      (connection) => {
+        const currentUserId = userId.toString();
+
+        const otherUser =
+          connection.user1._id.toString() === currentUserId
+            ? connection.user2
+            : connection.user1;
+
+        return {
+          connectionId: connection._id,
+          connectedSince: connection.createdAt,
+          user: otherUser,
+        };
+      }
+    );
+
+    res.status(200).json({
+      connections: formattedConnections,
+    });
+  } catch (error) {
+    console.error(
+      "Get my connections error:",
+      error.message
+    );
+
+    res.status(500).json({
+      message: "Server error.",
+    });
+  }
+};
+
+
 module.exports = {
   getMyConnectionStats,
   getUserConnectionStats,
+  getMyConnections,
 };

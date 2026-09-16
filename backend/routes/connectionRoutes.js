@@ -3,6 +3,7 @@ const express = require("express");
 const {
   getMyConnectionStats,
   getUserConnectionStats,
+  getMyConnections,
 } = require("../controllers/connectionController");
 
 const protect = require("../middlewares/authMiddleware");
@@ -16,5 +17,13 @@ router.get(
   protect,
   getUserConnectionStats
 );
+
+
+router.get(
+  "/",
+  protect,
+  getMyConnections
+);
+
 
 module.exports = router;
