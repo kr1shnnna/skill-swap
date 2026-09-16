@@ -1,6 +1,9 @@
 const Session = require("../models/Session");
 const Swap = require("../models/Swap");
 
+const Connection=require("../models/Connection");
+
+
 /*
  * ------------------------------------------
  * CREATE SESSION
@@ -237,6 +240,33 @@ const updateSessionStatus = async (req, res) => {
     session.status = status;
 
     await session.save();
+
+
+// Create a connection automatically when a SkillSwap is completed
+if (status === "completed") {
+  const requesterId = session.requester.toString();
+  const partnerId = session.partner.toString();
+
+  // Store the two user IDs in a consistent order
+  const [user1, user2] = [requesterId, partnerId].sort();
+
+  // Only create the connection if one does not already exist
+  await Connection.updateOne(
+    {
+      user1,
+      user2,
+    },
+    {
+      $setOnInsert: {
+        user1,
+        user2,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
+}
 
     const io = req.app.get("io");
 
