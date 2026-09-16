@@ -36,21 +36,28 @@ const StudentProfile = () => {
   const [ratingsLoading, setRatingsLoading] = useState(true);
   const [ratingsError, setRatingsError] = useState("");
 
+  // Connection & SkillSwap stats
+  const [connectionCount, setConnectionCount] = useState(0);
+  const [skillSwapCount, setSkillSwapCount] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(true);
+
   useEffect(() => {
     const fetchStudentProfile = async () => {
       try {
         setLoading(true);
         setRatingsLoading(true);
 
-        const [profileResponse, ratingsResponse] = await Promise.all([
-          api.get(`/users/${userId}`),
-          api.get(`/ratings/user/${userId}`),
-        ]);
+        const [profileResponse, ratingsResponse, statsResponse] =
+          await Promise.all([
+            api.get(`/users/${userId}`),
+            api.get(`/ratings/user/${userId}`),
+            api.get(`/connections/stats/${userId}`),
+          ]);
 
         setStudent(profileResponse.data.user);
 
         setRelationshipStatus(
-          profileResponse.data.relationshipStatus || "available"
+          profileResponse.data.relationshipStatus || "available",
         );
 
         setRatings(ratingsResponse.data.ratings || []);
@@ -58,13 +65,11 @@ const StudentProfile = () => {
         console.error("Student profile error:", error);
 
         setError(
-          error.response?.data?.message ||
-            "Unable to load student profile."
+          error.response?.data?.message || "Unable to load student profile.",
         );
 
         setRatingsError(
-          error.response?.data?.message ||
-            "Unable to load ratings."
+          error.response?.data?.message || "Unable to load ratings.",
         );
       } finally {
         setLoading(false);
@@ -94,14 +99,13 @@ const StudentProfile = () => {
       });
 
       setRequestMessage(
-        response.data.message || "Swap request sent successfully!"
+        response.data.message || "Swap request sent successfully!",
       );
     } catch (error) {
       console.error("Send swap request error:", error);
 
       setRequestError(
-        error.response?.data?.message ||
-          "Unable to send swap request."
+        error.response?.data?.message || "Unable to send swap request.",
       );
     } finally {
       setRequestLoading(false);
@@ -111,9 +115,7 @@ const StudentProfile = () => {
   if (loading) {
     return (
       <main className="student-profile-page">
-        <div className="student-profile-loading">
-          Loading profile...
-        </div>
+        <div className="student-profile-loading">Loading profile...</div>
       </main>
     );
   }
@@ -138,7 +140,6 @@ const StudentProfile = () => {
   return (
     <main className="student-profile-page">
       <div className="student-profile-container">
-
         {/* Back to Matches */}
         <Link to="/find-skills" className="back-link">
           <FaArrowLeft />
@@ -146,7 +147,6 @@ const StudentProfile = () => {
         </Link>
 
         <section className="student-profile-card">
-
           {/* ==========================================
               PROFILE HEADER
               ========================================== */}
@@ -158,12 +158,9 @@ const StudentProfile = () => {
 
               <p>SkillSwap Student</p>
 
-              {student.gender &&
-                student.gender !== "Prefer not to say" && (
-                  <p className="student-gender">
-                    Gender: {student.gender}
-                  </p>
-                )}
+              {student.gender && student.gender !== "Prefer not to say" && (
+                <p className="student-gender">Gender: {student.gender}</p>
+              )}
             </div>
           </div>
 
@@ -174,8 +171,7 @@ const StudentProfile = () => {
             <h2>About</h2>
 
             <p className="student-bio">
-              {student.bio ||
-                "This student hasn't added a bio yet."}
+              {student.bio || "This student hasn't added a bio yet."}
             </p>
           </div>
 
@@ -192,7 +188,6 @@ const StudentProfile = () => {
             <div className="rating-summary">
               {student.rating?.count > 0 ? (
                 <div className="rating-summary-score">
-
                   <span className="rating-average">
                     {Number(student.rating.average).toFixed(1)}
                   </span>
@@ -202,8 +197,7 @@ const StudentProfile = () => {
                       <FaStar
                         key={star}
                         className={
-                          star <=
-                          Math.round(student.rating.average)
+                          star <= Math.round(student.rating.average)
                             ? "profile-star filled"
                             : "profile-star"
                         }
@@ -213,20 +207,14 @@ const StudentProfile = () => {
 
                   <span className="rating-count">
                     Based on {student.rating.count}{" "}
-                    {student.rating.count === 1
-                      ? "rating"
-                      : "ratings"}
+                    {student.rating.count === 1 ? "rating" : "ratings"}
                   </span>
                 </div>
               ) : (
                 <div className="rating-summary-score">
-                  <span className="rating-new">
-                    New
-                  </span>
+                  <span className="rating-new">New</span>
 
-                  <span className="rating-count">
-                    No ratings yet
-                  </span>
+                  <span className="rating-count">No ratings yet</span>
                 </div>
               )}
             </div>
@@ -236,47 +224,36 @@ const StudentProfile = () => {
               <h3>Reviews</h3>
 
               {ratingsLoading ? (
-                <p className="reviews-loading">
-                  Loading reviews...
-                </p>
+                <p className="reviews-loading">Loading reviews...</p>
               ) : ratingsError ? (
-                <p className="reviews-error">
-                  {ratingsError}
-                </p>
+                <p className="reviews-error">{ratingsError}</p>
               ) : ratings.length === 0 ? (
                 <p className="no-reviews">
-                  No reviews yet. Complete a skill exchange
-                  to build your reputation.
+                  No reviews yet. Complete a skill exchange to build your
+                  reputation.
                 </p>
               ) : (
                 <div className="reviews-list">
                   {ratings.map((rating) => (
-                    <div
-                      className="review-card"
-                      key={rating._id}
-                    >
+                    <div className="review-card" key={rating._id}>
                       {/* Review Header */}
                       <div className="review-header">
-
                         <div className="reviewer-info">
                           <FaUserCircle className="reviewer-icon" />
 
                           <div>
                             <h4>
-                              {rating.reviewer?.name ||
-                                "SkillSwap Student"}
+                              {rating.reviewer?.name || "SkillSwap Student"}
                             </h4>
 
                             <span className="review-date">
-                              {new Date(
-                                rating.createdAt
-                              ).toLocaleDateString(
+                              {new Date(rating.createdAt).toLocaleDateString(
                                 "en-IN",
                                 {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
-                                }
+                                },
                               )}
                             </span>
                           </div>
@@ -286,24 +263,19 @@ const StudentProfile = () => {
                         <div className="review-rating">
                           <FaStar />
 
-                          <span>
-                            {rating.rating}.0
-                          </span>
+                          <span>{rating.rating}.0</span>
                         </div>
                       </div>
 
                       {/* Review Text */}
                       {rating.review && (
-                        <p className="review-text">
-                          "{rating.review}"
-                        </p>
+                        <p className="review-text">"{rating.review}"</p>
                       )}
 
                       {/* Session Topic */}
                       {rating.session?.topic && (
                         <span className="review-session">
-                          Skill exchange:{" "}
-                          {rating.session.topic}
+                          Skill exchange: {rating.session.topic}
                         </span>
                       )}
                     </div>
@@ -325,18 +297,13 @@ const StudentProfile = () => {
             {student.skillsToTeach?.length > 0 ? (
               <div className="student-skills">
                 {student.skillsToTeach.map((skill) => (
-                  <span
-                    key={skill}
-                    className="student-skill teach"
-                  >
+                  <span key={skill} className="student-skill teach">
                     {skill}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="empty-skills">
-                No teaching skills added yet.
-              </p>
+              <p className="empty-skills">No teaching skills added yet.</p>
             )}
           </div>
 
@@ -352,18 +319,13 @@ const StudentProfile = () => {
             {student.skillsToLearn?.length > 0 ? (
               <div className="student-skills">
                 {student.skillsToLearn.map((skill) => (
-                  <span
-                    key={skill}
-                    className="student-skill learn"
-                  >
+                  <span key={skill} className="student-skill learn">
                     {skill}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="empty-skills">
-                No learning goals added yet.
-              </p>
+              <p className="empty-skills">No learning goals added yet.</p>
             )}
           </div>
 
@@ -371,7 +333,6 @@ const StudentProfile = () => {
               ACTION
               ========================================== */}
           <div className="student-profile-action">
-
             {relationshipStatus === "connected" ? (
               <button
                 type="button"
@@ -381,19 +342,16 @@ const StudentProfile = () => {
                 <FaComments />
                 Connected · Chat
               </button>
-
             ) : relationshipStatus === "request_sent" ? (
               <div className="relationship-action request-sent">
                 <FaPaperPlane />
                 <span>Request Sent</span>
               </div>
-
             ) : relationshipStatus === "request_received" ? (
               <div className="relationship-action request-received">
                 <FaUserClock />
                 <span>Request Received</span>
               </div>
-
             ) : (
               <button
                 type="button"
@@ -401,25 +359,16 @@ const StudentProfile = () => {
                 onClick={handleSendRequest}
                 disabled={requestLoading}
               >
-                {requestLoading
-                  ? "Sending..."
-                  : "Send Swap Request"}
+                {requestLoading ? "Sending..." : "Send Swap Request"}
               </button>
             )}
 
             {requestMessage && (
-              <p className="request-success">
-                {requestMessage}
-              </p>
+              <p className="request-success">{requestMessage}</p>
             )}
 
-            {requestError && (
-              <p className="request-error">
-                {requestError}
-              </p>
-            )}
+            {requestError && <p className="request-error">{requestError}</p>}
           </div>
-
         </section>
       </div>
     </main>

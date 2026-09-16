@@ -54,6 +54,50 @@ const getMyConnectionStats = async (req, res) => {
   }
 };
 
+
+const getUserConnectionStats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const completedSessions = await Session.find({
+      status: "completed",
+      $or: [
+        { requester: userId },
+        { partner: userId },
+      ],
+    }).select("requester partner");
+
+    const uniqueConnectionIds = new Set();
+
+    completedSessions.forEach((session) => {
+      const requesterId = session.requester.toString();
+      const partnerId = session.partner.toString();
+
+      const otherUserId =
+        requesterId === userId
+          ? partnerId
+          : requesterId;
+
+      uniqueConnectionIds.add(otherUserId);
+    });
+
+    res.status(200).json({
+      connectionCount: uniqueConnectionIds.size,
+      skillSwapCount: completedSessions.length,
+    });
+  } catch (error) {
+    console.error(
+      "Get user connection stats error:",
+      error.message
+    );
+
+    res.status(500).json({
+      message: "Server error.",
+    });
+  }
+};
+
 module.exports = {
   getMyConnectionStats,
+  getUserConnectionStats,
 };
