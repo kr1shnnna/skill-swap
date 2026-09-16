@@ -229,15 +229,32 @@ const FindSkills = () => {
                   {/* User info */}
                   <div className="match-user">
                     <FaUserCircle className="match-user-icon" />
-
                     <div>
                       <h3>{match.user.name}</h3>
+
+                      <div className="match-rating">
+                        {match.user.rating?.count > 0 ? (
+                          <>
+                            <span className="match-rating-stars">★</span>
+                            <span className="match-rating-average">
+                              {Number(match.user.rating.average).toFixed(1)}
+                            </span>
+                            <span className="match-rating-count">
+                              ({match.user.rating.count})
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="match-rating-stars">★</span>
+                            <span className="match-rating-new">New</span>
+                          </>
+                        )}
+                      </div>
 
                       {match.user.gender &&
                         match.user.gender !== "Prefer not to say" && (
                           <p className="match-gender">{match.user.gender}</p>
                         )}
-                        
                     </div>
                   </div>
 

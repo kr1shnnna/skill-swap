@@ -398,6 +398,33 @@
 }
 
 
+.match-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.match-rating-stars {
+  color: #f5b301;
+  font-size: 0.9rem;
+}
+
+.match-rating-average {
+  font-weight: 600;
+}
+
+.match-rating-count {
+  color: #777;
+}
+
+.match-rating-new {
+  color: #777;
+  font-weight: 500;
+}
+
+
 /* Responsive */
 
 @media (max-width: 768px) {
