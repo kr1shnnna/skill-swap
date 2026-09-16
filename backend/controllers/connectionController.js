@@ -9,22 +9,34 @@ const getMyConnectionStats = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Count unique connections
-    const connectionCount = await Connection.countDocuments({
-      $or: [
-        { user1: userId },
-        { user2: userId },
-      ],
-    });
-
-    // Count completed SkillSwap sessions
-    const skillSwapCount = await Session.countDocuments({
+    // Find all completed SkillSwap sessions involving this user
+    const completedSessions = await Session.find({
       status: "completed",
       $or: [
         { requester: userId },
         { partner: userId },
       ],
+    }).select("requester partner");
+
+    // Find unique people this user has completed a SkillSwap with
+    const uniqueConnectionIds = new Set();
+
+    completedSessions.forEach((session) => {
+      const requesterId = session.requester.toString();
+      const partnerId = session.partner.toString();
+
+      const otherUserId =
+        requesterId === userId.toString()
+          ? partnerId
+          : requesterId;
+
+      uniqueConnectionIds.add(otherUserId);
     });
+
+    const connectionCount = uniqueConnectionIds.size;
+
+    // Total completed SkillSwap sessions
+    const skillSwapCount = completedSessions.length;
 
     res.status(200).json({
       connectionCount,
