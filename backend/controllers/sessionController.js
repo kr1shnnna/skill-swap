@@ -52,6 +52,7 @@ const createSession = async (req, res) => {
      * Sessions must always be scheduled
      * in the future.
      */
+
     if (scheduledDateTime <= new Date()) {
       return res.status(400).json({
         message:
@@ -62,9 +63,14 @@ const createSession = async (req, res) => {
     const requesterId = req.user.userId;
 
     /*
-     * Make sure an accepted skill swap exists
+     * ------------------------------------------
+     * VALIDATE ACCEPTED SKILL SWAP
+     * ------------------------------------------
+     *
+     * Make sure an accepted SkillSwap exists
      * between the two users.
      */
+
     const acceptedSwap = await Swap.findOne({
       status: "accepted",
       $or: [
@@ -87,17 +93,68 @@ const createSession = async (req, res) => {
     }
 
     /*
-     * Create session.
+     * ------------------------------------------
+     * PREVENT DUPLICATE ACTIVE SESSIONS
+     * ------------------------------------------
+     *
+     * The same two students cannot have two
+     * pending/accepted sessions at the exact
+     * same date and time.
+     *
+     * We check both directions:
+     *
+     * A → B
+     * B → A
+     *
+     * because they represent the same pair.
      */
+
+    const existingSession = await Session.findOne({
+      date: scheduledDateTime,
+      time,
+      status: {
+        $in: ["pending", "accepted"],
+      },
+      $or: [
+        {
+          requester: requesterId,
+          partner: partnerId,
+        },
+        {
+          requester: partnerId,
+          partner: requesterId,
+        },
+      ],
+    });
+
+    if (existingSession) {
+      return res.status(409).json({
+        message:
+          "A session is already scheduled with this student at this date and time.",
+      });
+    }
+
+    /*
+     * ------------------------------------------
+     * CREATE SESSION
+     * ------------------------------------------
+     */
+
     const session = await Session.create({
       requester: requesterId,
       partner: partnerId,
-      date,
+      date: scheduledDateTime,
       time,
       topic,
       note: note || "",
       status: "pending",
     });
+
+    /*
+     * ------------------------------------------
+     * POPULATE SESSION
+     * ------------------------------------------
+     */
 
     const populatedSession =
       await Session.findById(session._id)
@@ -110,6 +167,12 @@ const createSession = async (req, res) => {
           "name email"
         );
 
+    /*
+     * ------------------------------------------
+     * SOCKET.IO EVENT
+     * ------------------------------------------
+     */
+
     const io = req.app.get("io");
 
     if (io) {
@@ -117,6 +180,12 @@ const createSession = async (req, res) => {
         session: populatedSession,
       });
     }
+
+    /*
+     * ------------------------------------------
+     * RESPONSE
+     * ------------------------------------------
+     */
 
     res.status(201).json({
       message:
@@ -134,6 +203,7 @@ const createSession = async (req, res) => {
     });
   }
 };
+
 /*
  * ------------------------------------------
  * GET MY SESSIONS
