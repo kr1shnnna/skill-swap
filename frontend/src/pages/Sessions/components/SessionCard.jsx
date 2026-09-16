@@ -8,6 +8,7 @@ import {
   FaStickyNote,
   FaVideo,
   FaLock,
+  FaStar
 } from "react-icons/fa";
 
 import api from "../../../services/api";
@@ -21,6 +22,13 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [ratingError, setRatingError] = useState("");
+  const [hasRated, setHasRated] = useState(false);
+  const [myRating, setMyRating] = useState(null);
 
   const isRequester =
     session.requester?._id?.toString() === currentUserId?.toString();
@@ -52,6 +60,31 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
       clearInterval(interval);
     };
   }, [session.status]);
+
+
+
+
+  useEffect(() => {
+  const checkRating = async () => {
+    if (session.status !== "completed" || !session._id) {
+      return;
+    }
+
+    try {
+      const response = await api.get(
+        `/ratings/session/${session._id}`,
+      );
+
+      setHasRated(response.data.hasRated);
+      setMyRating(response.data.rating);
+    } catch (error) {
+      console.error("Check rating error:", error);
+    }
+  };
+
+  checkRating();
+}, [session.status, session._id]);
+
 
   /*
    * ==========================================
@@ -215,6 +248,44 @@ const SessionCard = ({ session, currentUserId, onJoinMeeting }) => {
 
     return "accepted";
   };
+
+
+
+  const handleSubmitRating = async () => {
+  if (selectedRating === 0) {
+    setRatingError("Please select a rating.");
+    return;
+  }
+
+  try {
+    setRatingLoading(true);
+    setRatingError("");
+
+    const response = await api.post("/ratings", {
+      sessionId: session._id,
+      rating: selectedRating,
+      review: reviewText.trim(),
+    });
+
+    setHasRated(true);
+    setMyRating(response.data.rating);
+
+    setShowRatingModal(false);
+    setSelectedRating(0);
+    setReviewText("");
+  } catch (error) {
+    console.error("Submit rating error:", error);
+
+    setRatingError(
+      error.response?.data?.message ||
+        "Unable to submit rating.",
+    );
+  } finally {
+    setRatingLoading(false);
+  }
+};
+
+
 
   /*
    * ==========================================

@@ -19,5 +19,10 @@ router.post("/", protect, createRating);
 // ------------------------------------------
 router.get("/user/:userId", protect, getUserRatings);
 
+
+
+
+router.get("/session/:sessionId", protect, getMySessionRating);
+
 module.exports = router;
 

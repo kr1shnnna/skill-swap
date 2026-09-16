@@ -194,7 +194,36 @@ const getUserRatings = async (req, res) => {
   }
 };
 
+
+// ------------------------------------------
+// CHECK MY RATING FOR A SESSION
+// ------------------------------------------
+const getMySessionRating = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const reviewerId = req.user.userId;
+
+    const rating = await Rating.findOne({
+      reviewer: reviewerId,
+      session: sessionId,
+    });
+
+    res.status(200).json({
+      hasRated: !!rating,
+      rating: rating || null,
+    });
+  } catch (error) {
+    console.error("Get session rating error:", error.message);
+
+    res.status(500).json({
+      message: "Server error.",
+    });
+  }
+};
+
 module.exports = {
   createRating,
   getUserRatings,
+  getMySessionRating,
 };
