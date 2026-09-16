@@ -1,8 +1,8 @@
-import Navbar from "./components/Navbar/Navbar"
-import Home from "./pages/Home/Home"
-import { Routes, Route } from "react-router-dom"
-import Login from "./pages/Login/Login"
-import Register from "./pages/Register/Register"
+import Navbar from "./components/Navbar/Navbar";
+import Home from "./pages/Home/Home";
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -14,27 +14,19 @@ import Chat from "./pages/Chat/Chat";
 import Sessions from "./pages/Sessions/Sessions";
 
 import GlobalCallHandler from "./components/GlobalCallHandler/GlobalCallHandler";
-
-
-
-
-
-
-
-
-
+import Connections from "./pages/Connections/Connections";
 
 const App = () => {
   return (
-     <>
-     <Navbar />
-     <GlobalCallHandler />
-     <Routes>
-      <Route path='/' element={<Home />} />
-      <Route path='/login' element={<Login />} />
-      <Route path='/register' element={<Register />} />
+    <>
+      <Navbar />
+      <GlobalCallHandler />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      <Route
+        <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
@@ -53,57 +45,54 @@ const App = () => {
         />
 
         <Route
-  path="/find-skills"
-  element={
-    <ProtectedRoute>
-      <FindSkills />
-    </ProtectedRoute>
-  }
-/>
+          path="/find-skills"
+          element={
+            <ProtectedRoute>
+              <FindSkills />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/profile/:userId"
-  element={
-    <ProtectedRoute>
-      <StudentProfile />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/profile/:userId"
+          element={
+            <ProtectedRoute>
+              <StudentProfile />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/swap-requests"
-  element={
-    <ProtectedRoute>
-      <SwapRequests />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/swap-requests"
+          element={
+            <ProtectedRoute>
+              <SwapRequests />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/chat"
-  element={
-    <ProtectedRoute>
-      <Chat />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
 
-  <Route
-  path="/sessions"
-  element={<Sessions />}
-/>
+        <Route path="/sessions" element={<Sessions />} />
 
-
-   
-
-
-        
-
-     </Routes>
-
-   
+        <Route
+          path="/connections"
+          element={
+            <ProtectedRoute>
+              <Connections />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
