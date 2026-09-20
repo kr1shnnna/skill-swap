@@ -3,13 +3,20 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-# Load the model once when the service starts.
+# Load the model once.
 model = SentenceTransformer(MODEL_NAME)
+
+
+def normalize_skill(skill):
+    """
+    Normalize a skill name for exact comparison.
+    """
+    return skill.lower().strip()
 
 
 def get_embedding(text):
     """
-    Convert a piece of text into a normalized embedding vector.
+    Convert text into a normalized embedding vector.
     """
     return model.encode(
         text,
@@ -21,7 +28,7 @@ def semantic_similarity(text1, text2):
     """
     Calculate cosine similarity between two pieces of text.
 
-    Because the embeddings are normalized, their dot product
+    Since embeddings are normalized, their dot product
     is equivalent to cosine similarity.
     """
     embedding1 = get_embedding(text1)
@@ -32,38 +39,99 @@ def semantic_similarity(text1, text2):
 
 def calculate_direction_score(skills_to_learn, skills_to_teach):
     """
-    Calculate how well a student's learning goals are covered
-    by another student's teaching skills.
+    Calculate how well another student's teaching skills
+    satisfy the current student's learning goals.
 
-    For every skill the student wants to learn, we find the
-    strongest semantic match among the other student's teaching
-    skills.
+    For every learning skill, we find the strongest match
+    among the other student's teaching skills.
 
-    Returns a score between 0 and 1.
+    Returns:
+        {
+            "score": float,
+            "matches": list
+        }
     """
 
     if not skills_to_learn or not skills_to_teach:
-        return 0.0
+        return {
+            "score": 0.0,
+            "matches": []
+        }
+
+    normalized_teaching = {
+        normalize_skill(skill): skill
+        for skill in skills_to_teach
+    }
 
     best_scores = []
+    matches = []
 
     for learning_skill in skills_to_learn:
-        scores = [
-            semantic_similarity(learning_skill, teaching_skill)
-            for teaching_skill in skills_to_teach
-        ]
+        normalized_learning = normalize_skill(learning_skill)
 
-        best_score = max(scores)
+        # -------------------------------------------------
+        # Exact match
+        # -------------------------------------------------
+
+        if normalized_learning in normalized_teaching:
+            matched_skill = normalized_teaching[normalized_learning]
+
+            best_score = 1.0
+
+            matches.append({
+                "learning_skill": learning_skill,
+                "matched_teaching_skill": matched_skill,
+                "similarity": best_score,
+                "match_type": "exact"
+            })
+
+            best_scores.append(best_score)
+
+            continue
+
+        # -------------------------------------------------
+        # Semantic match
+        # -------------------------------------------------
+
+        semantic_scores = []
+
+        for teaching_skill in skills_to_teach:
+            score = semantic_similarity(
+                learning_skill,
+                teaching_skill
+            )
+
+            semantic_scores.append(
+                (score, teaching_skill)
+            )
+
+        best_score, matched_skill = max(
+            semantic_scores,
+            key=lambda item: item[0]
+        )
+
+        matches.append({
+            "learning_skill": learning_skill,
+            "matched_teaching_skill": matched_skill,
+            "similarity": best_score,
+            "match_type": "semantic"
+        })
+
         best_scores.append(best_score)
 
-    return sum(best_scores) / len(best_scores)
+    direction_score = sum(best_scores) / len(best_scores)
+
+    return {
+        "score": direction_score,
+        "matches": matches
+    }
 
 
 def calculate_reciprocal_score(
     current_skills_to_learn,
     current_skills_to_teach,
     other_skills_to_learn,
-    other_skills_to_teach,
+    other_skills_to_teach
 ):
     """
     Calculate two-way SkillSwap compatibility.
@@ -73,26 +141,31 @@ def calculate_reciprocal_score(
 
     Direction 2:
         Can I teach what the other student wants to learn?
-
-    The final reciprocal score is the average of both directions.
     """
 
-    forward_score = calculate_direction_score(
+    forward_result = calculate_direction_score(
         current_skills_to_learn,
-        other_skills_to_teach,
+        other_skills_to_teach
     )
 
-    reverse_score = calculate_direction_score(
+    reverse_result = calculate_direction_score(
         other_skills_to_learn,
-        current_skills_to_teach,
+        current_skills_to_teach
     )
 
-    reciprocal_score = (forward_score + reverse_score) / 2
+    forward_score = forward_result["score"]
+    reverse_score = reverse_result["score"]
+
+    reciprocal_score = (
+        forward_score + reverse_score
+    ) / 2
 
     return {
         "forward_score": forward_score,
         "reverse_score": reverse_score,
         "reciprocal_score": reciprocal_score,
+        "forward_matches": forward_result["matches"],
+        "reverse_matches": reverse_result["matches"]
     }
 
 
@@ -100,21 +173,38 @@ def calculate_ai_match_score(
     current_skills_to_learn,
     current_skills_to_teach,
     other_skills_to_learn,
-    other_skills_to_teach,
+    other_skills_to_teach
 ):
     """
-    Return the AI matchmaking result as percentages.
+    Calculate the complete AI matchmaking result.
+
+    Scores are returned as percentages.
     """
 
     result = calculate_reciprocal_score(
         current_skills_to_learn,
         current_skills_to_teach,
         other_skills_to_learn,
-        other_skills_to_teach,
+        other_skills_to_teach
     )
 
     return {
-        "forward_score": round(result["forward_score"] * 100, 2),
-        "reverse_score": round(result["reverse_score"] * 100, 2),
-        "reciprocal_score": round(result["reciprocal_score"] * 100, 2),
+        "forward_score": round(
+            result["forward_score"] * 100,
+            2
+        ),
+
+        "reverse_score": round(
+            result["reverse_score"] * 100,
+            2
+        ),
+
+        "reciprocal_score": round(
+            result["reciprocal_score"] * 100,
+            2
+        ),
+
+        "forward_matches": result["forward_matches"],
+
+        "reverse_matches": result["reverse_matches"]
     }
