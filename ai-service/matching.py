@@ -3,7 +3,11 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-# Load the model once.
+# Initial semantic similarity threshold.
+# This is a calibration value for our current test set.
+SEMANTIC_MATCH_THRESHOLD = 0.65
+
+# Load the model once when the service starts.
 model = SentenceTransformer(MODEL_NAME)
 
 
@@ -28,7 +32,7 @@ def semantic_similarity(text1, text2):
     """
     Calculate cosine similarity between two pieces of text.
 
-    Since embeddings are normalized, their dot product
+    Since the embeddings are normalized, their dot product
     is equivalent to cosine similarity.
     """
     embedding1 = get_embedding(text1)
@@ -42,8 +46,10 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
     Calculate how well another student's teaching skills
     satisfy the current student's learning goals.
 
-    For every learning skill, we find the strongest match
-    among the other student's teaching skills.
+    Exact matches receive 1.0.
+
+    Semantic matches are accepted only when their similarity
+    reaches SEMANTIC_MATCH_THRESHOLD.
 
     Returns:
         {
@@ -67,14 +73,20 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
     matches = []
 
     for learning_skill in skills_to_learn:
-        normalized_learning = normalize_skill(learning_skill)
 
-        # -------------------------------------------------
-        # Exact match
-        # -------------------------------------------------
+        normalized_learning = normalize_skill(
+            learning_skill
+        )
+
+        # ---------------------------------
+        # Exact skill match
+        # ---------------------------------
 
         if normalized_learning in normalized_teaching:
-            matched_skill = normalized_teaching[normalized_learning]
+
+            matched_skill = normalized_teaching[
+                normalized_learning
+            ]
 
             best_score = 1.0
 
@@ -89,13 +101,14 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
 
             continue
 
-        # -------------------------------------------------
-        # Semantic match
-        # -------------------------------------------------
+        # ---------------------------------
+        # Semantic skill matching
+        # ---------------------------------
 
         semantic_scores = []
 
         for teaching_skill in skills_to_teach:
+
             score = semantic_similarity(
                 learning_skill,
                 teaching_skill
@@ -110,16 +123,32 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
             key=lambda item: item[0]
         )
 
+        # ---------------------------------
+        # Apply semantic threshold
+        # ---------------------------------
+
+        if best_score >= SEMANTIC_MATCH_THRESHOLD:
+
+            match_type = "semantic"
+            effective_score = best_score
+
+        else:
+
+            match_type = "below_threshold"
+            effective_score = 0.0
+
         matches.append({
             "learning_skill": learning_skill,
             "matched_teaching_skill": matched_skill,
             "similarity": best_score,
-            "match_type": "semantic"
+            "match_type": match_type
         })
 
-        best_scores.append(best_score)
+        best_scores.append(effective_score)
 
-    direction_score = sum(best_scores) / len(best_scores)
+    direction_score = (
+        sum(best_scores) / len(best_scores)
+    )
 
     return {
         "score": direction_score,
@@ -141,6 +170,8 @@ def calculate_reciprocal_score(
 
     Direction 2:
         Can I teach what the other student wants to learn?
+
+    The reciprocal score is the average of both directions.
     """
 
     forward_result = calculate_direction_score(
