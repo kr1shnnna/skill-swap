@@ -3,8 +3,7 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
-# Initial semantic similarity threshold.
-# This is a calibration value for our current test set.
+# Initial calibration threshold.
 SEMANTIC_MATCH_THRESHOLD = 0.65
 
 # Load the model once when the service starts.
@@ -18,30 +17,41 @@ def normalize_skill(skill):
     return skill.lower().strip()
 
 
-def get_embedding(text):
+def get_embeddings(texts):
     """
-    Convert text into a normalized embedding vector.
+    Generate normalized embeddings for multiple texts at once.
+
+    Batch encoding is much more efficient than generating
+    embeddings one by one.
     """
+    if not texts:
+        return []
+
     return model.encode(
-        text,
+        texts,
         normalize_embeddings=True
     )
 
 
-def semantic_similarity(text1, text2):
+def semantic_similarity_from_embeddings(
+    embedding1,
+    embedding2
+):
     """
-    Calculate cosine similarity between two pieces of text.
+    Calculate cosine similarity between two normalized
+    embeddings.
 
-    Since the embeddings are normalized, their dot product
+    Because embeddings are normalized, their dot product
     is equivalent to cosine similarity.
     """
-    embedding1 = get_embedding(text1)
-    embedding2 = get_embedding(text2)
-
     return float(embedding1 @ embedding2)
 
 
-def calculate_direction_score(skills_to_learn, skills_to_teach):
+def calculate_direction_score(
+    skills_to_learn,
+    skills_to_teach,
+    embedding_cache=None
+):
     """
     Calculate how well another student's teaching skills
     satisfy the current student's learning goals.
@@ -50,6 +60,9 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
 
     Semantic matches are accepted only when their similarity
     reaches SEMANTIC_MATCH_THRESHOLD.
+
+    Embeddings are generated in batches and reused through
+    embedding_cache.
 
     Returns:
         {
@@ -64,10 +77,45 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
             "matches": []
         }
 
+    if embedding_cache is None:
+        embedding_cache = {}
+
     normalized_teaching = {
         normalize_skill(skill): skill
         for skill in skills_to_teach
     }
+
+    # ---------------------------------------------
+    # Find all texts that need embeddings
+    # ---------------------------------------------
+
+    texts_to_encode = []
+
+    for skill in skills_to_learn + skills_to_teach:
+        normalized = normalize_skill(skill)
+
+        if normalized not in embedding_cache:
+            texts_to_encode.append(normalized)
+
+    # Remove duplicates while preserving order.
+    texts_to_encode = list(dict.fromkeys(texts_to_encode))
+
+    # ---------------------------------------------
+    # Generate missing embeddings in ONE batch
+    # ---------------------------------------------
+
+    if texts_to_encode:
+        new_embeddings = get_embeddings(texts_to_encode)
+
+        for text, embedding in zip(
+            texts_to_encode,
+            new_embeddings
+        ):
+            embedding_cache[text] = embedding
+
+    # ---------------------------------------------
+    # Calculate matches
+    # ---------------------------------------------
 
     best_scores = []
     matches = []
@@ -78,9 +126,9 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
             learning_skill
         )
 
-        # ---------------------------------
-        # Exact skill match
-        # ---------------------------------
+        # -----------------------------------------
+        # Exact match
+        # -----------------------------------------
 
         if normalized_learning in normalized_teaching:
 
@@ -101,17 +149,29 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
 
             continue
 
-        # ---------------------------------
-        # Semantic skill matching
-        # ---------------------------------
+        # -----------------------------------------
+        # Semantic matching
+        # -----------------------------------------
+
+        learning_embedding = embedding_cache[
+            normalized_learning
+        ]
 
         semantic_scores = []
 
         for teaching_skill in skills_to_teach:
 
-            score = semantic_similarity(
-                learning_skill,
+            normalized_teaching_skill = normalize_skill(
                 teaching_skill
+            )
+
+            teaching_embedding = embedding_cache[
+                normalized_teaching_skill
+            ]
+
+            score = semantic_similarity_from_embeddings(
+                learning_embedding,
+                teaching_embedding
             )
 
             semantic_scores.append(
@@ -123,17 +183,14 @@ def calculate_direction_score(skills_to_learn, skills_to_teach):
             key=lambda item: item[0]
         )
 
-        # ---------------------------------
+        # -----------------------------------------
         # Apply semantic threshold
-        # ---------------------------------
+        # -----------------------------------------
 
         if best_score >= SEMANTIC_MATCH_THRESHOLD:
-
             match_type = "semantic"
             effective_score = best_score
-
         else:
-
             match_type = "below_threshold"
             effective_score = 0.0
 
@@ -171,17 +228,30 @@ def calculate_reciprocal_score(
     Direction 2:
         Can I teach what the other student wants to learn?
 
-    The reciprocal score is the average of both directions.
+    Embeddings are shared between both directions.
     """
+
+    # Shared cache for both directions.
+    embedding_cache = {}
+
+    # ---------------------------------------------
+    # Forward direction
+    # ---------------------------------------------
 
     forward_result = calculate_direction_score(
         current_skills_to_learn,
-        other_skills_to_teach
+        other_skills_to_teach,
+        embedding_cache
     )
+
+    # ---------------------------------------------
+    # Reverse direction
+    # ---------------------------------------------
 
     reverse_result = calculate_direction_score(
         other_skills_to_learn,
-        current_skills_to_teach
+        current_skills_to_teach,
+        embedding_cache
     )
 
     forward_score = forward_result["score"]
