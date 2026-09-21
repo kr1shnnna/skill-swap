@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+
 import { Link, useNavigate } from "react-router-dom";
+
 import {
   FaSearch,
   FaUserCircle,
@@ -9,8 +11,13 @@ import {
   FaComments,
   FaUserClock,
 } from "react-icons/fa";
+
+import { MdAutoAwesome } from "react-icons/md";
+
 import api from "../../services/api";
+
 import "./FindSkills.css";
+
 
 const FindSkills = () => {
   const navigate = useNavigate();
@@ -20,6 +27,7 @@ const FindSkills = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sendingRequest, setSendingRequest] = useState(null);
+
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -41,6 +49,7 @@ const FindSkills = () => {
 
     fetchMatches();
   }, []);
+
 
   const handleSendRequest = async (receiverId) => {
     try {
@@ -64,11 +73,14 @@ const FindSkills = () => {
     } catch (error) {
       console.error("Send swap request error:", error);
 
-      setError(error.response?.data?.message || "Unable to send swap request.");
+      setError(
+        error.response?.data?.message || "Unable to send swap request.",
+      );
     } finally {
       setSendingRequest(null);
     }
   };
+
 
   const handleOpenChat = (userId) => {
     navigate("/chat", {
@@ -77,6 +89,7 @@ const FindSkills = () => {
       },
     });
   };
+
 
   const renderRelationshipAction = (match) => {
     const status = match.relationshipStatus || "available";
@@ -135,6 +148,7 @@ const FindSkills = () => {
     );
   };
 
+
   if (loading) {
     return (
       <main className="find-skills-page">
@@ -146,12 +160,17 @@ const FindSkills = () => {
     );
   }
 
+
   return (
     <main className="find-skills-page">
       <div className="find-skills-container">
+
         {/* Header */}
+
         <section className="find-skills-header">
-          <p className="find-skills-tag">DISCOVER • CONNECT • LEARN</p>
+          <p className="find-skills-tag">
+            DISCOVER • CONNECT • LEARN
+          </p>
 
           <h1>
             Find Your <span>Skill Matches</span>
@@ -163,10 +182,18 @@ const FindSkills = () => {
           </p>
         </section>
 
+
         {/* Error */}
-        {error && <div className="matches-message error-message">{error}</div>}
+
+        {error && (
+          <div className="matches-message error-message">
+            {error}
+          </div>
+        )}
+
 
         {/* No skills message */}
+
         {!error && message && matches.length === 0 && (
           <div className="no-matches-card">
             <div className="no-matches-icon">
@@ -183,7 +210,9 @@ const FindSkills = () => {
           </div>
         )}
 
+
         {/* No matches */}
+
         {!error && !message && matches.length === 0 && (
           <div className="no-matches-card">
             <div className="no-matches-icon">
@@ -202,9 +231,12 @@ const FindSkills = () => {
           </div>
         )}
 
+
         {/* Match results */}
+
         {matches.length > 0 && (
           <section className="matches-section">
+
             <div className="matches-top">
               <div>
                 <h2>Your Matches</h2>
@@ -217,49 +249,108 @@ const FindSkills = () => {
               </div>
             </div>
 
+
             <div className="matches-grid">
+
               {matches.map((match) => (
+
                 <div className="match-card" key={match.user.id}>
-                  {/* Match score */}
+
+                  {/* Existing Match Score */}
+
                   <div className="match-score">
                     <span>{match.matchScore}%</span>
                     <small>Match</small>
                   </div>
 
+
                   {/* User info */}
+
                   <div className="match-user">
+
                     <FaUserCircle className="match-user-icon" />
+
                     <div>
+
                       <h3>{match.user.name}</h3>
 
+
+                      {/* Rating */}
+
                       <div className="match-rating">
+
                         {match.user.rating?.count > 0 ? (
                           <>
-                            <span className="match-rating-stars">★</span>
+                            <span className="match-rating-stars">
+                              ★
+                            </span>
+
                             <span className="match-rating-average">
                               {Number(match.user.rating.average).toFixed(1)}
                             </span>
+
                             <span className="match-rating-count">
                               ({match.user.rating.count})
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="match-rating-stars">★</span>
-                            <span className="match-rating-new">New</span>
+                            <span className="match-rating-stars">
+                              ★
+                            </span>
+
+                            <span className="match-rating-new">
+                              New
+                            </span>
                           </>
                         )}
+
                       </div>
+
 
                       {match.user.gender &&
                         match.user.gender !== "Prefer not to say" && (
-                          <p className="match-gender">{match.user.gender}</p>
+                          <p className="match-gender">
+                            {match.user.gender}
+                          </p>
                         )}
+
                     </div>
+
                   </div>
 
+
+                  {/* AI Match */}
+
+                  {match.aiMatchScore > 0 && (
+                    <div className="ai-match-card">
+
+                      <div className="ai-match-header">
+
+                        <MdAutoAwesome className="ai-match-icon" />
+
+                        <span className="ai-match-label">
+                          AI Match
+                        </span>
+
+                        <span className="ai-match-score">
+                          {match.aiMatchScore}%
+                        </span>
+
+                      </div>
+
+                      <p className="ai-match-reason">
+                        Strong two-way skill compatibility
+                      </p>
+
+                    </div>
+                  )}
+
+
                   {/* Relationship status */}
+
                   <div className="relationship-status">
+
                     {match.relationshipStatus === "request_sent" && (
                       <span className="status-badge status-request-sent">
                         <FaPaperPlane />
@@ -287,27 +378,43 @@ const FindSkills = () => {
                         Available
                       </span>
                     )}
+
                   </div>
 
+
                   {/* Bio */}
+
                   {match.user.bio && (
-                    <p className="match-bio">{match.user.bio}</p>
+                    <p className="match-bio">
+                      {match.user.bio}
+                    </p>
                   )}
 
+
                   {/* Matched skills */}
+
                   <div className="matched-skills-section">
+
                     <h4>Can teach you</h4>
 
                     <div className="matched-skills">
+
                       {match.matchedSkills.map((skill) => (
-                        <span key={skill} className="matched-skill">
+                        <span
+                          key={skill}
+                          className="matched-skill"
+                        >
                           {skill}
                         </span>
                       ))}
+
                     </div>
+
                   </div>
 
+
                   {/* View profile */}
+
                   <Link
                     to={`/profile/${match.user.id}`}
                     className="view-profile-btn"
@@ -316,16 +423,24 @@ const FindSkills = () => {
                     <FaArrowRight />
                   </Link>
 
+
                   {/* Relationship action */}
+
                   {renderRelationshipAction(match)}
+
                 </div>
+
               ))}
+
             </div>
+
           </section>
         )}
+
       </div>
     </main>
   );
 };
+
 
 export default FindSkills;
