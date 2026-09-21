@@ -91,7 +91,7 @@ const FindSkills = () => {
   };
 
 
-  const getAIMatchReason = (match) => {
+ const getAIMatchReason = (match) => {
   const forwardMatches = (match.aiMatches?.forwardMatches || [])
     .filter((item) => item.match_type !== "below_threshold");
 
@@ -110,12 +110,14 @@ const FindSkills = () => {
     ),
   ];
 
+  const partnerName = match.user.name;
+
   if (learningSkills.length > 0 && teachingSkills.length > 0) {
     return (
       <>
         You can learn{" "}
         <strong>{learningSkills.join(", ")}</strong>{" "}
-        from them, and they can learn{" "}
+        from {partnerName}, and {partnerName} can learn{" "}
         <strong>{teachingSkills.join(", ")}</strong>{" "}
         from you.
       </>
@@ -127,7 +129,7 @@ const FindSkills = () => {
       <>
         You can learn{" "}
         <strong>{learningSkills.join(", ")}</strong>{" "}
-        from them.
+        from {partnerName}.
       </>
     );
   }
@@ -135,7 +137,7 @@ const FindSkills = () => {
   if (teachingSkills.length > 0) {
     return (
       <>
-        They can learn{" "}
+        {partnerName} can learn{" "}
         <strong>{teachingSkills.join(", ")}</strong>{" "}
         from you.
       </>

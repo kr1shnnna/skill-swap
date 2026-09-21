@@ -432,6 +432,34 @@
   border: 1px solid #e7e7e7;
   border-radius: 12px;
   background: #fafafa;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease;
+  cursor: pointer;
+}
+
+.ai-match-card:hover {
+  border-color: transparent;
+  background: linear-gradient(
+    #fafafa,
+    #fafafa
+  ) padding-box,
+  linear-gradient(
+    110deg,
+    #4285f4,
+    #9b72cb,
+    #d96570,
+    #fbbc04,
+    #34a853,
+    #4285f4
+  ) border-box;
+
+  background-size: 100% 100%, 300% 100%;
+  animation: ai-border-shimmer 4s linear infinite;
+
+  box-shadow:
+    0 4px 18px rgba(108, 99, 255, 0.08);
 }
 
 .ai-match-header {
@@ -444,12 +472,16 @@
   font-size: 17px;
   color: #6c63ff;
   flex-shrink: 0;
+  transition:
+    color 0.35s ease,
+    transform 0.35s ease;
 }
 
 .ai-match-label {
   font-size: 0.86rem;
   font-weight: 600;
   color: #555;
+  transition: color 0.35s ease;
 }
 
 .ai-match-score {
@@ -457,6 +489,35 @@
   font-size: 0.92rem;
   font-weight: 700;
   color: #333;
+  transition: color 0.35s ease;
+}
+
+/* Rainbow effect on hover */
+
+.ai-match-card:hover .ai-match-icon,
+.ai-match-card:hover .ai-match-label,
+.ai-match-card:hover .ai-match-score {
+  background: linear-gradient(
+    90deg,
+    #4285f4,
+    #9b72cb,
+    #d96570,
+    #fbbc04,
+    #34a853,
+    #4285f4
+  );
+
+  background-size: 300% auto;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  animation: ai-text-shimmer 4s linear infinite;
+}
+
+.ai-match-card:hover .ai-match-icon {
+  transform: scale(1.08);
 }
 
 .ai-match-reason {
@@ -469,6 +530,34 @@
 .ai-match-reason strong {
   color: #555;
   font-weight: 600;
+}
+
+/* Border animation */
+
+@keyframes ai-border-shimmer {
+  0% {
+    background-position:
+      0 0,
+      0% 50%;
+  }
+
+  100% {
+    background-position:
+      0 0,
+      300% 50%;
+  }
+}
+
+/* Text/icon animation */
+
+@keyframes ai-text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 300% 50%;
+  }
 }
 
 
