@@ -234,8 +234,8 @@ const getAcceptedSwaps = async (req, res) => {
         { status: "accepted" },
       ],
     })
-      .populate("sender", "name email")
-      .populate("receiver", "name email")
+      .populate("sender", "name email profilePicture")
+      .populate("receiver", "name email profilePicture")
       .sort({ updatedAt: -1 });
 
     res.status(200).json({

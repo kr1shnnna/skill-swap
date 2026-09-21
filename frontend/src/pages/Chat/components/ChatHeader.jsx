@@ -36,7 +36,15 @@ const ChatHeader = ({
         <FaArrowLeft />
       </button>
 
-      <FaUserCircle className="chat-user-avatar" />
+      {selectedUser.profilePicture ? (
+        <img
+          src={selectedUser.profilePicture}
+          alt={`${selectedUser.name || "Student"} profile`}
+          className="chat-user-avatar-image"
+        />
+      ) : (
+        <FaUserCircle className="chat-user-avatar" />
+      )}
 
       <div>
         <h2>{selectedUser.name}</h2>

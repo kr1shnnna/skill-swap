@@ -533,6 +533,16 @@
   color: #2563eb;
 }
 
+.chat-user-avatar-image {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+
+
 .conversation-chat-header h2 {
   margin: 0;
 
@@ -1516,6 +1526,16 @@
 }
 
 
+
+.conversation-avatar-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+
 /* ================================
    MOBILE
 ================================ */
@@ -1771,6 +1791,11 @@
   .chat-user-avatar {
     font-size: 38px;
   }
+
+  .chat-user-avatar-image {
+  width: 38px;
+  height: 38px;
+}
 
   .conversation-chat-header h2 {
     max-width: 220px;
