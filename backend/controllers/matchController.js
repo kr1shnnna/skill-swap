@@ -217,6 +217,7 @@ const getMatches = async (req, res) => {
             bio: user.bio,
             gender: user.gender,
             rating: user.rating,
+            profilePicture: user.profilePicture,
           },
 
           // Existing exact-match score
