@@ -542,6 +542,45 @@
 }
 
 
+@media (max-width: 400px) {
+  .profile-picture-section {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .profile-picture-wrapper {
+    width: 76px;
+    height: 76px;
+  }
+
+  .profile-picture,
+  .profile-picture-placeholder {
+    width: 76px;
+    height: 76px;
+  }
+
+  .profile-picture-info h3 {
+    font-size: 0.95rem;
+  }
+
+  .profile-picture-info p {
+    font-size: 0.74rem;
+    max-width: 240px;
+  }
+
+  .profile-picture-actions {
+    max-width: 260px;
+  }
+
+  .change-picture-btn,
+  .remove-picture-btn {
+    min-height: 36px;
+    font-size: 0.78rem;
+    padding: 7px 10px;
+  }
+}
+
+
 @media (max-width: 600px) {
   .profile-page {
     padding: 30px 15px;
