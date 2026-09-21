@@ -178,7 +178,7 @@ const getUserRatings = async (req, res) => {
     const ratings = await Rating.find({
       reviewee: userId,
     })
-      .populate("reviewer", "name")
+      .populate("reviewer", "name profilePicture")
       .populate("session", "topic date time")
       .sort({ createdAt: -1 });
 

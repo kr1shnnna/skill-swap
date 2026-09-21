@@ -281,9 +281,17 @@ const StudentProfile = () => {
                       {/* Review Header */}
                       <div className="review-header">
                         <div className="reviewer-info">
-                          <FaUserCircle className="reviewer-icon" />
-
+                          {rating.reviewer?.profilePicture ? (
+                            <img
+                              src={rating.reviewer.profilePicture}
+                              alt={`${rating.reviewer.name || "Student"} profile`}
+                              className="reviewer-picture"
+                            />
+                          ) : (
+                            <FaUserCircle className="reviewer-icon" />
+                          )}
                           <div>
+                            
                             <h4>
                               {rating.reviewer?.name || "SkillSwap Student"}
                             </h4>
