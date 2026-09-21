@@ -109,11 +109,11 @@ const getMyConnections = async (req, res) => {
     })
       .populate(
         "user1",
-        "name bio gender skillsToTeach skillsToLearn rating"
+        "name bio gender skillsToTeach skillsToLearn rating profilePicture"
       )
       .populate(
         "user2",
-        "name bio gender skillsToTeach skillsToLearn rating"
+        "name bio gender skillsToTeach skillsToLearn rating profilePicture"
       )
       .sort({ createdAt: -1 });
 

@@ -99,7 +99,15 @@ const Connections = () => {
                 <div className="connection-card" key={connection.connectionId}>
                   <div className="connection-card-top">
                     <div className="connection-avatar">
-                      {user?.name?.charAt(0)?.toUpperCase() || "?"}
+                      {user?.profilePicture ? (
+                        <img
+                          src={user.profilePicture}
+                          alt={`${user.name || "Student"} profile`}
+                          className="connection-avatar-image"
+                        />
+                      ) : (
+                        user?.name?.charAt(0)?.toUpperCase() || "?"
+                      )}
                     </div>
 
                     <div className="connection-user-info">
