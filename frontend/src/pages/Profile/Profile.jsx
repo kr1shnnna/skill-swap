@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import "./Profile.css";
+
+import { FaCamera, FaUserCircle } from "react-icons/fa";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
     gender: "Prefer not to say",
+    profilePicture: "",
     skillsToTeach: [],
     skillsToLearn: [],
   });
@@ -18,6 +21,9 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Load existing profile
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,6 +34,7 @@ const Profile = () => {
           name: response.data.user.name || "",
           bio: response.data.user.bio || "",
           gender: response.data.user.gender || "Prefer not to say",
+          profilePicture: response.data.user.profilePicture || "",
           skillsToTeach: response.data.user.skillsToTeach || [],
           skillsToLearn: response.data.user.skillsToLearn || [],
         });
@@ -114,6 +121,54 @@ const Profile = () => {
     });
   };
 
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Image must be smaller than 5 MB.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("profilePicture", file);
+
+    try {
+      setUploadingPicture(true);
+      setMessage("");
+
+      const response = await api.post("/users/profile/picture", formData);
+
+      setProfile((previousProfile) => ({
+        ...previousProfile,
+        profilePicture: response.data.profilePicture,
+      }));
+
+      setMessage("Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+
+      setMessage(
+        error.response?.data?.message || "Failed to upload profile picture.",
+      );
+    } finally {
+      setUploadingPicture(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -155,6 +210,56 @@ const Profile = () => {
           <section className="profile-section">
             <h2>About You</h2>
 
+            <div className="profile-picture-section">
+              <div className="profile-picture-wrapper">
+                {profile.profilePicture ? (
+                  <img
+                    src={profile.profilePicture}
+                    alt={`${profile.name || "Profile"} profile`}
+                    className="profile-picture"
+                  />
+                ) : (
+                  <FaUserCircle className="profile-picture-placeholder" />
+                )}
+
+                <button
+                  type="button"
+                  className="profile-picture-upload-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPicture}
+                  aria-label="Change profile picture"
+                >
+                  <FaCamera />
+                </button>
+              </div>
+
+              <div className="profile-picture-info">
+                <h3>Profile Picture</h3>
+
+                <p>Add a photo so other students can recognize you.</p>
+
+                <button
+                  type="button"
+                  className="change-picture-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPicture}
+                >
+                  {uploadingPicture
+                    ? "Uploading..."
+                    : profile.profilePicture
+                      ? "Change Photo"
+                      : "Upload Photo"}
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  hidden
+                />
+              </div>
+            </div>
             <div className="form-group">
               <label>Name</label>
 
