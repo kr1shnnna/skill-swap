@@ -440,6 +440,21 @@
   font-weight: 600;
 }
 
+
+.student-profile-picture-wrapper {
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+}
+
+.student-profile-picture {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
 /* ==========================================
    MOBILE
    ========================================== */

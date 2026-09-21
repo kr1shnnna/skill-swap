@@ -157,8 +157,19 @@ const StudentProfile = () => {
           {/* ==========================================
               PROFILE HEADER
               ========================================== */}
+
           <div className="student-profile-header">
-            <FaUserCircle className="student-profile-icon" />
+            <div className="student-profile-picture-wrapper">
+              {student.profilePicture ? (
+                <img
+                  src={student.profilePicture}
+                  alt={`${student.name} profile`}
+                  className="student-profile-picture"
+                />
+              ) : (
+                <FaUserCircle className="student-profile-icon" />
+              )}
+            </div>
 
             <div>
               <h1>{student.name}</h1>
