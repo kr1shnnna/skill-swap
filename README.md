@@ -1,47 +1,43 @@
-# SkillSwap 🔄
+# 🔄 SkillSwap
 
 ## A Peer-to-Peer Skill Exchange Platform for Students
 
-SkillSwap is a platform built around a simple idea:
+SkillSwap is a peer-to-peer platform built around a simple idea:
 
-**What if students could teach what they know and learn what they want from each other?**
+> **What if students could teach what they know and learn what they want from each other?**
 
-Instead of learning being a one-way process, SkillSwap creates an environment where students can exchange skills based on their interests and abilities.
+Instead of treating learning as a one-way process, SkillSwap creates an environment where students can exchange skills based on their interests, abilities, and learning goals.
 
-Students can discover compatible peers, see what they can teach and what they want to learn, connect with them, chat in real time, schedule SkillSwap sessions, and build genuine connections through completed skill exchanges.
-
-### ✨ What SkillSwap Offers
-
-- 🔍 Discover students based on skill compatibility
-- 🎯 Skill-based matching with match scores
-- 👤 Student profiles with skills, bios, ratings, and reviews
-- 🔄 Request and schedule SkillSwap sessions
-- 💬 Real-time messaging
-- 📞 Real-time calling
-- 🎥 Video meetings through Jitsi
-- 🤝 Connections based on completed SkillSwaps
-- ⭐ Ratings and reviews after completed sessions
-
-### 🤝 How Connections Work
-
-A connection is created when two students have completed at least one SkillSwap together.
-
-For example:
-
-**3 completed SkillSwaps with the same student = 1 Connection + 3 SkillSwaps**
-
-This keeps connections meaningful and based on actual skill exchanges rather than simply adding someone to a list.
-
-### 🚀 What's Next?
-
-SkillSwap is still evolving.
-
-One of the major features I want to explore next is **AI-based matching** — making the matching system more intelligent by understanding students' interests and the context behind their skills, rather than relying only on exact skill names.
-
-The goal is to make it easier for students to discover people they can genuinely learn from and exchange skills with.
+Students can create their profiles, list the skills they can teach and want to learn, discover compatible peers using AI-powered matching, connect with them, chat in real time, make calls, schedule SkillSwap sessions, and build meaningful connections through completed skill exchanges.
 
 ---
 
-**Skills → Matches → SkillSwaps → Connections → Community**
+## ✨ What SkillSwap Offers
 
-Built as a third-year engineering project.
+### 👤 Student Profiles
+
+Students can create personalized profiles containing:
+
+- Profile pictures
+- Bio and personal information
+- Skills they can teach
+- Skills they want to learn
+- Ratings and reviews
+- SkillSwap and connection history
+
+---
+
+### 🤖 AI-Powered Skill Matching
+
+SkillSwap uses an AI-based matching system to find students with compatible learning and teaching interests.
+
+Instead of relying only on exact skill names, the matching system uses **semantic similarity** to understand related skills and interests.
+
+For example:
+
+```text
+Student A wants to learn:
+Machine Learning
+
+Student B can teach:
+Deep Learning
