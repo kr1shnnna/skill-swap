@@ -33,11 +33,3 @@ SkillSwap uses an AI-based matching system to find students with compatible lear
 
 Instead of relying only on exact skill names, the matching system uses **semantic similarity** to understand related skills and interests.
 
-For example:
-
-```text
-Student A wants to learn:
-Machine Learning
-
-Student B can teach:
-Deep Learning
