@@ -5,7 +5,8 @@ const {
     updateProfile,
     getUserById,
     upload,
-    uploadProfilePicture
+    uploadProfilePicture,
+    removeProfilePicture,
 
 }=require('../controllers/userController');
 const protect=require('../middlewares/authMiddleware');
@@ -22,6 +23,12 @@ router.post(
   protect,
   upload.single("profilePicture"),
   uploadProfilePicture,
+);
+
+router.delete(
+  "/profile/picture",
+  protect,
+  removeProfilePicture
 );
 
 

@@ -2,9 +2,36 @@ import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import "./Profile.css";
 
-import { FaCamera, FaUserCircle } from "react-icons/fa";
+import { FaCamera, FaUserCircle, FaTrash } from "react-icons/fa";
 
 const Profile = () => {
+  const [removingPicture, setRemovingPicture] = useState(false);
+
+  const handleRemoveProfilePicture = async () => {
+    try {
+      setRemovingPicture(true);
+
+      const response = await api.delete("/users/profile/picture");
+
+      setProfile((prev) => ({
+        ...prev,
+        profilePicture: "",
+      }));
+
+      alert(response.data.message);
+    } catch (error) {
+      console.error("Remove profile picture error:", error);
+
+      alert(
+        error.response?.data?.message || "Failed to remove profile picture.",
+      );
+    } finally {
+      setRemovingPicture(false);
+    }
+  };
+
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
@@ -251,6 +278,18 @@ const Profile = () => {
                       : "Upload Photo"}
                 </button>
 
+                {profile.profilePicture && (
+                  <button
+                    type="button"
+                    className="remove-picture-btn"
+                    onClick={() => setShowRemoveConfirm(true)}
+                    disabled={removingPicture}
+                  >
+                    <FaTrash />
+                    {removingPicture ? "Removing..." : "Remove Photo"}
+                  </button>
+                )}
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -372,6 +411,43 @@ const Profile = () => {
             {saving ? "Saving..." : "Save Profile"}
           </button>
         </form>
+
+        {showRemoveConfirm && (
+          <div className="remove-picture-overlay">
+            <div className="remove-picture-modal">
+              <div className="remove-picture-modal-icon">
+                <FaTrash />
+              </div>
+
+              <h3>Remove Profile Picture?</h3>
+
+              <p>Are you sure you want to remove your profile picture?</p>
+
+              <div className="remove-picture-modal-actions">
+                <button
+                  type="button"
+                  className="cancel-remove-btn"
+                  onClick={() => setShowRemoveConfirm(false)}
+                  disabled={removingPicture}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="confirm-remove-btn"
+                  onClick={async () => {
+                    await handleRemoveProfilePicture();
+                    setShowRemoveConfirm(false);
+                  }}
+                  disabled={removingPicture}
+                >
+                  {removingPicture ? "Removing..." : "Remove"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
