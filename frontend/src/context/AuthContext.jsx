@@ -202,6 +202,29 @@ console.log("AUTH PROFILE PICTURE:", user?.profilePicture);
     setCallFailed(null);
   };
 
+
+  // ------------------------------------------
+// UPDATE USER
+// ------------------------------------------
+
+const updateUser = (updatedData) => {
+  setUser((previousUser) => {
+    if (!previousUser) {
+      return previousUser;
+    }
+
+    const updatedUser = {
+      ...previousUser,
+      ...updatedData,
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+
+    return updatedUser;
+  });
+};
+
+
   // ------------------------------------------
   // FETCH PENDING SWAP COUNT
   // ------------------------------------------
@@ -736,6 +759,7 @@ console.log("AUTH PROFILE PICTURE:", user?.profilePicture);
     token,
     login,
     logout,
+    updateUser,
     isAuthenticated: !!token,
 
     // Swap notifications

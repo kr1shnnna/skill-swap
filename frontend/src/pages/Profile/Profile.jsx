@@ -1,10 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import api from "../../services/api";
 import "./Profile.css";
 
 import { FaCamera, FaUserCircle, FaTrash } from "react-icons/fa";
 
+import { AuthContext } from "../../context/AuthContext";
+
 const Profile = () => {
+  const { updateUser } = useContext(AuthContext);
+
   const [removingPicture, setRemovingPicture] = useState(false);
 
   const handleRemoveProfilePicture = async () => {
@@ -18,11 +22,15 @@ const Profile = () => {
         profilePicture: "",
       }));
 
-      alert(response.data.message);
+      updateUser({
+        profilePicture: "",
+      });
+
+      setMessage("Profile picture removed successfully!");
     } catch (error) {
       console.error("Remove profile picture error:", error);
 
-      alert(
+      setMessage(
         error.response?.data?.message || "Failed to remove profile picture.",
       );
     } finally {
@@ -180,6 +188,10 @@ const Profile = () => {
         profilePicture: response.data.profilePicture,
       }));
 
+      updateUser({
+        profilePicture: response.data.profilePicture,
+      });
+
       setMessage("Profile picture updated successfully!");
     } catch (error) {
       console.error("Profile picture upload error:", error);
@@ -265,6 +277,7 @@ const Profile = () => {
 
                 <p>Add a photo so other students can recognize you.</p>
 
+                <div className="profile-picture-actions">
                 <button
                   type="button"
                   className="change-picture-btn"
@@ -289,6 +302,9 @@ const Profile = () => {
                     {removingPicture ? "Removing..." : "Remove Photo"}
                   </button>
                 )}
+                
+                </div>
+                
 
                 <input
                   ref={fileInputRef}
