@@ -11,11 +11,16 @@ export const AuthProvider = ({ children }) => {
   // USER
   // ------------------------------------------
 
+ 
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
 
     return savedUser ? JSON.parse(savedUser) : null;
   });
+
+
+  console.log("AUTH USER:", user);
+console.log("AUTH PROFILE PICTURE:", user?.profilePicture);
 
   // ------------------------------------------
   // TOKEN
@@ -400,24 +405,26 @@ export const AuthProvider = ({ children }) => {
     // INCOMING CALL
     // ----------------------------------------
 
-    socket.on("incomingCall", ({ callerId, callerName,callType, roomName }) => {
-     
-      if (!callerId || !callType || !roomName) {
-        return;
-      }
+    socket.on(
+      "incomingCall",
+      ({ callerId, callerName, callType, roomName }) => {
+        if (!callerId || !callType || !roomName) {
+          return;
+        }
 
-      // Clear any previous call status
-      setCallRejected(false);
-      setCallCancelled(false);
-      setCallFailed(null);
+        // Clear any previous call status
+        setCallRejected(false);
+        setCallCancelled(false);
+        setCallFailed(null);
 
-      setIncomingCall({
-        callerId: callerId.toString(),
-        callerName: callerName || "SkillSwap Student",
-        callType,
-        roomName,
-      });
-    });
+        setIncomingCall({
+          callerId: callerId.toString(),
+          callerName: callerName || "SkillSwap Student",
+          callType,
+          roomName,
+        });
+      },
+    );
 
     // ----------------------------------------
     // CALL ACCEPTED
@@ -549,7 +556,7 @@ export const AuthProvider = ({ children }) => {
   // START CALL
   // ------------------------------------------
 
-  const startCall = (receiverId, callType, roomName , receiverName) => {
+  const startCall = (receiverId, callType, roomName, receiverName) => {
     if (!socketRef.current) {
       console.error("Socket is not connected.");
 
@@ -573,8 +580,8 @@ export const AuthProvider = ({ children }) => {
       callType,
       roomName,
     });
- 
-    //debug 
+
+    //debug
     console.log("CALLER USER OBJECT:", user);
     console.log("CALLER NAME:", user?.name);
 

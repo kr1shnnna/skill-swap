@@ -247,7 +247,15 @@ const Navbar = () => {
                 className="user-dropdown-btn"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
-                <FaUserCircle className="user-icon" />
+                {user?.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={`${user.name || "Student"} profile`}
+                    className="navbar-user-picture"
+                  />
+                ) : (
+                  <FaUserCircle className="user-icon" />
+                )}
 
                 <span>{user?.name}</span>
 
@@ -337,7 +345,6 @@ const Navbar = () => {
             <Link to="/sessions" onClick={closeMobileMenu}>
               Sessions
             </Link>
-            
 
             <button
               type="button"
@@ -355,7 +362,15 @@ const Navbar = () => {
           {isAuthenticated ? (
             <div className="mobile-user-section">
               <div className="mobile-user-info">
-                <FaUserCircle />
+                {user?.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={`${user.name || "Student"} profile`}
+                    className="mobile-user-picture"
+                  />
+                ) : (
+                  <FaUserCircle />
+                )}
 
                 <div>
                   <strong>{user?.name}</strong>

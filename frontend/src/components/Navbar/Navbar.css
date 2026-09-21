@@ -321,6 +321,25 @@
 }
 
 
+.navbar-user-picture {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+
+.mobile-user-picture {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  flex-shrink: 0;
+}
+
+
 /* ==========================================
    MOBILE MENU
    ========================================== */
