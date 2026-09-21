@@ -160,11 +160,11 @@ const createSession = async (req, res) => {
       await Session.findById(session._id)
         .populate(
           "requester",
-          "name email"
+          "name email profilePicture"
         )
         .populate(
           "partner",
-          "name email"
+          "name email profilePicture"
         );
 
     /*
@@ -217,8 +217,8 @@ const getMySessions = async (req, res) => {
     const sessions = await Session.find({
       $or: [{ requester: userId }, { partner: userId }],
     })
-      .populate("requester", "name email")
-      .populate("partner", "name email")
+      .populate("requester", "name email profilePicture")
+      .populate("partner", "name email profilePicture")
       .sort({
         date: 1,
         time: 1,
@@ -349,8 +349,8 @@ if (status === "completed") {
     }
 
     const updatedSession = await Session.findById(session._id)
-      .populate("requester", "name email")
-      .populate("partner", "name email");
+      .populate("requester", "name email profilePicture")
+      .populate("partner", "name email profilePicture");
 
     res.status(200).json({
       message: "Session status updated.",
