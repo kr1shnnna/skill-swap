@@ -127,6 +127,7 @@ const updateProfile=async (req,res)=>{
             email: updatedUser.email,
             bio: updatedUser.bio,
             gender: updatedUser.gender,
+            profilePicture: updatedUser.profilePicture,
             skillsToTeach: updatedUser.skillsToTeach,
             skillsToLearn: updatedUser.skillsToLearn,
         }
