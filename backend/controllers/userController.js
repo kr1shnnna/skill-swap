@@ -1,6 +1,77 @@
 const User=require("../models/User");
 const Swap = require("../models/Swap");
 
+const cloudinary = require("../config/cloudinary");
+const multer = require("multer");
+
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed."));
+    }
+  },
+});
+
+
+
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Please select an image.",
+      });
+    }
+
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found.",
+      });
+    }
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "skillswap/profile-pictures",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+
+      uploadStream.end(req.file.buffer);
+    });
+
+    user.profilePicture = uploadResult.secure_url;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile picture updated successfully.",
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    console.error("Profile picture upload error:", error);
+
+    res.status(500).json({
+      message: "Failed to upload profile picture.",
+    });
+  }
+};
+
 
 
 
@@ -130,5 +201,7 @@ const getUserById = async (req, res) => {
 module.exports={
     getProfile,
     updateProfile,
-  getUserById
+  getUserById,
+  uploadProfilePicture,
+  upload,
 }
