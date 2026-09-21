@@ -257,9 +257,24 @@ def calculate_reciprocal_score(
     forward_score = forward_result["score"]
     reverse_score = reverse_result["score"]
 
-    reciprocal_score = (
-        forward_score + reverse_score
-    ) / 2
+    # ---------------------------------------------
+    # Reciprocal compatibility
+    # ---------------------------------------------
+    #
+    # Both directions are important for a SkillSwap.
+    #
+    # Harmonic mean penalizes situations where one
+    # direction is strong but the other is weak.
+    # ---------------------------------------------
+
+    if forward_score == 0 or reverse_score == 0:
+        reciprocal_score = 0.0
+    else:
+        reciprocal_score = (
+            2 * forward_score * reverse_score
+        ) / (
+            forward_score + reverse_score
+        )
 
     return {
         "forward_score": forward_score,

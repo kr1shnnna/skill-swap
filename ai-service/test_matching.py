@@ -280,6 +280,159 @@ scenarios = [
             "skills_to_learn": ["Social Media Marketing"],
         },
     },
+
+        # ============================================================
+    # 16. One-way compatibility
+    # ============================================================
+    {
+        "name": "One-Way Compatibility",
+        "student_a": {
+            "skills_to_teach": ["Cooking"],
+            "skills_to_learn": ["Python"],
+        },
+        "student_b": {
+            "skills_to_teach": ["Python"],
+            "skills_to_learn": ["Cooking"],
+        },
+    },
+
+    # ============================================================
+    # 17. Strong balanced compatibility
+    # ============================================================
+    {
+        "name": "Strong Balanced Compatibility",
+        "student_a": {
+            "skills_to_teach": ["JavaScript"],
+            "skills_to_learn": ["Python"],
+        },
+        "student_b": {
+            "skills_to_teach": ["Python"],
+            "skills_to_learn": ["JavaScript"],
+        },
+    },
+
+    # ============================================================
+    # 18. One direction strong, other direction weak
+    # ============================================================
+    {
+        "name": "Strong One Direction Weak Other",
+        "student_a": {
+            "skills_to_teach": ["Photography"],
+            "skills_to_learn": ["Python"],
+        },
+        "student_b": {
+            "skills_to_teach": ["Python"],
+            "skills_to_learn": ["Music"],
+        },
+    },
+
+    # ============================================================
+    # 19. Partial multi-skill compatibility
+    # ============================================================
+    {
+        "name": "Partial Multi-Skill Compatibility",
+        "student_a": {
+            "skills_to_teach": [
+                "JavaScript",
+                "HTML",
+            ],
+            "skills_to_learn": [
+                "Python",
+                "Machine Learning",
+                "Frontend Development",
+            ],
+        },
+        "student_b": {
+            "skills_to_teach": [
+                "Python",
+                "Artificial Intelligence",
+                "Cooking",
+            ],
+            "skills_to_learn": [
+                "JavaScript",
+                "Music",
+            ],
+        },
+    },
+
+    # ============================================================
+    # 20. Balanced semantic compatibility
+    # ============================================================
+    {
+        "name": "Balanced Semantic Compatibility",
+        "student_a": {
+            "skills_to_teach": [
+                "Python",
+            ],
+            "skills_to_learn": [
+                "Frontend Development",
+            ],
+        },
+        "student_b": {
+            "skills_to_teach": [
+                "React",
+                "JavaScript",
+            ],
+            "skills_to_learn": [
+                "Backend Development",
+            ],
+        },
+    },
+
+    # ============================================================
+    # 21. Exact one direction, unrelated other direction
+    # ============================================================
+    {
+        "name": "Exact One Direction Unrelated Other",
+        "student_a": {
+            "skills_to_teach": [
+                "Python",
+            ],
+            "skills_to_learn": [
+                "JavaScript",
+            ],
+        },
+        "student_b": {
+            "skills_to_teach": [
+                "JavaScript",
+            ],
+            "skills_to_learn": [
+                "Photography",
+            ],
+        },
+    },
+
+    # ============================================================
+    # 22. Multiple strong matches in both directions
+    # ============================================================
+    {
+        "name": "Multiple Strong Reciprocal Matches",
+        "student_a": {
+            "skills_to_teach": [
+                "Python",
+                "JavaScript",
+                "React",
+            ],
+            "skills_to_learn": [
+                "Machine Learning",
+                "Frontend Development",
+                "UI/UX Design",
+            ],
+        },
+        "student_b": {
+            "skills_to_teach": [
+                "Artificial Intelligence",
+                "Next.js",
+                "Figma",
+            ],
+            "skills_to_learn": [
+                "Python",
+                "JavaScript",
+                "React",
+            ],
+        },
+    },
+    
 ]
 
 
@@ -395,4 +548,3 @@ if __name__ == "__main__":
     print("=" * 70)
     print("ALL SCENARIOS COMPLETED")
     print("=" * 70)
-    
