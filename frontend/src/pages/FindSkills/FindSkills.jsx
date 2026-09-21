@@ -91,6 +91,61 @@ const FindSkills = () => {
   };
 
 
+  const getAIMatchReason = (match) => {
+  const forwardMatches = (match.aiMatches?.forwardMatches || [])
+    .filter((item) => item.match_type !== "below_threshold");
+
+  const reverseMatches = (match.aiMatches?.reverseMatches || [])
+    .filter((item) => item.match_type !== "below_threshold");
+
+  const learningSkills = [
+    ...new Set(
+      forwardMatches.map((item) => item.learning_skill)
+    ),
+  ];
+
+  const teachingSkills = [
+    ...new Set(
+      reverseMatches.map((item) => item.learning_skill)
+    ),
+  ];
+
+  if (learningSkills.length > 0 && teachingSkills.length > 0) {
+    return (
+      <>
+        You can learn{" "}
+        <strong>{learningSkills.join(", ")}</strong>{" "}
+        from them, and they can learn{" "}
+        <strong>{teachingSkills.join(", ")}</strong>{" "}
+        from you.
+      </>
+    );
+  }
+
+  if (learningSkills.length > 0) {
+    return (
+      <>
+        You can learn{" "}
+        <strong>{learningSkills.join(", ")}</strong>{" "}
+        from them.
+      </>
+    );
+  }
+
+  if (teachingSkills.length > 0) {
+    return (
+      <>
+        They can learn{" "}
+        <strong>{teachingSkills.join(", ")}</strong>{" "}
+        from you.
+      </>
+    );
+  }
+
+  return "AI found compatible skills between you.";
+};
+
+
   const renderRelationshipAction = (match) => {
     const status = match.relationshipStatus || "available";
     const userId = match.user.id;
@@ -340,7 +395,7 @@ const FindSkills = () => {
                       </div>
 
                       <p className="ai-match-reason">
-                        Strong two-way skill compatibility
+                        {getAIMatchReason(match)}
                       </p>
 
                     </div>

@@ -462,8 +462,13 @@
 .ai-match-reason {
   margin: 7px 0 0 24px;
   font-size: 0.78rem;
-  line-height: 1.4;
+  line-height: 1.45;
   color: #777;
+}
+
+.ai-match-reason strong {
+  color: #555;
+  font-weight: 600;
 }
 
 
